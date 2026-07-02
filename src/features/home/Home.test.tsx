@@ -28,9 +28,10 @@ describe('Home', () => {
     expect(screen.queryByTestId('home-noms')).not.toBeInTheDocument();
   });
 
-  it('links to shared noms when signed in', () => {
+  it('links to rotation and shared noms when signed in', () => {
     useAuthMock.mockReturnValue({ status: 'authenticated' });
     renderHome();
+    expect(screen.getByTestId('home-rotation')).toHaveAttribute('href', '/rotation');
     expect(screen.getByTestId('home-noms')).toHaveAttribute('href', '/noms');
     expect(screen.queryByTestId('home-signin')).not.toBeInTheDocument();
   });

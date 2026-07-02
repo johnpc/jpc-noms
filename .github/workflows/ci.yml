@@ -118,6 +118,8 @@ jobs:
         area:
           - name: smoke
             paths: .features-gen/e2e/features/smoke
+          - name: search
+            paths: .features-gen/e2e/features/search
     steps:
       - uses: actions/checkout@v7
 

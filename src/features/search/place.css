@@ -1,0 +1,28 @@
+.place-card {
+  border-radius: var(--sp-radius);
+}
+
+.place-card__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.place-card__name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--sp-text);
+}
+
+.place-card__price {
+  color: var(--sp-text-muted);
+  font-weight: 600;
+}
+
+.place-card__blurb {
+  margin: 6px 0 12px;
+  color: var(--sp-text-muted);
+  font-size: 0.9rem;
+}

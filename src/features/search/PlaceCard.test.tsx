@@ -1,0 +1,33 @@
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { PlaceCard } from './PlaceCard';
+import type { Place } from './types';
+
+const place: Place = {
+  id: 'p1',
+  name: 'places/p1',
+  displayName: { text: "Joe's Pizza" },
+  priceLevel: 'PRICE_LEVEL_MODERATE',
+  editorialSummary: { text: 'Cozy slice shop' },
+};
+
+describe('PlaceCard', () => {
+  it('renders name, price, and blurb', () => {
+    render(<PlaceCard place={place} />);
+    expect(screen.getByText("Joe's Pizza")).toBeInTheDocument();
+    expect(screen.getByText('$$')).toBeInTheDocument();
+    expect(screen.getByText('Cozy slice shop')).toBeInTheDocument();
+  });
+
+  it('renders no action button without an actionLabel', () => {
+    render(<PlaceCard place={place} />);
+    expect(screen.queryByTestId('place-card-action')).not.toBeInTheDocument();
+  });
+
+  it('fires onAction when the action is tapped', () => {
+    const onAction = vi.fn();
+    render(<PlaceCard place={place} actionLabel="Add to rotation" onAction={onAction} />);
+    fireEvent.click(screen.getByTestId('place-card-action'));
+    expect(onAction).toHaveBeenCalled();
+  });
+});

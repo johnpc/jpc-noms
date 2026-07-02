@@ -3,16 +3,24 @@ import { IonRouterOutlet } from '@ionic/react';
 import { Home } from './features/home/Home';
 import { SignIn } from './features/auth/SignIn';
 import { SignUp } from './features/auth/SignUp';
+import { SearchPage } from './features/search/SearchPage';
+import { RotationPage } from './features/rotation/RotationPage';
 
 /**
- * App routes. Home is the shell; search/rotation/noms/pairing land in their own
- * slices and register their routes here as they arrive.
+ * App routes. Home is the shell; pairing/noms land in their own slices and
+ * register their routes here as they arrive.
  */
 export function AppRoutes() {
   return (
     <IonRouterOutlet>
       <Route exact path="/home">
         <Home />
+      </Route>
+      <Route exact path="/search">
+        <SearchPage />
+      </Route>
+      <Route exact path="/rotation">
+        <RotationPage />
       </Route>
       <Route exact path="/signin">
         <SignIn />
