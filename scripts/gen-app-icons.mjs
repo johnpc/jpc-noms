@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 /**
  * Generate all app icons from the brand source art:
- *   assets/icon.png       — full-bleed light icon (spork on brand blue)
- *   assets/icon-dark.png  — full-bleed dark icon (glowing spork on charcoal)
+ *   assets/icon.png       — full-bleed light icon (plate + fork/knife on coral)
+ *   assets/icon-dark.png  — full-bleed dark icon (glowing plate on charcoal)
  *
  * Produces, deterministically (no @capacitor/assets — it mangled paths/dark):
  *   • PWA         → public/icons/icon-{48..512}.png + maskable-{192,512}.png
+ *   • Favicon     → public/favicon.png + public/apple-touch-icon.png
  *   • iOS         → AppIcon.appiconset light + dark + tinted (1024) + Contents.json
- *   • Android     → mipmap-<dpi> launcher + round + foreground (light & dark)
  *
+ * iOS only — no Android target for this app.
  * Re-run after changing the source art:  node scripts/gen-app-icons.mjs
  * Not a shipped logic file (build script) — lives outside src/ + amplify/.
  */
@@ -19,17 +20,9 @@ import { join } from 'node:path';
 const ROOT = process.cwd();
 const LIGHT = join(ROOT, 'assets/icon.png');
 const DARK = join(ROOT, 'assets/icon-dark.png');
-const BRAND_BG = { r: 0x5b, g: 0x8d, b: 0xef };
-const DARK_BG = { r: 0x10, g: 0x12, b: 0x18 };
+const BRAND_BG = { r: 0xff, g: 0x6b, b: 0x5c };
 
 const PWA_SIZES = [48, 72, 96, 128, 192, 256, 384, 512];
-const ANDROID = [
-  ['mdpi', 48],
-  ['hdpi', 72],
-  ['xhdpi', 96],
-  ['xxhdpi', 144],
-  ['xxxhdpi', 192],
-];
 
 const resizeTo = (src, size) => sharp(src).resize(size, size, { fit: 'cover' }).png();
 
@@ -51,6 +44,15 @@ async function pwa() {
     writeFileSync(join(dir, `maskable-${s}.png`), await maskable(LIGHT, s, BRAND_BG));
   }
   console.log(`PWA: ${PWA_SIZES.length} icons + 2 maskable`);
+}
+
+/** Browser favicon + iOS home-screen touch icon, from the same light art. */
+async function favicon() {
+  const dir = join(ROOT, 'public');
+  // 32px favicon (crisp in the tab); 180px apple-touch-icon (home screen).
+  await resizeTo(LIGHT, 32).toFile(join(dir, 'favicon.png'));
+  await resizeTo(LIGHT, 180).toFile(join(dir, 'apple-touch-icon.png'));
+  console.log('Favicon: favicon.png (32) + apple-touch-icon.png (180)');
 }
 
 async function ios() {
@@ -89,23 +91,7 @@ async function ios() {
   console.log('iOS: light + dark + tinted AppIcon');
 }
 
-async function android() {
-  const base = join(ROOT, 'android/app/src/main/res');
-  for (const [dpi, size] of ANDROID) {
-    const dir = join(base, `mipmap-${dpi}`);
-    mkdirSync(dir, { recursive: true });
-    await resizeTo(LIGHT, size).toFile(join(dir, 'ic_launcher.png'));
-    await resizeTo(LIGHT, size).toFile(join(dir, 'ic_launcher_round.png'));
-    // Adaptive foreground is drawn at ~1.5x inside a safe canvas; the OS masks it.
-    writeFileSync(
-      join(dir, 'ic_launcher_foreground.png'),
-      await maskable(LIGHT, size * 2, BRAND_BG),
-    );
-  }
-  console.log(`Android: ${ANDROID.length} densities (launcher + round + foreground)`);
-}
-
 await pwa();
+await favicon();
 await ios();
-await android();
 console.log('✓ app icons generated');
