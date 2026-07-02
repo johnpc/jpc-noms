@@ -31,12 +31,20 @@ export function Home() {
             <span className="home-card__name">Find a restaurant</span>
           </Link>
           {status === 'authenticated' ? (
-            <Link className="home-card" to="/noms" data-testid="home-noms">
-              <span className="home-card__emoji" aria-hidden="true">
-                🍽️
-              </span>
-              <span className="home-card__name">Our noms</span>
-            </Link>
+            <>
+              <Link className="home-card" to="/rotation" data-testid="home-rotation">
+                <span className="home-card__emoji" aria-hidden="true">
+                  ⭐
+                </span>
+                <span className="home-card__name">Your rotation</span>
+              </Link>
+              <Link className="home-card" to="/noms" data-testid="home-noms">
+                <span className="home-card__emoji" aria-hidden="true">
+                  🍽️
+                </span>
+                <span className="home-card__name">Our noms</span>
+              </Link>
+            </>
           ) : (
             <Link className="home-card" to="/signin" data-testid="home-signin">
               <span className="home-card__emoji" aria-hidden="true">
