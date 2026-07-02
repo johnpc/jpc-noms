@@ -9,7 +9,7 @@
     "build": "tsc && npm run typecheck:amplify && vite build",
     "preview": "vite preview",
     "prod-config": "node scripts/prod-config.mjs",
-    "e2e-config": "ampx generate outputs --stack <SANDBOX_STACK> --profile personal",
+    "e2e-config": "ampx generate outputs --stack amplify-jpcnoms-xss-sandbox-c38bb97e0e --profile personal",
     "gen:icons": "node scripts/gen-app-icons.mjs",
     "seed": "tsx amplify/seed/seed.ts",
     "test": "vitest run",
