@@ -20,7 +20,7 @@ import { promisify } from 'node:util';
 
 const run = promisify(execFile);
 
-const APP_ID = 'd1ws6pg5gd10zx';
+const APP_ID = 'd20o9oelclxbuz';
 const BRANCH = 'main';
 const REGION = 'us-west-2';
 const PROFILE = 'personal';
