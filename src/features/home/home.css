@@ -1,0 +1,40 @@
+.home-hero {
+  padding: 24px 4px 8px;
+}
+
+.home-hero__title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--sp-text);
+}
+
+.home-hero__sub {
+  margin: 4px 0 0;
+  color: var(--sp-text-muted);
+}
+
+.home-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-gap);
+  margin-top: 20px;
+}
+
+.home-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+  border-radius: var(--sp-radius);
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border);
+  box-shadow: var(--sp-shadow);
+  text-decoration: none;
+  color: var(--sp-text);
+  font-weight: 600;
+}
+
+.home-card__emoji {
+  font-size: 1.6rem;
+}

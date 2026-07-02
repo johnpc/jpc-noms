@@ -1,0 +1,12 @@
+dist
+coverage
+node_modules
+.features-gen
+playwright-report
+test-results
+amplify_outputs*
+package-lock.json
+# Capacitor copies the built web bundle into the native projects' public/
+# mirror on `cap sync` — generated artifacts, not source to format.
+ios/App/App/public
+android/app/src/main/assets/public

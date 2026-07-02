@@ -1,0 +1,90 @@
+/**
+ * SPORK design tokens. Consume these `--sp-*` variables and role classes
+ * everywhere — never hardcoded hex/px in feature CSS. Supports system light/dark
+ * (Ionic dark.system palette). A single blue accent; warm neutrals.
+ */
+
+:root {
+  --sp-font-sans: 'Inter', system-ui, sans-serif;
+  --sp-font-serif: 'Newsreader', Georgia, serif;
+
+  --sp-accent: #5b8def;
+  --sp-accent-strong: #3f6fd6;
+  --sp-accent-contrast: #ffffff;
+  --sp-accent-soft: #eaf1fe;
+  --sp-accent-gradient: linear-gradient(135deg, #6f9bf5 0%, #4f7ce8 100%);
+  --sp-correct: #2e9e6b;
+  --sp-incorrect: #d9534f;
+
+  --sp-bg: #f4f6fb;
+  --sp-surface: #ffffff;
+  --sp-border: #e6e9f0;
+  --sp-text: #1b1d22;
+  --sp-text-muted: #6b7280;
+
+  --sp-radius: 16px;
+  --sp-radius-sm: 10px;
+  --sp-gap: 16px;
+  --sp-shadow: 0 1px 2px rgba(20, 28, 46, 0.04), 0 4px 16px rgba(20, 28, 46, 0.06);
+  --sp-shadow-hover: 0 2px 6px rgba(20, 28, 46, 0.08), 0 10px 28px rgba(20, 28, 46, 0.1);
+  /* Soft cast under piece glyphs / icons — usable inside drop-shadow(). */
+  --sp-glyph-shadow: rgba(20, 28, 46, 0.25);
+
+  /* Per-category accent dots/tints for Discover shelves. */
+  --sp-cat-languages: #5b8def;
+  --sp-cat-mythology: #a06bf0;
+  --sp-cat-scripture: #d98a3d;
+  --sp-cat-science: #2e9e6b;
+  --sp-cat-history: #c0566a;
+
+  /* Ionic theming hooks */
+  --ion-background-color: var(--sp-bg);
+  --ion-text-color: var(--sp-text);
+  --ion-font-family: var(--sp-font-sans);
+  --ion-toolbar-background: var(--sp-surface);
+  --ion-toolbar-color: var(--sp-text);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sp-accent-soft: #1c2740;
+    --sp-bg: #111319;
+    --sp-surface: #1b1e26;
+    --sp-border: #2a2f3a;
+    --sp-text: #f2f4f8;
+    --sp-text-muted: #9aa2b1;
+    --sp-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.35);
+    --sp-shadow-hover: 0 2px 6px rgba(0, 0, 0, 0.4), 0 10px 28px rgba(0, 0, 0, 0.45);
+    --sp-glyph-shadow: rgba(0, 0, 0, 0.5);
+  }
+}
+
+body {
+  font-family: var(--sp-font-sans);
+}
+
+/* Role classes */
+.sp-heading {
+  font-family: var(--sp-font-sans);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--sp-text);
+}
+
+.sp-kicker {
+  font-family: var(--sp-font-sans);
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sp-accent);
+}
+
+.sp-muted {
+  color: var(--sp-text-muted);
+}
+
+.sp-card-face {
+  font-family: var(--sp-font-serif);
+  font-weight: 600;
+}

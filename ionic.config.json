@@ -1,0 +1,7 @@
+{
+  "name": "jpc-noms",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react-vite"
+}
