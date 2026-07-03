@@ -5,20 +5,12 @@
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { dataClient } from '../../lib/dataClient';
+import { nomFromRecord } from './nomRecord';
 import type { Nom } from './types';
 
 const AUTH = { authMode: 'userPool' } as const;
 
-const toNom = (r: Record<string, unknown>): Nom => ({
-  id: r.id as string,
-  pairingId: r.pairingId as string,
-  members: (r.members as string[]) ?? [],
-  title: r.title as string | null,
-  optionPlaceIds: ((r.optionPlaceIds as (string | null)[]) ?? []).filter((x): x is string => !!x),
-  selectedPlaceId: r.selectedPlaceId as string | null,
-  selectedBy: r.selectedBy as string | null,
-  status: r.status as Nom['status'],
-});
+const toNom = nomFromRecord;
 
 /** All noms the caller is a member of (both partners see the same set). */
 export function useNoms(enabled = true) {
