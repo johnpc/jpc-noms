@@ -13,7 +13,7 @@ vi.mock('./rotationApi', () => ({
   useRemoveFromRotation: () => ({ mutate: h.remove, isPending: false }),
 }));
 vi.mock('../noms/useAddToNom', () => ({
-  useAddToNom: () => ({ addToNom: h.addToNom, busy: false }),
+  useAddToNom: () => ({ addToNom: h.addToNom, busy: false, nominatedIds: new Set() }),
 }));
 vi.mock('./RotationItem', () => ({
   RotationItem: ({ googlePlaceId }: { googlePlaceId: string }) => <div>item:{googlePlaceId}</div>,

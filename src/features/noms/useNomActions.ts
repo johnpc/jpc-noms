@@ -13,7 +13,7 @@ import type { Nom } from './types';
  * "Decide for us" picks a random option and selects it — same downstream path
  * (push + Tesla nav) as a manual select.
  */
-export function useNomActions(nom: Nom | undefined, actor: Actor) {
+export function useNomActions(nom: Nom | undefined, actor: Actor, deleteRedirect = '/noms') {
   const history = useHistory();
   const add = useAddOption();
   const select = useSelectOption();
@@ -34,7 +34,15 @@ export function useNomActions(nom: Nom | undefined, actor: Actor) {
       add.mutate({ nom, placeId, actor });
     },
     select: doSelect,
-    remove: (placeId: string) => nom && remove.mutate({ nom, placeId, actor }),
+    remove: (placeId: string) => {
+      if (!nom) return;
+      // Removing the LAST option clears the whole nom (an empty nom is noise).
+      if (nom.optionPlaceIds.length <= 1 && nom.optionPlaceIds.includes(placeId)) {
+        del.mutate(nom.id);
+        return;
+      }
+      remove.mutate({ nom, placeId, actor });
+    },
     reopen: () => nom && reopen.mutate({ nom, actor }),
     decideForUs: () => {
       const pick = nom && pickRandomOption(nom, randomFraction());
@@ -42,7 +50,7 @@ export function useNomActions(nom: Nom | undefined, actor: Actor) {
     },
     del: () => {
       if (!nom) return;
-      del.mutate(nom.id, { onSuccess: () => history.replace('/noms') });
+      del.mutate(nom.id, { onSuccess: () => history.replace(deleteRedirect) });
     },
     busy:
       add.isPending || select.isPending || remove.isPending || reopen.isPending || del.isPending,

@@ -23,6 +23,7 @@ describe('RotationItem', () => {
         removing={false}
         onNom={vi.fn()}
         addingNom={false}
+        nominated={false}
       />,
     );
     expect(container).toBeEmptyDOMElement();
@@ -42,6 +43,7 @@ describe('RotationItem', () => {
         removing={false}
         onNom={onNom}
         addingNom={false}
+        nominated={false}
       />,
     );
     expect(screen.getByText('Joe')).toBeInTheDocument();

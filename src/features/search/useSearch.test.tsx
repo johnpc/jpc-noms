@@ -21,7 +21,7 @@ vi.mock('../rotation/rotationApi', () => ({
   useAddToRotation: () => ({ mutate: h.mutate, isPending: false }),
 }));
 vi.mock('../noms/useAddToNom', () => ({
-  useAddToNom: () => ({ addToNom: h.addToNom, busy: false }),
+  useAddToNom: () => ({ addToNom: h.addToNom, busy: false, nominatedIds: new Set() }),
 }));
 
 import { useSearch } from './useSearch';

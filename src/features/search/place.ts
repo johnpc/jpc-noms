@@ -30,3 +30,13 @@ export function priceLabel(place: Place): string {
 export function placeAddress(place: Place): string {
   return place.formattedAddress?.trim() ?? '';
 }
+
+/** Where "Visit website" points: the place's own site if Google has one, else
+ * a Google Maps search for the place (name + address) so there's always a
+ * useful destination. Returns { href, label }. */
+export function placeLink(place: Place): { href: string; label: string } {
+  const site = place.websiteUri?.trim();
+  if (site) return { href: site, label: 'Website' };
+  const q = encodeURIComponent([placeName(place), placeAddress(place)].filter(Boolean).join(' '));
+  return { href: `https://www.google.com/maps/search/?api=1&query=${q}`, label: 'View on Maps' };
+}

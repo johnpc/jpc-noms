@@ -64,6 +64,29 @@ describe('useNomActions', () => {
     );
   });
 
+  it('remove takes out one option when several remain', () => {
+    const { result } = renderHook(() => useNomActions(nom, actor));
+    result.current.remove('b');
+    expect(h.remove).toHaveBeenCalledWith({ nom, placeId: 'b', actor });
+    expect(h.del).not.toHaveBeenCalled();
+  });
+
+  it('removing the LAST option deletes the whole nom instead', () => {
+    const single: Nom = { ...nom, optionPlaceIds: ['a'] };
+    const { result } = renderHook(() => useNomActions(single, actor));
+    result.current.remove('a');
+    expect(h.del).toHaveBeenCalledWith('n1');
+    expect(h.remove).not.toHaveBeenCalled();
+  });
+
+  it('del routes to a custom redirect when provided', () => {
+    const { result } = renderHook(() => useNomActions(nom, actor, '/today'));
+    result.current.del();
+    const opts = h.del.mock.calls[0][1] as { onSuccess: () => void };
+    opts.onSuccess();
+    expect(h.replace).toHaveBeenCalledWith('/today');
+  });
+
   it('is a no-op set when there is no nom', () => {
     const { result } = renderHook(() => useNomActions(undefined, actor));
     result.current.add('x');

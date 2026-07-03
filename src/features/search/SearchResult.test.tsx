@@ -19,6 +19,7 @@ describe('SearchResult', () => {
         saved={false}
         adding={false}
         addingNom={false}
+        nominated={false}
         onAdd={onAdd}
         onNom={onNom}
       />,
@@ -30,6 +31,21 @@ describe('SearchResult', () => {
     expect(onNom).toHaveBeenCalled();
   });
 
+  it('shows the place as already nominated (button disabled) once in the nom', () => {
+    render(
+      <SearchResult
+        place={place}
+        saved={false}
+        adding={false}
+        addingNom={false}
+        nominated
+        onAdd={vi.fn()}
+        onNom={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId('place-card-nom')).toHaveTextContent('In nom ✓');
+  });
+
   it('shows the in-rotation state and disables the add action when saved', () => {
     render(
       <SearchResult
@@ -37,6 +53,7 @@ describe('SearchResult', () => {
         saved
         adding={false}
         addingNom={false}
+        nominated={false}
         onAdd={vi.fn()}
         onNom={vi.fn()}
       />,

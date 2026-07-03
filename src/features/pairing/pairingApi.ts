@@ -7,19 +7,20 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { dataClient } from '../../lib/dataClient';
 import { pairingInput, type PairToken } from './qrToken';
-import type { Pairing } from './types';
+import { adoptSoloNoms, fetchCallerPairing } from './pairingNoms';
 
 const AUTH = { authMode: 'userPool' } as const;
 
-/** The caller's active/pending pairing (they're a member of it), or null. */
-export function usePairing(enabled = true) {
+/**
+ * The caller's active/pending pairing, or null (owned rows + invites addressed
+ * to their email — see fetchCallerPairing). Keyed by email so the invitee lookup
+ * re-runs when the session resolves.
+ */
+export function usePairing(enabled = true, email = '') {
   return useQuery({
-    queryKey: ['pairing'],
+    queryKey: ['pairing', email],
     enabled,
-    queryFn: async (): Promise<Pairing | null> => {
-      const { data } = await dataClient.models.Pairing.list(AUTH);
-      return (data?.[0] as Pairing) ?? null;
-    },
+    queryFn: () => fetchCallerPairing(email),
   });
 }
 
@@ -45,9 +46,13 @@ export function useAcceptPairing() {
   return useMutation({
     mutationFn: async (args: { pairingId: string; callerEmail: string }) => {
       const { data } = await dataClient.mutations.acceptInvite(args, AUTH);
+      if (data?.members) await adoptSoloNoms(data.id, data.members);
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['pairing'] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['pairing'] });
+      void qc.invalidateQueries({ queryKey: ['noms'] });
+    },
   });
 }
 
@@ -64,9 +69,13 @@ export function usePairByScan() {
       const input = pairingInput(me, partner);
       if (!input) throw new Error("That's your own code — scan your partner's.");
       const { data } = await dataClient.models.Pairing.create(input, AUTH);
+      if (data) await adoptSoloNoms(data.id, input.members);
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['pairing'] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['pairing'] });
+      void qc.invalidateQueries({ queryKey: ['noms'] });
+    },
   });
 }
 

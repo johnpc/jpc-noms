@@ -8,6 +8,11 @@ Feature: Collaborative noms
     Given a visitor opens the noms page
     Then they are prompted to sign in to nominate
 
+  # The primary screen is "Today's nom": a guest is prompted to sign in.
+  Scenario: A guest is prompted to sign in on the Today screen
+    Given a visitor opens the today page
+    Then they are prompted to sign in on the today screen
+
   # You don't need a partner to start a nom — a signed-in user can always create.
   @requires-deploy
   Scenario: A signed-in user can start a nom without a partner

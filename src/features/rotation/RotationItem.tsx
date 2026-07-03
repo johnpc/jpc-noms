@@ -7,10 +7,18 @@ interface Props {
   removing: boolean;
   onNom: () => void;
   addingNom: boolean;
+  nominated: boolean;
 }
 
 /** One rotation entry: resolves the place, renders a card with ➕ Nom + Remove. */
-export function RotationItem({ googlePlaceId, onRemove, removing, onNom, addingNom }: Props) {
+export function RotationItem({
+  googlePlaceId,
+  onRemove,
+  removing,
+  onNom,
+  addingNom,
+  nominated,
+}: Props) {
   const { data: place, isLoading } = usePlace(googlePlaceId);
   if (isLoading || !place) return null;
   return (
@@ -21,6 +29,7 @@ export function RotationItem({ googlePlaceId, onRemove, removing, onNom, addingN
       onAction={onRemove}
       onNom={onNom}
       nomDisabled={addingNom}
+      nominated={nominated}
     />
   );
 }

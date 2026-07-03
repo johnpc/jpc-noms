@@ -50,6 +50,7 @@ export function SearchPage() {
               saved={s.savedIds.has(place.id)}
               adding={s.adding}
               addingNom={s.addingNom}
+              nominated={s.nominatedIds.has(place.id)}
               onAdd={() => s.add(place.id)}
               onNom={() => s.addNom(place.id)}
             />

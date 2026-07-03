@@ -22,6 +22,7 @@ const base = {
   adding: false,
   addNom: vi.fn(),
   addingNom: false,
+  nominatedIds: new Set<string>(),
 };
 
 describe('SearchPage', () => {

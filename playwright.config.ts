@@ -30,6 +30,8 @@ const testDir = defineBddConfig({
 
 export default defineConfig({
   testDir,
+  // Refuse to run unless amplify_outputs.json points at the sandbox (never prod).
+  globalSetup: './e2e/global-setup.ts',
   fullyParallel: true,
   // Cap concurrency: every worker hits the SAME shared deployed backend, whose
   // queries slow as ingestion grows the table. Too many parallel workers

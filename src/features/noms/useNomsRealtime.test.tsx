@@ -21,6 +21,10 @@ vi.mock('../../lib/dataClient', () => ({
     },
   },
 }));
+const appListener = vi.hoisted(() => ({ remove: vi.fn() }));
+vi.mock('@capacitor/app', () => ({
+  App: { addListener: vi.fn(() => Promise.resolve(appListener)) },
+}));
 
 import { useNomsRealtime } from './useNomsRealtime';
 
@@ -71,5 +75,14 @@ describe('useNomsRealtime', () => {
     const onNext = subs.onDelete.mock.calls[0][0].next as (r: Record<string, unknown>) => void;
     onNext({ id: 'n1' });
     expect(qc.getQueryData<Nom[]>(['noms'])).toEqual([]);
+  });
+
+  it('refetches on tab re-focus (backstop for a dropped subscription)', () => {
+    const invalidate = vi.spyOn(qc, 'invalidateQueries');
+    renderHook(() => useNomsRealtime(true), { wrapper });
+    // Simulate the app coming back to the foreground.
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['noms'] });
   });
 });
