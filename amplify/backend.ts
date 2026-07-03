@@ -18,13 +18,17 @@ dotenv.config();
 /**
  * Noms backend.
  *
- * Grows by vertical slice. This slice wires auth + data + the three Google
- * Places query resolvers. The Places Lambdas read/write the GoogleApiCache
- * table straight through their IAM role (bypassing AppSync), so each gets the
- * table name + a read/write grant, plus the Google API key from .env. Later
- * slices add the Pairing/Nom/Device models and the stream-triggered Lambdas
- * (send-to-tesla, nom-push) with their DynamoDB-stream + SNS wiring here.
+ * Secrets live in AWS Secrets Manager, referenced here by ARN. The ARN itself
+ * is NOT sensitive (access is IAM-gated), so we hardcode it rather than read it
+ * from .env / process.env — a build-time env var is absent in the Amplify
+ * main-branch (prod) build, which is exactly why prod search once had no key.
+ * Hardcoded ARNs resolve identically in sandbox and prod. Rotate a value in
+ * Secrets Manager without a code change; only a new secret NAME touches code.
  */
+const GOOGLE_SECRET_ARN =
+  'arn:aws:secretsmanager:us-west-2:566092841021:secret:jpc-noms/google-places-4ekimt';
+const TESSIE_SECRET_ARN =
+  'arn:aws:secretsmanager:us-west-2:566092841021:secret:jpc-noms/tessie-pY5skf';
 const backend = defineBackend({
   auth,
   data,
@@ -45,7 +49,8 @@ const placesFns = [
 ];
 
 for (const fn of placesFns) {
-  fn.addEnvironment('GOOGLE_PLACES_API_KEY', process.env.GOOGLE_PLACES_API_KEY ?? '');
+  // Google Places key comes from Secrets Manager at runtime (see googleApi.ts).
+  fn.addEnvironment('GOOGLE_SECRET_ARN', GOOGLE_SECRET_ARN);
   fn.addEnvironment('CACHE_TABLE_NAME', cacheTable.tableName);
   cacheTable.grantReadWriteData(fn.resources.lambda);
   // grantReadWriteData covers the table ARN but not its GSIs — the cache reads
@@ -55,6 +60,12 @@ for (const fn of placesFns) {
     new PolicyStatement({
       actions: ['dynamodb:Query', 'dynamodb:Scan'],
       resources: [`${cacheTable.tableArn}/index/*`],
+    }),
+  );
+  fn.resources.lambda.addToRolePolicy(
+    new PolicyStatement({
+      actions: ['secretsmanager:GetSecretValue'],
+      resources: [GOOGLE_SECRET_ARN],
     }),
   );
 }
@@ -122,8 +133,7 @@ backend.sendToTeslaFunction.addEnvironment('CACHE_TABLE_NAME', cacheTable.tableN
 backend.sendToTeslaFunction.addEnvironment('ALLOWED_OWNERS', process.env.ALLOWED_OWNERS ?? '');
 // Tessie creds live in Secrets Manager (NOT plaintext env — this drives the
 // car). The Lambda reads TESSIE_SECRET_ARN at runtime; grant it GetSecretValue.
-const tessieSecretArn = process.env.TESSIE_SECRET_ARN ?? '';
-backend.sendToTeslaFunction.addEnvironment('TESSIE_SECRET_ARN', tessieSecretArn);
+backend.sendToTeslaFunction.addEnvironment('TESSIE_SECRET_ARN', TESSIE_SECRET_ARN);
 cacheTable.grantReadData(tesla);
 tesla.addToRolePolicy(
   new PolicyStatement({
@@ -131,11 +141,9 @@ tesla.addToRolePolicy(
     resources: [`${cacheTable.tableArn}/index/*`],
   }),
 );
-if (tessieSecretArn) {
-  tesla.addToRolePolicy(
-    new PolicyStatement({
-      actions: ['secretsmanager:GetSecretValue'],
-      resources: [tessieSecretArn],
-    }),
-  );
-}
+tesla.addToRolePolicy(
+  new PolicyStatement({
+    actions: ['secretsmanager:GetSecretValue'],
+    resources: [TESSIE_SECRET_ARN],
+  }),
+);
