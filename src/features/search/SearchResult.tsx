@@ -6,13 +6,14 @@ interface Props {
   saved: boolean;
   adding: boolean;
   addingNom: boolean;
+  nominated: boolean;
   onAdd: () => void;
   onNom: () => void;
 }
 
 /** One search result: a place card wired to add-to-rotation + ➕ Nom. Extracted
  * from SearchPage so that screen stays a thin, low-complexity composition. */
-export function SearchResult({ place, saved, adding, addingNom, onAdd, onNom }: Props) {
+export function SearchResult({ place, saved, adding, addingNom, nominated, onAdd, onNom }: Props) {
   return (
     <PlaceCard
       place={place}
@@ -21,6 +22,7 @@ export function SearchResult({ place, saved, adding, addingNom, onAdd, onNom }: 
       onAction={onAdd}
       onNom={onNom}
       nomDisabled={addingNom}
+      nominated={nominated}
     />
   );
 }

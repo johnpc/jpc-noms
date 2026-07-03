@@ -11,6 +11,14 @@ Then('they are prompted to sign in to nominate', async ({ page }) => {
   await expect(page.getByTestId('noms-signin')).toBeVisible();
 });
 
+Given('a visitor opens the today page', async ({ page }) => {
+  await page.goto('/today');
+});
+
+Then('they are prompted to sign in on the today screen', async ({ page }) => {
+  await expect(page.getByTestId('today-signin')).toBeVisible();
+});
+
 // `the test user signs in` is defined in search.steps.ts (shared step).
 
 When('the test user opens the noms page', async ({ page }) => {

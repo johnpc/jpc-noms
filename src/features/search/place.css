@@ -56,3 +56,12 @@
   color: var(--sp-text-muted);
   font-size: 0.9rem;
 }
+
+.place-card__link {
+  display: inline-block;
+  margin: 0 0 12px;
+  color: var(--sp-primary, #3880ff);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}

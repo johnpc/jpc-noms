@@ -30,6 +30,10 @@ const GOOGLE_SECRET_ARN =
   'arn:aws:secretsmanager:us-west-2:566092841021:secret:jpc-noms/google-places-4ekimt';
 const TESSIE_SECRET_ARN =
   'arn:aws:secretsmanager:us-west-2:566092841021:secret:jpc-noms/tessie-pY5skf';
+// APNs SNS platform application (token auth, key 9ZC2WPB5WT / team JW5SC3NYUV /
+// bundle com.johncorser.noms). Hardcoded like the secret ARNs so it resolves in
+// the prod build (process.env is absent there). Setting this lights up push.
+const APNS_PLATFORM_ARN = 'arn:aws:sns:us-west-2:566092841021:app/APNS/NomsAPNs';
 const backend = defineBackend({
   auth,
   data,
@@ -103,7 +107,7 @@ push.addEventSource(
   }),
 );
 backend.nomPushFunction.addEnvironment('DEVICE_TABLE_NAME', deviceTable.tableName);
-backend.nomPushFunction.addEnvironment('APNS_PLATFORM_ARN', process.env.APNS_PLATFORM_ARN ?? '');
+backend.nomPushFunction.addEnvironment('APNS_PLATFORM_ARN', APNS_PLATFORM_ARN);
 deviceTable.grantReadData(push);
 push.addToRolePolicy(
   new PolicyStatement({
@@ -130,10 +134,7 @@ pairingPush.addEventSource(
   }),
 );
 backend.pairingPushFunction.addEnvironment('DEVICE_TABLE_NAME', deviceTable.tableName);
-backend.pairingPushFunction.addEnvironment(
-  'APNS_PLATFORM_ARN',
-  process.env.APNS_PLATFORM_ARN ?? '',
-);
+backend.pairingPushFunction.addEnvironment('APNS_PLATFORM_ARN', APNS_PLATFORM_ARN);
 deviceTable.grantReadData(pairingPush);
 pairingPush.addToRolePolicy(
   new PolicyStatement({
@@ -163,9 +164,6 @@ tesla.addEventSource(
 );
 backend.sendToTeslaFunction.addEnvironment('CACHE_TABLE_NAME', cacheTable.tableName);
 backend.sendToTeslaFunction.addEnvironment('ALLOWED_OWNERS', process.env.ALLOWED_OWNERS ?? '');
-// Tessie creds live in Secrets Manager (NOT plaintext env — this drives the
-// car). The Lambda reads TESSIE_SECRET_ARN at runtime; grant it GetSecretValue.
-backend.sendToTeslaFunction.addEnvironment('TESSIE_SECRET_ARN', TESSIE_SECRET_ARN);
 cacheTable.grantReadData(tesla);
 tesla.addToRolePolicy(
   new PolicyStatement({
@@ -173,9 +171,20 @@ tesla.addToRolePolicy(
     resources: [`${cacheTable.tableArn}/index/*`],
   }),
 );
-tesla.addToRolePolicy(
-  new PolicyStatement({
-    actions: ['secretsmanager:GetSecretValue'],
-    resources: [TESSIE_SECRET_ARN],
-  }),
-);
+// SAFETY: only arm Tessie on the real (prod) backend. A `ampx sandbox` deploy
+// sets AMPLIFY_DEV_ACCOUNT_ID; the prod pipeline build does not. On a sandbox
+// we deliberately DON'T wire the secret ARN or the GetSecretValue grant, so
+// sendNavigation() is inert (creds()→null) and an e2e that selects a nom can
+// NEVER drive the physical car — even though sandbox ALLOWED_OWNERS is empty
+// (= allow any member). Tessie creds live in Secrets Manager (this drives the
+// car); the Lambda reads TESSIE_SECRET_ARN at runtime.
+const isSandbox = !!process.env.AMPLIFY_DEV_ACCOUNT_ID;
+if (!isSandbox) {
+  backend.sendToTeslaFunction.addEnvironment('TESSIE_SECRET_ARN', TESSIE_SECRET_ARN);
+  tesla.addToRolePolicy(
+    new PolicyStatement({
+      actions: ['secretsmanager:GetSecretValue'],
+      resources: [TESSIE_SECRET_ARN],
+    }),
+  );
+}

@@ -35,6 +35,12 @@ export function Home() {
           </Link>
           {status === 'authenticated' ? (
             <>
+              <Link className="home-card" to="/today" data-testid="home-today">
+                <span className="home-card__emoji" aria-hidden="true">
+                  🍽️
+                </span>
+                <span className="home-card__name">Today’s nom</span>
+              </Link>
               <Link className="home-card" to="/rotation" data-testid="home-rotation">
                 <span className="home-card__emoji" aria-hidden="true">
                   ⭐
@@ -47,17 +53,11 @@ export function Home() {
                 </span>
                 <span className="home-card__name">Your partner</span>
               </Link>
-              <Link className="home-card" to="/noms" data-testid="home-noms">
-                <span className="home-card__emoji" aria-hidden="true">
-                  🍽️
-                </span>
-                <span className="home-card__name">Our noms</span>
-              </Link>
               <Link className="home-card" to="/stats" data-testid="home-stats">
                 <span className="home-card__emoji" aria-hidden="true">
                   📊
                 </span>
-                <span className="home-card__name">Stats</span>
+                <span className="home-card__name">Stats &amp; past noms</span>
               </Link>
             </>
           ) : (

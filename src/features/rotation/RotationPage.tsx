@@ -51,6 +51,7 @@ export function RotationPage() {
                 onRemove={() => remove.mutate(e.id)}
                 onNom={() => void nom.addToNom(e.googlePlaceId)}
                 addingNom={nom.busy}
+                nominated={nom.nominatedIds.has(e.googlePlaceId)}
               />
             ))}
           </div>

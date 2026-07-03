@@ -17,10 +17,15 @@ export function useAddToNom() {
   const create = useCreateNom();
   const add = useAddOption();
 
+  const openNom = firstOpenNom(noms);
+  // Place ids already in today's open nom — the search/rotation cards use this
+  // to show a place as already nominated (so the ➕ Nom button reflects state).
+  const nominatedIds = new Set(openNom?.optionPlaceIds ?? []);
+
   const addToNom = async (placeId: string) => {
     if (!signedIn || !sub) return;
     void tap();
-    let nom: Nom | undefined = firstOpenNom(noms);
+    let nom: Nom | undefined = openNom;
     if (!nom) {
       const created = await create.mutateAsync({ pairingId, members });
       if (!created) return;
@@ -30,5 +35,5 @@ export function useAddToNom() {
     void showToast('Added to your nom 🍽️');
   };
 
-  return { addToNom, busy: create.isPending || add.isPending };
+  return { addToNom, nominatedIds, busy: create.isPending || add.isPending };
 }

@@ -33,10 +33,12 @@ describe('Home', () => {
   it('links to rotation and shared noms when signed in', () => {
     useAuthMock.mockReturnValue({ status: 'authenticated' });
     renderHome();
+    expect(screen.getByTestId('home-today')).toHaveAttribute('href', '/today');
     expect(screen.getByTestId('home-rotation')).toHaveAttribute('href', '/rotation');
     expect(screen.getByTestId('home-partner')).toHaveAttribute('href', '/partner');
-    expect(screen.getByTestId('home-noms')).toHaveAttribute('href', '/noms');
     expect(screen.getByTestId('home-stats')).toHaveAttribute('href', '/stats');
+    // The full noms list moved off Home — it's reached via Stats now.
+    expect(screen.queryByTestId('home-noms')).not.toBeInTheDocument();
     expect(screen.queryByTestId('home-signin')).not.toBeInTheDocument();
   });
 

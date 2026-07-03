@@ -17,6 +17,15 @@ export function useNoms(enabled = true) {
   return useQuery({
     queryKey: ['noms'],
     enabled,
+    // The subscription (useNomsRealtime) is the fast path, but a mobile websocket
+    // drops when the app backgrounds and can silently miss updates (a partner's
+    // added option never arrives → stale option counts). Poll as a backstop so
+    // the list self-heals within a few seconds even if a subscription event was
+    // lost; refetchOnWindowFocus/reconnect + the resume listener catch the rest.
+    refetchInterval: 8000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
     queryFn: async (): Promise<Nom[]> => {
       const { data } = await dataClient.models.Nom.list(AUTH);
       return (data ?? []).map((r) => toNom(r as Record<string, unknown>));

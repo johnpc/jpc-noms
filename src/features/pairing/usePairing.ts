@@ -18,7 +18,7 @@ import { pairingView } from './pairing';
 export function usePairingFlow() {
   const { status, email } = useAuth();
   const signedIn = status === 'authenticated';
-  const query = usePairingQuery(signedIn);
+  const query = usePairingQuery(signedIn, email ?? '');
   const create = useCreatePairing();
   const accept = useAcceptPairing();
   const unpair = useUnpair();

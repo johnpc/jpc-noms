@@ -1,6 +1,7 @@
 import {
   IonButtons,
   IonBackButton,
+  IonButton,
   IonContent,
   IonHeader,
   IonList,
@@ -51,6 +52,9 @@ export function StatsPage() {
                 <HistoryRow key={nom.id} nom={nom} />
               ))}
             </IonList>
+            <IonButton expand="block" fill="clear" routerLink="/noms" data-testid="stats-all-noms">
+              See all noms
+            </IonButton>
           </>
         )}
       </IonContent>

@@ -11,7 +11,7 @@ import type { Actor } from './nomWrite';
 export function useNomMembership(enabled = true) {
   const { status, email, sub } = useAuth();
   const signedIn = status === 'authenticated';
-  const { data: pairing } = usePairing(signedIn && enabled);
+  const { data: pairing } = usePairing(signedIn && enabled, email ?? '');
   const active = pairing?.status === 'ACTIVE' ? pairing : null;
 
   const actor: Actor = { sub: sub ?? '', label: email ?? '' };

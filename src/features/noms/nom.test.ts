@@ -8,6 +8,8 @@ import {
   selectedByLabel,
   nomDateLabel,
   firstOpenNom,
+  todaysNom,
+  previousDecidedNom,
 } from './nom';
 import type { Nom } from './types';
 
@@ -97,5 +99,57 @@ describe('firstOpenNom', () => {
   it('is undefined when none are open', () => {
     expect(firstOpenNom([nom({ status: 'SELECTED', selectedPlaceId: 'a' })])).toBeUndefined();
     expect(firstOpenNom([])).toBeUndefined();
+  });
+});
+
+describe('todaysNom', () => {
+  const now = new Date('2026-07-03T18:00:00'); // local
+  it('returns a nom created today (calendar day)', () => {
+    const t = nom({ id: 't', createdAt: '2026-07-03T09:00:00' });
+    const old = nom({ id: 'o', createdAt: '2026-07-01T09:00:00' });
+    expect(todaysNom([old, t], now)?.id).toBe('t');
+  });
+  it('prefers the OPEN one when several exist today', () => {
+    const decided = nom({
+      id: 'd',
+      createdAt: '2026-07-03T08:00:00',
+      status: 'SELECTED',
+      selectedPlaceId: 'a',
+    });
+    const open = nom({ id: 'o2', createdAt: '2026-07-03T12:00:00', status: 'OPEN' });
+    expect(todaysNom([decided, open], now)?.id).toBe('o2');
+  });
+  it('is undefined when nothing was created today', () => {
+    expect(todaysNom([nom({ createdAt: '2026-07-01T09:00:00' })], now)).toBeUndefined();
+    expect(todaysNom([], now)).toBeUndefined();
+  });
+});
+
+describe('previousDecidedNom', () => {
+  const now = new Date('2026-07-03T18:00:00');
+  it('returns the most recent DECIDED nom before today', () => {
+    const a = nom({
+      id: 'a',
+      createdAt: '2026-06-30T12:00:00',
+      status: 'SELECTED',
+      selectedPlaceId: 'x',
+    });
+    const b = nom({
+      id: 'b',
+      createdAt: '2026-07-01T12:00:00',
+      status: 'SELECTED',
+      selectedPlaceId: 'y',
+    });
+    expect(previousDecidedNom([a, b], now)?.id).toBe('b');
+  });
+  it('ignores today’s noms and undecided ones', () => {
+    const todayDecided = nom({
+      id: 't',
+      createdAt: '2026-07-03T09:00:00',
+      status: 'SELECTED',
+      selectedPlaceId: 'z',
+    });
+    const openOld = nom({ id: 'o', createdAt: '2026-07-01T09:00:00', status: 'OPEN' });
+    expect(previousDecidedNom([todayDecided, openOld], now)).toBeUndefined();
   });
 });

@@ -8,6 +8,7 @@ import { RotationPage } from './features/rotation/RotationPage';
 import { PairingPage } from './features/pairing/PairingPage';
 import { NomsPage } from './features/noms/NomsPage';
 import { NomDetail } from './features/noms/NomDetail';
+import { TodayPage } from './features/noms/TodayPage';
 import { SettingsPage } from './features/settings/SettingsPage';
 import { StatsPage } from './features/stats/StatsPage';
 import { DownloadPage } from './features/download/DownloadPage';
@@ -30,6 +31,9 @@ export function AppRoutes() {
       </Route>
       <Route exact path="/partner">
         <PairingPage />
+      </Route>
+      <Route exact path="/today">
+        <TodayPage />
       </Route>
       <Route exact path="/noms">
         <NomsPage />

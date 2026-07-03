@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { App } from '@capacitor/app';
 import { dataClient } from '../../lib/dataClient';
 import { nomFromRecord, upsertNom, removeNom } from './nomRecord';
 import type { Nom } from './types';
@@ -31,10 +32,19 @@ export function useNomsRealtime(enabled: boolean): void {
         qc.setQueryData<Nom[]>(['noms'], (list) => removeNom(list, String(raw.id))),
       error: () => {},
     });
+    // A mobile websocket dies while the app is backgrounded and may miss events
+    // that fired meanwhile. On resume (native) or tab re-focus (web), force a
+    // refetch so the list can't stay stale — the visible "4 of 6 options" bug.
+    const refresh = () => void qc.invalidateQueries({ queryKey: ['noms'] });
+    const appResume = App.addListener('resume', refresh);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') refresh();
+    });
     return () => {
       created.unsubscribe();
       updated.unsubscribe();
       deleted.unsubscribe();
+      void appResume.then((h) => h.remove());
     };
   }, [enabled, qc]);
 }

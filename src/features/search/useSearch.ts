@@ -48,5 +48,6 @@ export function useSearch() {
     adding: addToRotation.isPending,
     addNom,
     addingNom: nom.busy,
+    nominatedIds: nom.nominatedIds,
   };
 }

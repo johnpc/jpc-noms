@@ -53,3 +53,33 @@ export function nomDateLabel(nom: Nom): string {
 export function firstOpenNom(noms: Nom[]): Nom | undefined {
   return noms.find((n) => n.status === 'OPEN');
 }
+
+/** Local YYYY-MM-DD for a timestamp (calendar-day key, not UTC). */
+function dayKey(iso: string, now: Date): string {
+  const d = iso ? new Date(iso) : now;
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+/**
+ * "Today's nom" = a nom CREATED on today's calendar date (local). `now` is
+ * injected for determinism. If several exist (edge case), prefer the open one.
+ * Returns undefined when nothing was created today — the caller shows the
+ * empty/prompt state and lazily creates on first add.
+ */
+export function todaysNom(noms: Nom[], now: Date): Nom | undefined {
+  const key = dayKey('', now);
+  const today = noms.filter((n) => n.createdAt && dayKey(n.createdAt, now) === key);
+  return today.find((n) => n.status === 'OPEN') ?? today[0];
+}
+
+/**
+ * The most recent DECIDED nom before today — shown on the Today screen as
+ * "last time you picked …" for reference. Ignores today's noms and any without
+ * a selection. Sorted by createdAt desc.
+ */
+export function previousDecidedNom(noms: Nom[], now: Date): Nom | undefined {
+  const key = dayKey('', now);
+  return noms
+    .filter((n) => isSelected(n) && n.createdAt && dayKey(n.createdAt, now) !== key)
+    .sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''))[0];
+}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { placeName, placeBlurb, priceLabel, placeAddress } from './place';
+import { placeName, placeBlurb, priceLabel, placeAddress, placeLink } from './place';
 import type { Place } from './types';
 
 const base: Place = { id: 'p1', name: 'places/p1', displayName: { text: "Joe's Pizza" } };
@@ -43,5 +43,18 @@ describe('priceLabel', () => {
   it('is empty for unknown or missing levels', () => {
     expect(priceLabel(base)).toBe('');
     expect(priceLabel({ ...base, priceLevel: 'WAT' })).toBe('');
+  });
+});
+
+describe('placeLink', () => {
+  it('links to the place website when Google provides one', () => {
+    const l = placeLink({ ...base, websiteUri: 'https://joes.example' });
+    expect(l).toEqual({ href: 'https://joes.example', label: 'Website' });
+  });
+  it('falls back to a Google Maps search (name + address) when no website', () => {
+    const l = placeLink({ ...base, formattedAddress: '1 Main St' });
+    expect(l.label).toBe('View on Maps');
+    expect(l.href).toContain('google.com/maps/search/');
+    expect(l.href).toContain(encodeURIComponent("Joe's Pizza 1 Main St"));
   });
 });
