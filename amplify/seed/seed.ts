@@ -8,7 +8,7 @@
  *   npm run e2e-config   # ensure amplify_outputs.json exists (sandbox)
  *   npm run seed         # runs this script via tsx (needs .env.local creds)
  */
-import { signIn, signOut } from 'aws-amplify/auth';
+import { signIn, signOut, getCurrentUser } from 'aws-amplify/auth';
 import { client, clearOneModel, EDITOR_WRITE } from './seedClient';
 import { SEEDED_PLACES } from './fixtures/places';
 
@@ -48,6 +48,24 @@ async function main() {
   // invite form, which only shows when unpaired).
   const clearedPairings = await clearOneModel(client.models.Pairing);
   console.log(`Cleared Pairing (${clearedPairings} rows).`);
+
+  // Seed one shared nom the test user is a member of, with a seeded option, so
+  // the collaborative-noms e2e reads a REAL nom (honest read of multi-owner
+  // data). The test user's sub is resolved from the signed-in session.
+  const clearedNoms = await clearOneModel(client.models.Nom);
+  console.log(`Cleared Nom (${clearedNoms} rows).`);
+  const me = (await getCurrentUser()).userId;
+  await client.models.Nom.create(
+    {
+      pairingId: 'seed-pairing',
+      members: [me],
+      title: 'Date night',
+      optionPlaceIds: [SEEDED_PLACES[1].id],
+      status: 'OPEN',
+    },
+    EDITOR_WRITE,
+  );
+  console.log('Seeded 1 shared nom (Date night) with 1 option.');
 
   await signOut().catch(() => {});
   console.log('Seed complete.');
