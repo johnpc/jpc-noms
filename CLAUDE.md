@@ -51,8 +51,28 @@ Good: `feat(noms): notify partner when they add a restaurant to a nom` ·
 
 Any PR that changes something a user can see or interact with MUST include a screenshot or short video
 in the description. Generate it from the slice's own Gherkin test (`VIDEO=1 npm run test:e2e` records a
-`.webm`), upload to `files.jpc.io`, and paste the **permanent** `/d/` URL (a `curl -I` 307 is expected;
-the `/d/` link never expires). Skip only for pure backend/config/docs changes.
+`.webm` per test under `test-results/`), upload to `files.jpc.io`, and paste the **permanent** `/d/`
+URL. Skip only for pure backend/config/docs changes.
+
+**`https://files.jpc.io/d/<name>` is a permanent, embeddable URL** — GitHub renders `.webm`/`.mp4`/
+`.gif`/`.png` from it inline in PRs. It's a Next.js server that re-signs a fresh presigned S3 link on
+every request, so `curl -I` on the `/d/` URL returns a **307 redirect** to a short-lived S3 URL — the
+expiry is on the _redirect target_, not the `/d/` link. Don't mistake the 307 for a broken link.
+
+Upload (AWS profile `personal`, region `us-west-2`):
+
+```bash
+FILE_PATH="test-results/<…>/video.webm"        # the recorded artifact
+FILENAME=$(basename "$FILE_PATH")
+HASH=$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 5)
+aws s3 cp "$FILE_PATH" \
+  "s3://amplify-d1wnjkkkrwiiql-mai-imagehostbucketaac3bfe7-aark0f5h8nw8/public/public/${HASH}-${FILENAME}" \
+  --profile personal --region us-west-2
+echo "https://files.jpc.io/d/${HASH}-${FILENAME}"   # paste this into the PR
+```
+
+(The `/share-file` skill also creates an `s.jpc.io` short link + SMS; for PR artifacts the `/d/` URL
+above is all that's needed.)
 
 ## Stack
 
