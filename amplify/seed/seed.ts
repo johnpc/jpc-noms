@@ -55,6 +55,7 @@ async function main() {
   const clearedNoms = await clearOneModel(client.models.Nom);
   console.log(`Cleared Nom (${clearedNoms} rows).`);
   const me = (await getCurrentUser()).userId;
+  // An OPEN nom with a selectable option (drives the noms slice e2e)...
   await client.models.Nom.create(
     {
       pairingId: 'seed-pairing',
@@ -65,7 +66,20 @@ async function main() {
     },
     EDITOR_WRITE,
   );
-  console.log('Seeded 1 shared nom (Date night) with 1 option.');
+  // ...and a SELECTED nom so the stats/history page reads a real decision.
+  await client.models.Nom.create(
+    {
+      pairingId: 'seed-pairing',
+      members: [me],
+      title: 'Last Friday',
+      optionPlaceIds: [SEEDED_PLACES[0].id, SEEDED_PLACES[2].id],
+      selectedPlaceId: SEEDED_PLACES[0].id,
+      selectedBy: 'John',
+      status: 'SELECTED',
+    },
+    EDITOR_WRITE,
+  );
+  console.log('Seeded 2 shared noms (1 open, 1 decided).');
 
   await signOut().catch(() => {});
   console.log('Seed complete.');

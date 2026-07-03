@@ -50,6 +50,12 @@ export function Home() {
                 </span>
                 <span className="home-card__name">Our noms</span>
               </Link>
+              <Link className="home-card" to="/stats" data-testid="home-stats">
+                <span className="home-card__emoji" aria-hidden="true">
+                  📊
+                </span>
+                <span className="home-card__name">Stats</span>
+              </Link>
             </>
           ) : (
             <Link className="home-card" to="/signin" data-testid="home-signin">
