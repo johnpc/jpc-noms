@@ -1,7 +1,9 @@
 /**
  * Pure helpers to read the caller's Cognito identity from an AppSync resolver
- * event. No I/O — unit-tested. The Cognito authorizer puts `sub` and the email
- * claim on `event.identity`.
+ * event. No I/O — unit-tested. The Cognito authorizer puts `sub` on
+ * `event.identity`. Email is NOT read here: AppSync's userPool authorizer
+ * surfaces access-token claims, which don't carry `email` — the client passes
+ * its own signed-in email as a mutation argument instead (see normalizeEmail).
  */
 export interface ResolverIdentity {
   sub?: string;
@@ -15,9 +17,9 @@ export function callerSub(identity: ResolverIdentity | undefined): string {
   return sub;
 }
 
-/** The caller's email claim, lowercased, or throws if absent. */
-export function callerEmail(identity: ResolverIdentity | undefined): string {
-  const email = identity?.claims?.email as string | undefined;
-  if (!email) throw new Error('No email claim on the caller');
-  return email.trim().toLowerCase();
+/** Normalize a caller-supplied email (trim + lowercase), or throw if empty. */
+export function normalizeEmail(email: string | undefined): string {
+  const e = email?.trim().toLowerCase();
+  if (!e) throw new Error('Missing caller email');
+  return e;
 }

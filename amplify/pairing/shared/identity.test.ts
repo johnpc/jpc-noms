@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { callerSub, callerEmail } from './identity';
+import { callerSub, normalizeEmail } from './identity';
 
 describe('callerSub', () => {
   it('reads sub from identity', () => {
@@ -14,11 +14,12 @@ describe('callerSub', () => {
   });
 });
 
-describe('callerEmail', () => {
-  it('lowercases + trims the email claim', () => {
-    expect(callerEmail({ claims: { email: '  Ann@Example.COM ' } })).toBe('ann@example.com');
+describe('normalizeEmail', () => {
+  it('lowercases + trims a caller-supplied email', () => {
+    expect(normalizeEmail('  Ann@Example.COM ')).toBe('ann@example.com');
   });
-  it('throws when no email claim', () => {
-    expect(() => callerEmail({ claims: {} })).toThrow('No email claim');
+  it('throws when the email is missing/empty', () => {
+    expect(() => normalizeEmail(undefined)).toThrow('Missing caller email');
+    expect(() => normalizeEmail('   ')).toThrow('Missing caller email');
   });
 });

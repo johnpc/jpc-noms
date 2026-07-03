@@ -48,20 +48,26 @@ describe('pairingApi', () => {
     expect(m.list).toHaveBeenCalledWith({ authMode: 'userPool' });
   });
 
-  it('useCreatePairing invites by email', async () => {
+  it('useCreatePairing invites by email, forwarding the caller email', async () => {
     const { result } = renderHook(() => useCreatePairing(), { wrapper });
     await act(async () => {
-      await result.current.mutateAsync('b@x.com');
+      await result.current.mutateAsync({ inviteeEmail: 'b@x.com', callerEmail: 'a@x.com' });
     });
-    expect(m.create).toHaveBeenCalledWith({ inviteeEmail: 'b@x.com' }, { authMode: 'userPool' });
+    expect(m.create).toHaveBeenCalledWith(
+      { inviteeEmail: 'b@x.com', callerEmail: 'a@x.com' },
+      { authMode: 'userPool' },
+    );
   });
 
-  it('useAcceptPairing accepts by id', async () => {
+  it('useAcceptPairing accepts by id, forwarding the caller email', async () => {
     const { result } = renderHook(() => useAcceptPairing(), { wrapper });
     await act(async () => {
-      await result.current.mutateAsync('p1');
+      await result.current.mutateAsync({ pairingId: 'p1', callerEmail: 'b@x.com' });
     });
-    expect(m.accept).toHaveBeenCalledWith({ pairingId: 'p1' }, { authMode: 'userPool' });
+    expect(m.accept).toHaveBeenCalledWith(
+      { pairingId: 'p1', callerEmail: 'b@x.com' },
+      { authMode: 'userPool' },
+    );
   });
 
   it('usePairByScan creates an ACTIVE pairing with both subs', async () => {
