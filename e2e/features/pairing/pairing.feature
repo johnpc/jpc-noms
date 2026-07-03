@@ -14,3 +14,11 @@ Feature: Fixed partner pairing
     Given the test user signs in
     When the test user opens the partner page
     Then they see the invite-a-partner form
+
+  # QR is the primary path: a signed-in user sees their scannable code + scan button.
+  @requires-deploy
+  Scenario: A signed-in user can scan to pair
+    Given the test user signs in
+    When the test user opens the partner page
+    Then they see their pairing QR code
+    And a scan-partner-code button is available

@@ -3,6 +3,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const useFlow = vi.hoisted(() => vi.fn());
 vi.mock('./usePairing', () => ({ usePairingFlow: useFlow }));
+// QrPairing has its own tests + camera/QR deps; stub it here.
+vi.mock('./QrPairing', () => ({ QrPairing: () => <div data-testid="qr-pairing" /> }));
 
 import { PairingPage } from './PairingPage';
 
