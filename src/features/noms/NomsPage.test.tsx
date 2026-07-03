@@ -42,7 +42,7 @@ describe('NomsPage', () => {
     expect(screen.getByTestId('noms-unpaired')).toBeInTheDocument();
   });
 
-  it('shows an empty state and lists noms', () => {
+  it('shows an empty state and lists noms by date', () => {
     useList.mockReturnValue({ ...base, noms: [] });
     const { rerender } = render1();
     expect(screen.getByTestId('noms-empty')).toBeInTheDocument();
@@ -51,7 +51,7 @@ describe('NomsPage', () => {
       noms: [
         {
           id: 'n1',
-          title: 'Friday',
+          createdAt: '2026-07-03T12:00:00.000Z',
           optionPlaceIds: [],
           members: [],
           pairingId: 'p1',
@@ -65,13 +65,22 @@ describe('NomsPage', () => {
       </MemoryRouter>,
     );
     expect(screen.getByTestId('nom-row')).toBeInTheDocument();
-    expect(screen.getByTestId('nom-row')).toHaveTextContent('Friday');
+    // Rows are labelled by their date, not a name.
+    expect(screen.getByTestId('nom-row')).toHaveTextContent('Jul');
   });
 
-  it('renders the create control when paired', () => {
+  it('renders the start-a-nom control (no title input — noms are dated)', () => {
     useList.mockReturnValue(base);
     render1();
     expect(screen.getByTestId('noms-create-btn')).toBeInTheDocument();
-    expect(screen.getByTestId('noms-title')).toBeInTheDocument();
+    expect(screen.queryByTestId('noms-title')).not.toBeInTheDocument();
+  });
+
+  it('starts a nom on tap with no title', () => {
+    const createNom = vi.fn();
+    useList.mockReturnValue({ ...base, createNom });
+    render1();
+    screen.getByTestId('noms-create-btn').click();
+    expect(createNom).toHaveBeenCalledWith();
   });
 });

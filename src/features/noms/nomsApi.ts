@@ -28,12 +28,12 @@ export function useNoms(enabled = true) {
 export function useCreateNom() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { pairingId: string; members: string[]; title?: string }) => {
+    mutationFn: async (input: { pairingId: string; members: string[] }) => {
       const { data } = await dataClient.models.Nom.create(
         { ...input, optionPlaceIds: [], status: 'OPEN' },
         AUTH,
       );
-      return data;
+      return data ? nomFromRecord(data as unknown as Record<string, unknown>) : null;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['noms'] }),
   });

@@ -4,7 +4,6 @@ import {
   IonBackButton,
   IonContent,
   IonHeader,
-  IonInput,
   IonList,
   IonItem,
   IonLabel,
@@ -13,15 +12,13 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/react';
-import { useState } from 'react';
 import { useNomsList } from './useNoms';
-import { nomSummary } from './nom';
+import { nomSummary, nomDateLabel } from './nom';
 import { Prompt } from './Prompt';
 
-/** The shared noms list — create a nom and open any to add options / select. */
+/** The shared noms list — start a dated nom, or open any to add options / select. */
 export function NomsPage() {
   const n = useNomsList();
-  const [title, setTitle] = useState('');
 
   if (!n.signedIn)
     return <Shell body={<Prompt testid="noms-signin">Sign in to nominate together.</Prompt>} />;
@@ -31,19 +28,10 @@ export function NomsPage() {
       body={
         <>
           <div className="noms-create">
-            <IonInput
-              label="New nom (e.g. Friday dinner)"
-              labelPlacement="stacked"
-              value={title}
-              onIonInput={(e) => setTitle(e.detail.value ?? '')}
-              data-testid="noms-title"
-            />
             <IonButton
-              disabled={n.creating || !title.trim()}
-              onClick={() => {
-                n.createNom(title.trim());
-                setTitle('');
-              }}
+              expand="block"
+              disabled={n.creating}
+              onClick={() => n.createNom()}
               data-testid="noms-create-btn"
             >
               Start a nom
@@ -55,12 +43,14 @@ export function NomsPage() {
             </Prompt>
           )}
           {n.noms.length === 0 ? (
-            <Prompt testid="noms-empty">No noms yet. Start one above.</Prompt>
+            <Prompt testid="noms-empty">
+              No noms yet. Start one above, or tap “➕ Nom” on any restaurant.
+            </Prompt>
           ) : (
             <IonList data-testid="noms-list">
               {n.noms.map((nom) => (
                 <IonItem key={nom.id} routerLink={`/noms/${nom.id}`} data-testid="nom-row">
-                  <IonLabel>{nom.title || 'Untitled nom'}</IonLabel>
+                  <IonLabel>{nomDateLabel(nom)}</IonLabel>
                   <IonNote slot="end">{nomSummary(nom)}</IonNote>
                 </IonItem>
               ))}

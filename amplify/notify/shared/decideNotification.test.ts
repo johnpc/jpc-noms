@@ -11,20 +11,24 @@ describe('decideNotification', () => {
   it('notifies the other member when an option is added', () => {
     const out = decideNotification(
       'MODIFY',
-      img({ optionPlaceIds: ['a'], lastActorSub: 'u1', lastActionText: 'John', title: 'Fri' }),
+      img({ optionPlaceIds: ['a'], lastActorSub: 'u1', lastActionText: 'John' }),
       img({ optionPlaceIds: [] }),
     );
-    expect(out).toEqual({ recipientSubs: ['u2'], title: 'Noms', body: 'John added a spot to Fri' });
+    expect(out).toEqual({
+      recipientSubs: ['u2'],
+      title: 'Noms',
+      body: 'John added a spot to your nom',
+    });
   });
 
   it('notifies when a nom becomes selected', () => {
     const out = decideNotification(
       'MODIFY',
-      img({ status: 'SELECTED', selectedPlaceId: 'a', lastActorSub: 'u2', title: 'Dinner' }),
+      img({ status: 'SELECTED', selectedPlaceId: 'a', lastActorSub: 'u2' }),
       img({ status: 'OPEN' }),
     );
     expect(out?.recipientSubs).toEqual(['u1']);
-    expect(out?.body).toContain('picked where to eat for Dinner');
+    expect(out?.body).toContain('picked where to eat');
   });
 
   it('does not notify the actor themselves', () => {

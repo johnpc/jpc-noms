@@ -1,11 +1,19 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const h = vi.hoisted(() => ({ useAuth: vi.fn(), useRotation: vi.fn(), remove: vi.fn() }));
+const h = vi.hoisted(() => ({
+  useAuth: vi.fn(),
+  useRotation: vi.fn(),
+  remove: vi.fn(),
+  addToNom: vi.fn(),
+}));
 vi.mock('../auth/useAuth', () => ({ useAuth: h.useAuth }));
 vi.mock('./rotationApi', () => ({
   useRotation: h.useRotation,
   useRemoveFromRotation: () => ({ mutate: h.remove, isPending: false }),
+}));
+vi.mock('../noms/useAddToNom', () => ({
+  useAddToNom: () => ({ addToNom: h.addToNom, busy: false }),
 }));
 vi.mock('./RotationItem', () => ({
   RotationItem: ({ googlePlaceId }: { googlePlaceId: string }) => <div>item:{googlePlaceId}</div>,

@@ -13,6 +13,9 @@ interface Props {
   /** Optional secondary action (e.g. "Remove") shown as a subtle text button. */
   secondaryLabel?: string;
   onSecondary?: () => void;
+  /** Optional "add to today's nom" action, shown as an outline button. */
+  onNom?: () => void;
+  nomDisabled?: boolean;
 }
 
 /** Render-only restaurant card. Shows name, price, a blurb, and optional actions. */
@@ -23,6 +26,8 @@ export function PlaceCard({
   actionDisabled,
   secondaryLabel,
   onSecondary,
+  onNom,
+  nomDisabled,
 }: Props) {
   const price = priceLabel(place);
   const blurb = placeBlurb(place);
@@ -50,6 +55,17 @@ export function PlaceCard({
             data-testid="place-card-action"
           >
             {actionLabel}
+          </IonButton>
+        )}
+        {onNom && (
+          <IonButton
+            size="small"
+            fill="outline"
+            onClick={onNom}
+            disabled={nomDisabled}
+            data-testid="place-card-nom"
+          >
+            ➕ Nom
           </IonButton>
         )}
         {secondaryLabel && (

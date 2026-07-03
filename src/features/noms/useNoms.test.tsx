@@ -31,32 +31,24 @@ describe('useNomsList', () => {
     expect(result.current.paired).toBe(false);
   });
 
-  it('creates a nom stamped with the active pairing members', () => {
+  it('creates a nom stamped with the active pairing members (no title — noms are dated)', () => {
     h.pairing = { data: { id: 'p1', status: 'ACTIVE', members: ['u1', 'u2'] } };
     const { result } = renderHook(() => useNomsList());
     expect(result.current.paired).toBe(true);
-    result.current.createNom('Friday');
-    expect(h.create).toHaveBeenCalledWith({
-      pairingId: 'p1',
-      members: ['u1', 'u2'],
-      title: 'Friday',
-    });
+    result.current.createNom();
+    expect(h.create).toHaveBeenCalledWith({ pairingId: 'p1', members: ['u1', 'u2'] });
   });
 
   it('creates a SOLO nom when unpaired (members: [self], pairingId solo)', () => {
     const { result } = renderHook(() => useNomsList());
-    result.current.createNom('Solo lunch');
-    expect(h.create).toHaveBeenCalledWith({
-      pairingId: 'solo',
-      members: ['me'],
-      title: 'Solo lunch',
-    });
+    result.current.createNom();
+    expect(h.create).toHaveBeenCalledWith({ pairingId: 'solo', members: ['me'] });
   });
 
   it('does not create when signed out', () => {
     h.auth = { status: 'unauthenticated', sub: null };
     const { result } = renderHook(() => useNomsList());
-    result.current.createNom('x');
+    result.current.createNom();
     expect(h.create).not.toHaveBeenCalled();
   });
 });

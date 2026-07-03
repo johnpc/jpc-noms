@@ -20,6 +20,21 @@ export async function showError(message: string): Promise<void> {
   }
 }
 
+/** Show a short confirmation toast at the bottom. Best-effort — never throws. */
+export async function showToast(message: string): Promise<void> {
+  try {
+    const t = await toastController.create({
+      message,
+      duration: 2000,
+      position: 'bottom',
+      color: 'success',
+    });
+    await t.present();
+  } catch {
+    /* toast unavailable (e.g. SSR/test) — ignore */
+  }
+}
+
 /** Human-readable message from an unknown thrown value. */
 export function errorMessage(err: unknown, fallback = 'Something went wrong.'): string {
   return err instanceof Error && err.message ? err.message : fallback;

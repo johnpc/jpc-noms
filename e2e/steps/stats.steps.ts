@@ -17,12 +17,6 @@ When('the test user opens the stats page', async ({ page }) => {
   await page.goto('/stats');
 });
 
-Then('a decided nom {string} is listed', async ({ page }, title: string) => {
-  await expect(page.getByTestId('history-row').filter({ hasText: title })).toBeVisible({
-    timeout: 20_000,
-  });
-});
-
 Then('the winning restaurant {string} is shown', async ({ page }, name: string) => {
   await expect(page.getByTestId('history-row').filter({ hasText: name })).toBeVisible({
     timeout: 20_000,

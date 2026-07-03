@@ -8,11 +8,10 @@ Feature: Dining stats & history
     Given a visitor opens the stats page
     Then they are prompted to sign in for stats
 
-  # Honest read: the seeded SELECTED nom "Last Friday" shows a real decision +
-  # the restaurant that won (Zingerman's Delicatessen).
+  # Honest read: the seeded SELECTED nom (dated) shows a real decision + the
+  # restaurant that won (Zingerman's Delicatessen).
   @requires-deploy
   Scenario: A member sees their decision history
     Given the test user signs in
     When the test user opens the stats page
-    Then a decided nom "Last Friday" is listed
-    And the winning restaurant "Zingerman's Delicatessen" is shown
+    Then the winning restaurant "Zingerman's Delicatessen" is shown

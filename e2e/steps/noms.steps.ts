@@ -17,23 +17,25 @@ When('the test user opens the noms page', async ({ page }) => {
   await page.goto('/noms');
 });
 
-Then('the shared nom {string} is listed', async ({ page }, title: string) => {
-  await expect(page.getByTestId('nom-row').filter({ hasText: title })).toBeVisible({
-    timeout: 20_000,
-  });
+Then('a shared nom is listed', async ({ page }) => {
+  await expect(page.getByTestId('nom-row').first()).toBeVisible({ timeout: 20_000 });
 });
 
-When('the test user opens the {string} nom', async ({ page }, title: string) => {
-  await page.getByTestId('nom-row').filter({ hasText: title }).click();
+When('the test user opens the first nom', async ({ page }) => {
+  // The open (not-yet-selected) seeded nom shows an "option" count, not "Selected".
+  await page.getByTestId('nom-row').filter({ hasText: 'option' }).first().click();
 });
 
 Then('a restaurant option is shown', async ({ page }) => {
-  await expect(page.getByTestId('nom-options').getByTestId('place-card').first()).toBeVisible({
+  // Options render collapsed (name-only) by default; the row is enough of a read.
+  await expect(page.getByTestId('nom-options').getByTestId('nom-option').first()).toBeVisible({
     timeout: 20_000,
   });
 });
 
 When('the test user selects the first option', async ({ page }) => {
+  // Expand the collapsed option, then select it.
+  await page.getByTestId('nom-options').getByTestId('nom-option').first().click();
   await page.getByTestId('nom-options').getByTestId('place-card-action').first().click();
 });
 

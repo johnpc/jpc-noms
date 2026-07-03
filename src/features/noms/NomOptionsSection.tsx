@@ -41,6 +41,7 @@ export function NomOptionsSection({
               onAction={() => onSelect(pid)}
               secondaryLabel={selected ? undefined : 'Remove'}
               onSecondary={() => onRemove(pid)}
+              collapsible
             />
           ))}
         </div>

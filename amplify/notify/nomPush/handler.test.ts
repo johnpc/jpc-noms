@@ -15,7 +15,6 @@ const record = (over: Record<string, unknown> = {}) => ({
       optionPlaceIds: { L: [{ S: 'a' }] },
       lastActorSub: { S: 'u1' },
       lastActionText: { S: 'John' },
-      title: { S: 'Fri' },
       ...(over.NewImage as object),
     },
     OldImage: { members: { L: [{ S: 'u1' }, { S: 'u2' }] }, optionPlaceIds: { L: [] } },
@@ -33,7 +32,7 @@ describe('nom-push handler', () => {
     await handler({ Records: [record()] } as never);
     expect(e.tokensForOwner).toHaveBeenCalledWith('u2');
     expect(e.tokensForOwner).not.toHaveBeenCalledWith('u1');
-    expect(e.pushToToken).toHaveBeenCalledWith('tok-1', 'Noms', 'John added a spot to Fri');
+    expect(e.pushToToken).toHaveBeenCalledWith('tok-1', 'Noms', 'John added a spot to your nom');
   });
 
   it('skips records that do not warrant a notification', async () => {

@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const h = vi.hoisted(() => ({
   push: vi.fn(),
   mutate: vi.fn(),
+  addToNom: vi.fn(),
   status: 'unauthenticated' as string,
   places: [] as unknown[],
   rotation: [] as { googlePlaceId: string }[],
@@ -18,6 +19,9 @@ vi.mock('../auth/useAuth', () => ({ useAuth: () => ({ status: h.status }) }));
 vi.mock('../rotation/rotationApi', () => ({
   useRotation: () => ({ data: h.rotation }),
   useAddToRotation: () => ({ mutate: h.mutate, isPending: false }),
+}));
+vi.mock('../noms/useAddToNom', () => ({
+  useAddToNom: () => ({ addToNom: h.addToNom, busy: false }),
 }));
 
 import { useSearch } from './useSearch';
@@ -55,5 +59,20 @@ describe('useSearch', () => {
     const { result } = renderHook(() => useSearch());
     expect(result.current.term).toBe('food');
     expect(result.current.suggestions.length).toBeGreaterThan(0);
+  });
+
+  it('routes a guest to sign-in instead of adding to a nom', () => {
+    const { result } = renderHook(() => useSearch());
+    act(() => result.current.addNom('p1'));
+    expect(h.push).toHaveBeenCalledWith('/signin');
+    expect(h.addToNom).not.toHaveBeenCalled();
+  });
+
+  it('adds to today’s nom when signed in', () => {
+    h.status = 'authenticated';
+    const { result } = renderHook(() => useSearch());
+    act(() => result.current.addNom('p1'));
+    expect(h.addToNom).toHaveBeenCalledWith('p1');
+    expect(h.push).not.toHaveBeenCalled();
   });
 });
