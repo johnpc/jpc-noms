@@ -32,6 +32,7 @@ describe('Home', () => {
     useAuthMock.mockReturnValue({ status: 'authenticated' });
     renderHome();
     expect(screen.getByTestId('home-rotation')).toHaveAttribute('href', '/rotation');
+    expect(screen.getByTestId('home-partner')).toHaveAttribute('href', '/partner');
     expect(screen.getByTestId('home-noms')).toHaveAttribute('href', '/noms');
     expect(screen.queryByTestId('home-signin')).not.toBeInTheDocument();
   });

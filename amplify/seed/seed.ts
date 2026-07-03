@@ -44,6 +44,11 @@ async function main() {
   await client.models.Rotation.create({ googlePlaceId: SEEDED_PLACES[0].id }, EDITOR_WRITE);
   console.log('Seeded the test user rotation with 1 favorite.');
 
+  // Clear pairings so the test user starts unpaired (the invite e2e asserts the
+  // invite form, which only shows when unpaired).
+  const clearedPairings = await clearOneModel(client.models.Pairing);
+  console.log(`Cleared Pairing (${clearedPairings} rows).`);
+
   await signOut().catch(() => {});
   console.log('Seed complete.');
 }

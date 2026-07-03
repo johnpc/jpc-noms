@@ -5,6 +5,8 @@ import { data } from './data/resource';
 import { searchPlacesFunction } from './places/searchPlaces/resource';
 import { getPlaceFunction } from './places/getPlace/resource';
 import { getPlaceImageFunction } from './places/getPlaceImage/resource';
+import { createPairingFunction } from './pairing/createPairing/resource';
+import { acceptPairingFunction } from './pairing/acceptPairing/resource';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -25,6 +27,8 @@ const backend = defineBackend({
   searchPlacesFunction,
   getPlaceFunction,
   getPlaceImageFunction,
+  createPairingFunction,
+  acceptPairingFunction,
 });
 
 const cacheTable = backend.data.resources.tables['GoogleApiCache'];
@@ -45,6 +49,20 @@ for (const fn of placesFns) {
     new PolicyStatement({
       actions: ['dynamodb:Query', 'dynamodb:Scan'],
       resources: [`${cacheTable.tableArn}/index/*`],
+    }),
+  );
+}
+
+// Pairing Lambdas: they read/write the Pairing table (invitee joins a
+// multi-owner row they don't yet own) via their IAM role.
+const pairingTable = backend.data.resources.tables['Pairing'];
+for (const fn of [backend.createPairingFunction, backend.acceptPairingFunction]) {
+  fn.addEnvironment('PAIRING_TABLE_NAME', pairingTable.tableName);
+  pairingTable.grantReadWriteData(fn.resources.lambda);
+  fn.resources.lambda.addToRolePolicy(
+    new PolicyStatement({
+      actions: ['dynamodb:Query', 'dynamodb:Scan'],
+      resources: [`${pairingTable.tableArn}/index/*`],
     }),
   );
 }
