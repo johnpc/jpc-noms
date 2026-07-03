@@ -10,6 +10,7 @@ import { getPlaceImageFunction } from './places/getPlaceImage/resource';
 import { createPairingFunction } from './pairing/createPairing/resource';
 import { acceptPairingFunction } from './pairing/acceptPairing/resource';
 import { nomPushFunction } from './notify/nomPush/resource';
+import { sendToTeslaFunction } from './tesla/sendToTesla/resource';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -33,6 +34,7 @@ const backend = defineBackend({
   createPairingFunction,
   acceptPairingFunction,
   nomPushFunction,
+  sendToTeslaFunction,
 });
 
 const cacheTable = backend.data.resources.tables['GoogleApiCache'];
@@ -102,3 +104,38 @@ push.addToRolePolicy(
     resources: ['*'],
   }),
 );
+
+// --- Tesla: send-to-tesla ALSO consumes the Nom stream. When a nom's
+// selectedPlaceId changes to a real value (and its members are allowed), it
+// reads the place address from GoogleApiCache and sets the car's nav via
+// Tessie. Re-implements the recovered eats Lambda (pointed at Nom). ALLOWED_OWNERS
+// empty in sandbox = allow any member; set the household's two subs in prod. ---
+const tesla = backend.sendToTeslaFunction.resources.lambda;
+tesla.addEventSource(
+  new DynamoEventSource(nomTable, {
+    startingPosition: StartingPosition.LATEST,
+    batchSize: 5,
+    retryAttempts: 2,
+  }),
+);
+backend.sendToTeslaFunction.addEnvironment('CACHE_TABLE_NAME', cacheTable.tableName);
+backend.sendToTeslaFunction.addEnvironment('ALLOWED_OWNERS', process.env.ALLOWED_OWNERS ?? '');
+// Tessie creds live in Secrets Manager (NOT plaintext env — this drives the
+// car). The Lambda reads TESSIE_SECRET_ARN at runtime; grant it GetSecretValue.
+const tessieSecretArn = process.env.TESSIE_SECRET_ARN ?? '';
+backend.sendToTeslaFunction.addEnvironment('TESSIE_SECRET_ARN', tessieSecretArn);
+cacheTable.grantReadData(tesla);
+tesla.addToRolePolicy(
+  new PolicyStatement({
+    actions: ['dynamodb:Query'],
+    resources: [`${cacheTable.tableArn}/index/*`],
+  }),
+);
+if (tessieSecretArn) {
+  tesla.addToRolePolicy(
+    new PolicyStatement({
+      actions: ['secretsmanager:GetSecretValue'],
+      resources: [tessieSecretArn],
+    }),
+  );
+}

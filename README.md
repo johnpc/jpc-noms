@@ -32,11 +32,12 @@ together.
 | Feature                                 | Status |
 | --------------------------------------- | ------ |
 | Guest-browsable restaurant search       | ✅     |
-| Save favorites to a rotation            | ⬜     |
-| Fixed partner pairing                   | ⬜     |
-| Collaborative noms (add / select, live) | ⬜     |
-| APNs push on partner activity           | ⬜     |
-| Tesla navigation on selection           | ⬜     |
+| Save favorites to a rotation            | ✅     |
+| Fixed partner pairing                   | ✅     |
+| Collaborative noms (add / select, live) | ✅     |
+| APNs push on partner activity           | ✅     |
+| Tesla navigation on selection           | ✅     |
+| Light / dark theme (Settings)           | ✅     |
 
 ## Stack
 

@@ -59,6 +59,12 @@ export function Home() {
               <span className="home-card__name">Sign in to nominate</span>
             </Link>
           )}
+          <Link className="home-card" to="/settings" data-testid="home-settings">
+            <span className="home-card__emoji" aria-hidden="true">
+              ⚙️
+            </span>
+            <span className="home-card__name">Settings</span>
+          </Link>
         </nav>
       </IonContent>
     </IonPage>
