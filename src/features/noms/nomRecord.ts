@@ -7,7 +7,7 @@ export function nomFromRecord(r: Record<string, unknown>): Nom {
     id: r.id as string,
     pairingId: r.pairingId as string,
     members: (r.members as string[]) ?? [],
-    title: (r.title as string | null) ?? null,
+    createdAt: (r.createdAt as string | null) ?? null,
     optionPlaceIds: ((r.optionPlaceIds as (string | null)[]) ?? []).filter((x): x is string => !!x),
     selectedPlaceId: (r.selectedPlaceId as string | null) ?? null,
     selectedBy: (r.selectedBy as string | null) ?? null,

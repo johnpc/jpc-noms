@@ -11,7 +11,7 @@ const nom: Nom = {
   id: 'n1',
   pairingId: 'p1',
   members: [],
-  title: 'Friday',
+  createdAt: '2026-07-03T12:00:00.000Z',
   optionPlaceIds: ['x'],
   selectedPlaceId: 'x',
   status: 'SELECTED',
@@ -22,12 +22,12 @@ describe('HistoryRow', () => {
     vi.clearAllMocks();
   });
 
-  it('shows the nom title and the resolved winning restaurant', () => {
+  it('shows the nom date and the resolved winning restaurant', () => {
     usePlaceMock.mockReturnValue({
       data: { id: 'x', name: 'places/x', displayName: { text: 'Joe' } },
     });
     render(<HistoryRow nom={nom} />);
-    expect(screen.getByTestId('history-row')).toHaveTextContent('Friday');
+    expect(screen.getByTestId('history-row')).toHaveTextContent('Jul');
     expect(screen.getByTestId('history-row')).toHaveTextContent('Joe');
   });
 

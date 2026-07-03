@@ -39,13 +39,25 @@ describe('nomsApi', () => {
   });
 
   it('useCreateNom creates an OPEN nom with empty options for the pairing', async () => {
+    m.create.mockResolvedValue({
+      data: {
+        id: 'n1',
+        pairingId: 'p1',
+        members: ['u1', 'u2'],
+        optionPlaceIds: [],
+        status: 'OPEN',
+      },
+    });
     const { result } = renderHook(() => useCreateNom(), { wrapper });
+    let created: unknown;
     await act(async () => {
-      await result.current.mutateAsync({ pairingId: 'p1', members: ['u1', 'u2'], title: 'Fri' });
+      created = await result.current.mutateAsync({ pairingId: 'p1', members: ['u1', 'u2'] });
     });
     expect(m.create).toHaveBeenCalledWith(
-      { pairingId: 'p1', members: ['u1', 'u2'], title: 'Fri', optionPlaceIds: [], status: 'OPEN' },
+      { pairingId: 'p1', members: ['u1', 'u2'], optionPlaceIds: [], status: 'OPEN' },
       { authMode: 'userPool' },
     );
+    // Returns a mapped Nom (not the raw record) so callers can add options to it.
+    expect(created).toMatchObject({ id: 'n1', optionPlaceIds: [] });
   });
 });

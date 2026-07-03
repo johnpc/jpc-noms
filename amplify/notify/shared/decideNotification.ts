@@ -5,7 +5,6 @@
  */
 export interface NomImage {
   members: string[];
-  title?: string;
   optionPlaceIds: string[];
   status?: string;
   selectedPlaceId?: string;
@@ -48,9 +47,8 @@ const justSelected = (n: NomImage, o: NomImage | undefined): boolean =>
   n.status === 'SELECTED' && o?.status !== 'SELECTED' && !!n.selectedPlaceId;
 
 function bodyText(img: NomImage, selected: boolean): string {
-  const nomName = img.title?.trim() || 'your nom';
   const who = img.lastActionText?.trim();
   const prefix = who ? `${who} ` : '';
-  const verb = selected ? `picked where to eat for ${nomName}` : `added a spot to ${nomName}`;
+  const verb = selected ? 'picked where to eat' : 'added a spot to your nom';
   return `${prefix}${verb}`.trim();
 }

@@ -10,6 +10,7 @@ import {
 } from '@ionic/react';
 import { useAuth } from '../auth/useAuth';
 import { useRotation, useRemoveFromRotation } from './rotationApi';
+import { useAddToNom } from '../noms/useAddToNom';
 import { RotationItem } from './RotationItem';
 
 /** The signed-in user's saved restaurants. Signed-out users are prompted to sign in. */
@@ -17,6 +18,7 @@ export function RotationPage() {
   const { status } = useAuth();
   const { data: entries = [], isLoading } = useRotation(status === 'authenticated');
   const remove = useRemoveFromRotation();
+  const nom = useAddToNom();
 
   return (
     <IonPage>
@@ -47,6 +49,8 @@ export function RotationPage() {
                 googlePlaceId={e.googlePlaceId}
                 removing={remove.isPending}
                 onRemove={() => remove.mutate(e.id)}
+                onNom={() => void nom.addToNom(e.googlePlaceId)}
+                addingNom={nom.busy}
               />
             ))}
           </div>

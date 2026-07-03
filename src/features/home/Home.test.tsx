@@ -3,7 +3,9 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
 
 const useAuthMock = vi.hoisted(() => vi.fn());
+const isNativeMock = vi.hoisted(() => vi.fn(() => false));
 vi.mock('../auth/useAuth', () => ({ useAuth: useAuthMock }));
+vi.mock('@capacitor/core', () => ({ Capacitor: { isNativePlatform: isNativeMock } }));
 
 import { Home } from './Home';
 
@@ -38,10 +40,20 @@ describe('Home', () => {
     expect(screen.queryByTestId('home-signin')).not.toBeInTheDocument();
   });
 
-  it('always links to settings and download', () => {
+  it('links to settings always and to download on the web build', () => {
+    isNativeMock.mockReturnValue(false);
     useAuthMock.mockReturnValue({ status: 'unauthenticated' });
     renderHome();
     expect(screen.getByTestId('home-settings')).toHaveAttribute('href', '/settings');
     expect(screen.getByTestId('home-download')).toHaveAttribute('href', '/download');
+  });
+
+  it('hides the download link on the native app', () => {
+    isNativeMock.mockReturnValue(true);
+    useAuthMock.mockReturnValue({ status: 'unauthenticated' });
+    renderHome();
+    expect(screen.getByTestId('home-settings')).toHaveAttribute('href', '/settings');
+    expect(screen.queryByTestId('home-download')).not.toBeInTheDocument();
+    isNativeMock.mockReturnValue(false);
   });
 });

@@ -1,5 +1,6 @@
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from '@ionic/react';
 import { Link } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 import { useAuth } from '../auth/useAuth';
 import './home.css';
 
@@ -10,6 +11,8 @@ import './home.css';
  */
 export function Home() {
   const { status } = useAuth();
+  // "Get the app" only makes sense on the web build — hide it inside the app.
+  const showDownload = !Capacitor.isNativePlatform();
 
   return (
     <IonPage>
@@ -71,12 +74,14 @@ export function Home() {
             </span>
             <span className="home-card__name">Settings</span>
           </Link>
-          <Link className="home-card" to="/download" data-testid="home-download">
-            <span className="home-card__emoji" aria-hidden="true">
-              📲
-            </span>
-            <span className="home-card__name">Get the app</span>
-          </Link>
+          {showDownload && (
+            <Link className="home-card" to="/download" data-testid="home-download">
+              <span className="home-card__emoji" aria-hidden="true">
+                📲
+              </span>
+              <span className="home-card__name">Get the app</span>
+            </Link>
+          )}
         </nav>
       </IonContent>
     </IonPage>

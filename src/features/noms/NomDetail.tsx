@@ -4,7 +4,7 @@ import { useNomDetail } from './useNomDetail';
 import { NomOptionsSection } from './NomOptionsSection';
 import { NomFooterActions } from './NomFooterActions';
 import { NomShell } from './NomShell';
-import { isSelected, selectedByLabel } from './nom';
+import { isSelected, selectedByLabel, nomDateLabel } from './nom';
 
 /** One shared nom: its options (either partner can select) + your rotation to add from. */
 export function NomDetail() {
@@ -22,7 +22,7 @@ export function NomDetail() {
   const selected = isSelected(nom);
 
   return (
-    <NomShell title={nom.title || 'Nom'}>
+    <NomShell title={nomDateLabel(nom)}>
       {selected && (
         <IonText color="success">
           <p data-testid="nom-selected">

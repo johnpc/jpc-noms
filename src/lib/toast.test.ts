@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const h = vi.hoisted(() => ({ create: vi.fn(), present: vi.fn() }));
 vi.mock('@ionic/core', () => ({ toastController: { create: h.create } }));
 
-import { showError, errorMessage } from './toast';
+import { showError, showToast, errorMessage } from './toast';
 
 describe('toast', () => {
   beforeEach(() => {
@@ -22,6 +22,19 @@ describe('toast', () => {
   it('showError swallows failures', async () => {
     h.create.mockRejectedValue(new Error('no toast'));
     await expect(showError('x')).resolves.toBeUndefined();
+  });
+
+  it('showToast creates + presents a success toast', async () => {
+    await showToast('added');
+    expect(h.create).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'added', color: 'success' }),
+    );
+    expect(h.present).toHaveBeenCalled();
+  });
+
+  it('showToast swallows failures', async () => {
+    h.create.mockRejectedValue(new Error('no toast'));
+    await expect(showToast('x')).resolves.toBeUndefined();
   });
 
   it('errorMessage extracts an Error message or uses the fallback', () => {

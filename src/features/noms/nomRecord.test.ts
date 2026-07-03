@@ -8,7 +8,7 @@ describe('nomFromRecord', () => {
       id: 'n1',
       pairingId: 'p1',
       members: ['u1', 'u2'],
-      title: 'Fri',
+      createdAt: '2026-07-03T12:00:00.000Z',
       optionPlaceIds: ['a', null, 'b'],
       status: 'OPEN',
     });
@@ -16,7 +16,7 @@ describe('nomFromRecord', () => {
       id: 'n1',
       pairingId: 'p1',
       members: ['u1', 'u2'],
-      title: 'Fri',
+      createdAt: '2026-07-03T12:00:00.000Z',
       optionPlaceIds: ['a', 'b'],
       selectedPlaceId: null,
       selectedBy: null,
@@ -28,7 +28,7 @@ describe('nomFromRecord', () => {
     const nom = nomFromRecord({ id: 'n1', pairingId: 'p1' });
     expect(nom.members).toEqual([]);
     expect(nom.optionPlaceIds).toEqual([]);
-    expect(nom.title).toBeNull();
+    expect(nom.createdAt).toBeNull();
   });
 });
 
@@ -41,10 +41,10 @@ describe('upsertNom', () => {
   });
 
   it('replaces an existing nom in place (no dup, keeps order)', () => {
-    const updated = { ...a, title: 'changed' };
+    const updated = { ...a, status: 'SELECTED' as const, selectedPlaceId: 'x' };
     const out = upsertNom([a, b], updated);
     expect(out.map((n) => n.id)).toEqual(['a', 'b']);
-    expect(out[0].title).toBe('changed');
+    expect(out[0].status).toBe('SELECTED');
   });
 
   it('handles an undefined starting list', () => {

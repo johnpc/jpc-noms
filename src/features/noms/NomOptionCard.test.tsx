@@ -35,4 +35,29 @@ describe('NomOptionCard', () => {
     fireEvent.click(screen.getByTestId('place-card-action'));
     expect(onAction).toHaveBeenCalled();
   });
+
+  it('collapses to a name-only row and expands to the full card on tap', () => {
+    usePlaceMock.mockReturnValue({
+      data: { id: 'a', name: 'places/a', displayName: { text: 'Joe' } },
+      isLoading: false,
+    });
+    render(
+      <NomOptionCard
+        googlePlaceId="a"
+        actionLabel="Select"
+        onAction={vi.fn()}
+        disabled={false}
+        collapsible
+      />,
+    );
+    // Collapsed: name shown in the row, no full card / action yet.
+    expect(screen.getByTestId('nom-option')).toHaveTextContent('Joe');
+    expect(screen.queryByTestId('place-card-action')).not.toBeInTheDocument();
+    // Tap the row to expand.
+    fireEvent.click(screen.getByTestId('nom-option'));
+    expect(screen.getByTestId('place-card-action')).toBeInTheDocument();
+    // Tap the header to collapse again.
+    fireEvent.click(screen.getByTestId('nom-option-collapse'));
+    expect(screen.queryByTestId('place-card-action')).not.toBeInTheDocument();
+  });
 });

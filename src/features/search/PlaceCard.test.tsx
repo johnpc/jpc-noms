@@ -34,4 +34,13 @@ describe('PlaceCard', () => {
     fireEvent.click(screen.getByTestId('place-card-action'));
     expect(onAction).toHaveBeenCalled();
   });
+
+  it('renders a ➕ Nom button only when onNom is provided, and fires it', () => {
+    const { rerender } = render(<PlaceCard place={place} />);
+    expect(screen.queryByTestId('place-card-nom')).not.toBeInTheDocument();
+    const onNom = vi.fn();
+    rerender(<PlaceCard place={place} onNom={onNom} />);
+    fireEvent.click(screen.getByTestId('place-card-nom'));
+    expect(onNom).toHaveBeenCalled();
+  });
 });

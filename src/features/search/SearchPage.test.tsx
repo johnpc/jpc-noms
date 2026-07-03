@@ -20,6 +20,8 @@ const base = {
   savedIds: new Set<string>(['p1']),
   add: vi.fn(),
   adding: false,
+  addNom: vi.fn(),
+  addingNom: false,
 };
 
 describe('SearchPage', () => {

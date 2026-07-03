@@ -60,7 +60,6 @@ async function main() {
     {
       pairingId: 'seed-pairing',
       members: [me],
-      title: 'Date night',
       optionPlaceIds: [SEEDED_PLACES[1].id],
       status: 'OPEN',
     },
@@ -71,7 +70,6 @@ async function main() {
     {
       pairingId: 'seed-pairing',
       members: [me],
-      title: 'Last Friday',
       optionPlaceIds: [SEEDED_PLACES[0].id, SEEDED_PLACES[2].id],
       selectedPlaceId: SEEDED_PLACES[0].id,
       selectedBy: 'John',

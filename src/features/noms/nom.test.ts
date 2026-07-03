@@ -6,6 +6,8 @@ import {
   isSelected,
   nomSummary,
   selectedByLabel,
+  nomDateLabel,
+  firstOpenNom,
 } from './nom';
 import type { Nom } from './types';
 
@@ -71,5 +73,29 @@ describe('selectedByLabel', () => {
   });
   it('is empty when unknown', () => {
     expect(selectedByLabel(nom({}))).toBe('');
+  });
+});
+
+describe('nomDateLabel', () => {
+  it('formats the createdAt date', () => {
+    // A fixed ISO date renders a weekday/month/day label (locale-formatted).
+    const label = nomDateLabel(nom({ createdAt: '2026-07-03T12:00:00.000Z' }));
+    expect(label).toMatch(/Jul/);
+    expect(label).toMatch(/3/);
+  });
+  it('falls back when the date is missing', () => {
+    expect(nomDateLabel(nom({ createdAt: null }))).toBe('New nom');
+  });
+});
+
+describe('firstOpenNom', () => {
+  it('returns the first OPEN nom', () => {
+    const selected = nom({ id: 's', status: 'SELECTED', selectedPlaceId: 'a' });
+    const open = nom({ id: 'o', status: 'OPEN' });
+    expect(firstOpenNom([selected, open])?.id).toBe('o');
+  });
+  it('is undefined when none are open', () => {
+    expect(firstOpenNom([nom({ status: 'SELECTED', selectedPlaceId: 'a' })])).toBeUndefined();
+    expect(firstOpenNom([])).toBeUndefined();
   });
 });

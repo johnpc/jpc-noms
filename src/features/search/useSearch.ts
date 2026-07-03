@@ -4,12 +4,13 @@ import { useGeolocation } from './useGeolocation';
 import { useSearchPlaces } from './searchApi';
 import { useAuth } from '../auth/useAuth';
 import { useAddToRotation, useRotation } from '../rotation/rotationApi';
+import { useAddToNom } from '../noms/useAddToNom';
 import { DEFAULT_QUERY, SEARCH_SUGGESTIONS } from './suggestions';
 
 /**
- * Search-page logic: debounce-free term state, geolocated search, and an
- * auth-gated "add to rotation" (guests are routed to sign-in before saving).
- * Components render from this; no logic lives in the JSX.
+ * Search-page logic: debounce-free term state, geolocated search, an auth-gated
+ * "add to rotation", and a one-tap "➕ Nom" that drops a place into today's open
+ * nom. Guests are routed to sign-in before either write. No logic in the JSX.
  */
 export function useSearch() {
   const coords = useGeolocation();
@@ -17,19 +18,23 @@ export function useSearch() {
   const history = useHistory();
   // Default to a "food" search near the user so the page isn't empty on load.
   const [term, setTerm] = useState(DEFAULT_QUERY);
+  const signedIn = status === 'authenticated';
 
   const search = useSearchPlaces(coords, term);
-  const rotation = useRotation(status === 'authenticated');
+  const rotation = useRotation(signedIn);
   const addToRotation = useAddToRotation();
+  const nom = useAddToNom();
 
   const savedIds = new Set((rotation.data ?? []).map((r) => r.googlePlaceId));
 
   const add = (googlePlaceId: string) => {
-    if (status !== 'authenticated') {
-      history.push('/signin');
-      return;
-    }
+    if (!signedIn) return void history.push('/signin');
     addToRotation.mutate(googlePlaceId);
+  };
+
+  const addNom = (googlePlaceId: string) => {
+    if (!signedIn) return void history.push('/signin');
+    void nom.addToNom(googlePlaceId);
   };
 
   return {
@@ -41,5 +46,7 @@ export function useSearch() {
     savedIds,
     add,
     adding: addToRotation.isPending,
+    addNom,
+    addingNom: nom.busy,
   };
 }

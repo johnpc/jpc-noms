@@ -10,7 +10,7 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/react';
-import { PlaceCard } from './PlaceCard';
+import { SearchResult } from './SearchResult';
 import { SearchSuggestions } from './SearchSuggestions';
 import { useSearch } from './useSearch';
 
@@ -44,12 +44,14 @@ export function SearchPage() {
         )}
         <div data-testid="search-results">
           {s.places.map((place) => (
-            <PlaceCard
+            <SearchResult
               key={place.id}
               place={place}
-              actionLabel={s.savedIds.has(place.id) ? 'In rotation ✓' : 'Add to rotation'}
-              actionDisabled={s.savedIds.has(place.id) || s.adding}
-              onAction={() => s.add(place.id)}
+              saved={s.savedIds.has(place.id)}
+              adding={s.adding}
+              addingNom={s.addingNom}
+              onAdd={() => s.add(place.id)}
+              onNom={() => s.addNom(place.id)}
             />
           ))}
         </div>

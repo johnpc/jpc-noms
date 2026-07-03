@@ -26,7 +26,7 @@ const nom: Nom = {
   id: 'n1',
   pairingId: 'p1',
   members: ['u1', 'u2'],
-  title: 'Friday',
+  createdAt: '2026-07-03T12:00:00.000Z',
   optionPlaceIds: ['a'],
   status: 'OPEN',
 };

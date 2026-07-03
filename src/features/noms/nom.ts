@@ -37,3 +37,19 @@ export function selectedByLabel(nom: Nom): string {
   const who = nom.selectedBy?.trim();
   return who ? `${who} picked this` : '';
 }
+
+/** A nom's display name: its creation date (noms are dated, not titled). */
+export function nomDateLabel(nom: Nom): string {
+  if (!nom.createdAt) return 'New nom';
+  return new Date(nom.createdAt).toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+/** The current open nom (most recent first), or undefined — where a "➕ Nom"
+ * tap lands. When none is open, the caller starts a fresh dated nom. */
+export function firstOpenNom(noms: Nom[]): Nom | undefined {
+  return noms.find((n) => n.status === 'OPEN');
+}

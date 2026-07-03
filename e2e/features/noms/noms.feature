@@ -16,13 +16,14 @@ Feature: Collaborative noms
     Then the start-a-nom control is available
 
   # Honest read of the shared (multi-owner) nom + a real selection. The seeded
-  # nom "Date night" has the test user as a member and one option.
+  # open nom has the test user as a member and one option. Noms are dated (not
+  # named), so the list is read by row presence and the nom by its options.
   @requires-deploy
   Scenario: A member opens a shared nom and selects a restaurant
     Given the test user signs in
     When the test user opens the noms page
-    Then the shared nom "Date night" is listed
-    When the test user opens the "Date night" nom
+    Then a shared nom is listed
+    When the test user opens the first nom
     Then a restaurant option is shown
     When the test user selects the first option
     Then the nom shows it is selected
