@@ -7,6 +7,8 @@ const mocks = vi.hoisted(() => ({
   signUp: vi.fn(),
   confirmSignUp: vi.fn(),
   signOut: vi.fn(),
+  updatePassword: vi.fn(),
+  deleteUser: vi.fn(),
 }));
 vi.mock('aws-amplify/auth', () => mocks);
 
@@ -70,5 +72,15 @@ describe('authClient', () => {
     });
     await authClient.signOut();
     expect(mocks.signOut).toHaveBeenCalled();
+  });
+
+  it('changePassword forwards old + new to updatePassword', async () => {
+    await authClient.changePassword('old', 'new');
+    expect(mocks.updatePassword).toHaveBeenCalledWith({ oldPassword: 'old', newPassword: 'new' });
+  });
+
+  it('deleteAccount calls deleteUser', async () => {
+    await authClient.deleteAccount();
+    expect(mocks.deleteUser).toHaveBeenCalled();
   });
 });
