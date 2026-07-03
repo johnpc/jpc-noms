@@ -122,6 +122,8 @@ jobs:
             paths: .features-gen/e2e/features/search
           - name: pairing
             paths: .features-gen/e2e/features/pairing
+          - name: noms
+            paths: .features-gen/e2e/features/noms
     steps:
       - uses: actions/checkout@v7
 

@@ -56,6 +56,24 @@ const schema = a
         allow.authenticated().to(['read']),
       ]),
 
+    // The shared, collaborative nom — the heart of the app. `members` mirrors
+    // the pairing's members, so BOTH partners can read AND write the same row
+    // (ownersDefinedIn). Either can add options (optionPlaceIds) or mark one
+    // selected; onCreate/onUpdate subscriptions push the change live to the
+    // other, and the Nom stream drives push (slice 5) + Tesla nav (slice 6).
+    Nom: a
+      .model({
+        pairingId: a.string().required(),
+        members: a.string().array().required(),
+        title: a.string(),
+        optionPlaceIds: a.string().array().required(),
+        selectedPlaceId: a.string(),
+        selectedBy: a.string(),
+        status: a.enum(['OPEN', 'SELECTED']),
+      })
+      .secondaryIndexes((index) => [index('pairingId')])
+      .authorization((allow) => [allow.ownersDefinedIn('members')]),
+
     GooglePlaceText: a.customType({
       text: a.string(),
       languageCode: a.string(),
