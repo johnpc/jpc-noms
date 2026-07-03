@@ -13,6 +13,7 @@ vi.mock('./pairingApi', () => ({
   useCreatePairing: () => ({ mutate: h.create, isPending: false }),
   useAcceptPairing: () => ({ mutate: h.accept, isPending: false }),
 }));
+vi.mock('./usePairingRealtime', () => ({ usePairingRealtime: vi.fn() }));
 
 import { usePairingFlow } from './usePairing';
 

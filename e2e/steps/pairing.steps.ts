@@ -24,3 +24,11 @@ Then('they see the invite-a-partner form', async ({ page }) => {
   if (!USERNAME || !PASSWORD) test.skip(true, 'TEST_USERNAME / TEST_PASSWORD not set');
   await expect(page.getByTestId('pairing-invite')).toBeVisible({ timeout: 20_000 });
 });
+
+Then('they see their pairing QR code', async ({ page }) => {
+  await expect(page.getByTestId('pairing-qr')).toBeVisible({ timeout: 20_000 });
+});
+
+Then('a scan-partner-code button is available', async ({ page }) => {
+  await expect(page.getByTestId('qr-scan-btn')).toBeVisible();
+});

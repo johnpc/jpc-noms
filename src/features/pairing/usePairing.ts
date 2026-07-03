@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useAuth } from '../auth/useAuth';
 import { usePairing as usePairingQuery, useCreatePairing, useAcceptPairing } from './pairingApi';
+import { usePairingRealtime } from './usePairingRealtime';
 import { pairingView } from './pairing';
 
 /**
  * Pairing-page logic: resolves the caller's pairing into a view (none /
  * pending-sent / pending-received / active) and exposes invite + accept
- * actions. Gated on a signed-in session.
+ * actions. Kept live via the Pairing subscription so both apps reflect a
+ * scan-to-pair instantly. Gated on a signed-in session.
  */
 export function usePairingFlow() {
   const { status, email } = useAuth();
@@ -14,6 +16,7 @@ export function usePairingFlow() {
   const query = usePairingQuery(signedIn);
   const create = useCreatePairing();
   const accept = useAcceptPairing();
+  usePairingRealtime(signedIn);
   const [inviteEmail, setInviteEmail] = useState('');
 
   const view = pairingView(query.data ?? null, email ?? '');

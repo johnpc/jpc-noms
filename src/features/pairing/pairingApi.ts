@@ -6,6 +6,7 @@
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { dataClient } from '../../lib/dataClient';
+import { pairingInput, type PairToken } from './qrToken';
 import type { Pairing } from './types';
 
 const AUTH = { authMode: 'userPool' } as const;
@@ -40,6 +41,25 @@ export function useAcceptPairing() {
   return useMutation({
     mutationFn: async (pairingId: string) => {
       const { data } = await dataClient.mutations.acceptInvite({ pairingId }, AUTH);
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['pairing'] }),
+  });
+}
+
+/**
+ * QR pairing: I scanned my partner's code — create ONE ACTIVE Pairing with both
+ * subs. Multi-owner auth lets me include the partner as a member (I'm a member
+ * too), so no Lambda is needed; the partner's app sees it live via the Pairing
+ * subscription. Throws if I scanned my own code.
+ */
+export function usePairByScan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ me, partner }: { me: PairToken; partner: PairToken }) => {
+      const input = pairingInput(me, partner);
+      if (!input) throw new Error("That's your own code — scan your partner's.");
+      const { data } = await dataClient.models.Pairing.create(input, AUTH);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['pairing'] }),

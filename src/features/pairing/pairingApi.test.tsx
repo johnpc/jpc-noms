@@ -3,15 +3,20 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { ReactNode } from 'react';
 
-const m = vi.hoisted(() => ({ list: vi.fn(), create: vi.fn(), accept: vi.fn() }));
+const m = vi.hoisted(() => ({
+  list: vi.fn(),
+  create: vi.fn(),
+  accept: vi.fn(),
+  pairingCreate: vi.fn(),
+}));
 vi.mock('../../lib/dataClient', () => ({
   dataClient: {
-    models: { Pairing: { list: m.list } },
+    models: { Pairing: { list: m.list, create: m.pairingCreate } },
     mutations: { invitePartner: m.create, acceptInvite: m.accept },
   },
 }));
 
-import { usePairing, useCreatePairing, useAcceptPairing } from './pairingApi';
+import { usePairing, useCreatePairing, useAcceptPairing, usePairByScan } from './pairingApi';
 
 function wrapper({ children }: { children: ReactNode }) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -50,5 +55,36 @@ describe('pairingApi', () => {
       await result.current.mutateAsync('p1');
     });
     expect(m.accept).toHaveBeenCalledWith({ pairingId: 'p1' }, { authMode: 'userPool' });
+  });
+
+  it('usePairByScan creates an ACTIVE pairing with both subs', async () => {
+    m.pairingCreate.mockResolvedValue({ data: { id: 'p1' } });
+    const { result } = renderHook(() => usePairByScan(), { wrapper });
+    await act(async () => {
+      await result.current.mutateAsync({
+        me: { sub: 'me', email: 'me@x.com' },
+        partner: { sub: 'you', email: 'you@x.com' },
+      });
+    });
+    expect(m.pairingCreate).toHaveBeenCalledWith(
+      {
+        members: ['me', 'you'],
+        inviterEmail: 'me@x.com',
+        inviteeEmail: 'you@x.com',
+        status: 'ACTIVE',
+      },
+      { authMode: 'userPool' },
+    );
+  });
+
+  it('usePairByScan rejects scanning your own code', async () => {
+    const { result } = renderHook(() => usePairByScan(), { wrapper });
+    await expect(
+      result.current.mutateAsync({
+        me: { sub: 'me', email: 'me@x.com' },
+        partner: { sub: 'me', email: 'me@x.com' },
+      }),
+    ).rejects.toThrow('own code');
+    expect(m.pairingCreate).not.toHaveBeenCalled();
   });
 });

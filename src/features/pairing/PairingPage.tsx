@@ -11,8 +11,10 @@ import {
   IonToolbar,
 } from '@ionic/react';
 import { usePairingFlow } from './usePairing';
+import { QrPairing } from './QrPairing';
+import './pairing.css';
 
-/** Fixed partner pairing: invite by email, accept an invite, or see your pair. */
+/** Fixed partner pairing: scan to connect (primary), or invite by email. */
 export function PairingPage() {
   const p = usePairingFlow();
   const view = p.view; // local so TS narrows the discriminated union across branches
@@ -35,38 +37,44 @@ export function PairingPage() {
           <IonText>
             <p data-testid="pairing-active">Paired with {view.partnerEmail} 🎉</p>
           </IonText>
-        ) : view.kind === 'pending-sent' ? (
-          <IonText color="medium">
-            <p data-testid="pairing-sent">
-              Invite sent to {view.partnerEmail}. Waiting for them to accept.
-            </p>
-          </IonText>
-        ) : view.kind === 'pending-received' ? (
-          <div data-testid="pairing-received">
-            <p>{view.partnerEmail} invited you to pair.</p>
-            <IonButton
-              disabled={p.accepting}
-              onClick={() => p.accept(view.pairingId)}
-              data-testid="pairing-accept-btn"
-            >
-              Accept
-            </IonButton>
-          </div>
         ) : (
-          <div data-testid="pairing-invite">
-            <p>Pair with your partner so you can nominate restaurants together.</p>
-            <IonInput
-              type="email"
-              label="Partner's email"
-              labelPlacement="stacked"
-              value={p.inviteEmail}
-              onIonInput={(e) => p.setInviteEmail(e.detail.value ?? '')}
-              data-testid="pairing-email"
-            />
-            <IonButton disabled={p.inviting} onClick={p.invite} data-testid="pairing-invite-btn">
-              Send invite
-            </IonButton>
-          </div>
+          <>
+            {/* Primary path: scan to connect — works from any unpaired state. */}
+            <QrPairing />
+
+            {view.kind === 'pending-received' && (
+              <div data-testid="pairing-received">
+                <p>{view.partnerEmail} invited you by email.</p>
+                <IonButton
+                  disabled={p.accepting}
+                  onClick={() => p.accept(view.pairingId)}
+                  data-testid="pairing-accept-btn"
+                >
+                  Accept invite
+                </IonButton>
+              </div>
+            )}
+            {view.kind === 'pending-sent' && (
+              <IonText color="medium">
+                <p data-testid="pairing-sent">Invite sent to {view.partnerEmail}.</p>
+              </IonText>
+            )}
+
+            <p className="pairing-divider">— or invite by email —</p>
+            <div data-testid="pairing-invite">
+              <IonInput
+                type="email"
+                label="Partner's email"
+                labelPlacement="stacked"
+                value={p.inviteEmail}
+                onIonInput={(e) => p.setInviteEmail(e.detail.value ?? '')}
+                data-testid="pairing-email"
+              />
+              <IonButton disabled={p.inviting} onClick={p.invite} data-testid="pairing-invite-btn">
+                Send invite
+              </IonButton>
+            </div>
+          </>
         )}
       </IonContent>
     </IonPage>

@@ -10,6 +10,7 @@ import { getPlaceImageFunction } from './places/getPlaceImage/resource';
 import { createPairingFunction } from './pairing/createPairing/resource';
 import { acceptPairingFunction } from './pairing/acceptPairing/resource';
 import { nomPushFunction } from './notify/nomPush/resource';
+import { pairingPushFunction } from './notify/pairingPush/resource';
 import { sendToTeslaFunction } from './tesla/sendToTesla/resource';
 import dotenv from 'dotenv';
 
@@ -38,6 +39,7 @@ const backend = defineBackend({
   createPairingFunction,
   acceptPairingFunction,
   nomPushFunction,
+  pairingPushFunction,
   sendToTeslaFunction,
 });
 
@@ -110,6 +112,36 @@ push.addToRolePolicy(
   }),
 );
 push.addToRolePolicy(
+  new PolicyStatement({
+    actions: ['sns:CreatePlatformEndpoint', 'sns:Publish'],
+    resources: ['*'],
+  }),
+);
+
+// --- Pairing push: notify BOTH members when a Pairing goes ACTIVE (a scan
+// connected two people). Same Device-read + SNS-publish shape as nom-push,
+// consuming the Pairing table stream. ---
+const pairingPush = backend.pairingPushFunction.resources.lambda;
+pairingPush.addEventSource(
+  new DynamoEventSource(pairingTable, {
+    startingPosition: StartingPosition.LATEST,
+    batchSize: 5,
+    retryAttempts: 2,
+  }),
+);
+backend.pairingPushFunction.addEnvironment('DEVICE_TABLE_NAME', deviceTable.tableName);
+backend.pairingPushFunction.addEnvironment(
+  'APNS_PLATFORM_ARN',
+  process.env.APNS_PLATFORM_ARN ?? '',
+);
+deviceTable.grantReadData(pairingPush);
+pairingPush.addToRolePolicy(
+  new PolicyStatement({
+    actions: ['dynamodb:Query'],
+    resources: [`${deviceTable.tableArn}/index/*`],
+  }),
+);
+pairingPush.addToRolePolicy(
   new PolicyStatement({
     actions: ['sns:CreatePlatformEndpoint', 'sns:Publish'],
     resources: ['*'],
