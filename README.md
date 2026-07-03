@@ -29,15 +29,17 @@ together.
 
 ## Features
 
-| Feature                                 | Status |
-| --------------------------------------- | ------ |
-| Guest-browsable restaurant search       | ✅     |
-| Save favorites to a rotation            | ✅     |
-| Fixed partner pairing                   | ✅     |
-| Collaborative noms (add / select, live) | ✅     |
-| APNs push on partner activity           | ✅     |
-| Tesla navigation on selection           | ✅     |
-| Light / dark theme (Settings)           | ✅     |
+| Feature                                    | Status |
+| ------------------------------------------ | ------ |
+| Guest-browsable restaurant search + photos | ✅     |
+| Save favorites to a rotation               | ✅     |
+| Fixed partner pairing                      | ✅     |
+| Collaborative noms (add / select, live)    | ✅     |
+| APNs push on partner activity              | ✅     |
+| Tesla navigation on selection              | ✅     |
+| Dining stats & decision history            | ✅     |
+| Account management (password / delete)     | ✅     |
+| Light / dark theme (Settings)              | ✅     |
 
 ## Stack
 
@@ -45,6 +47,22 @@ Ionic 8 + React 19 + TypeScript (strict) + Vite + Capacitor (iOS), on AWS Amplif
 AppSync + DynamoDB). Restaurant data comes from the Google Places API; the Tesla hand-off runs through
 a DynamoDB-stream Lambda calling the Tessie API. Architecture, quality gates, and CI descend from the
 [stoop](https://github.com/johnpc/stoop) / [spork](https://github.com/johnpc/spork) reference apps.
+
+## How it works
+
+- **Restaurant data** comes from the **Google Places API**. A `searchGooglePlaces` /
+  `getGooglePlace` / `getGooglePlaceImage` trio of Lambda resolvers proxies Places and caches every
+  response in a `GoogleApiCache` DynamoDB table (keyed by a stable hash), so repeat lookups are free
+  and the app never ships the API key to the client. Photos are hosted image URLs resolved on demand.
+- **A nom is shared, not copied.** The `Nom` model is multi-owner (`members` + `ownersDefinedIn`), so
+  both partners read and write the _same_ row. Edits propagate live over **AppSync subscriptions**,
+  applied straight into the client cache (no refetch) for an instant feel.
+- **Push** rides a DynamoDB stream on the `Nom` table → a Lambda that notifies the _other_ partner via
+  **APNs** (SNS) when an option is added or a nom is decided.
+- **The Tesla hand-off** is a second consumer of that stream: when a nom is marked selected, a Lambda
+  reads the winning place's address from the cache and calls the **Tessie** `share` command to set the
+  car's navigation. Tessie credentials live in **AWS Secrets Manager**, never in code or plaintext env.
+- **No AI generation** here — all content is real Google Places data + the two partners' own choices.
 
 ## Setup
 
