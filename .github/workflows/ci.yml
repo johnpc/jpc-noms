@@ -120,6 +120,8 @@ jobs:
             paths: .features-gen/e2e/features/smoke
           - name: search
             paths: .features-gen/e2e/features/search
+          - name: pairing
+            paths: .features-gen/e2e/features/pairing
     steps:
       - uses: actions/checkout@v7
 

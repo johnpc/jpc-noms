@@ -5,6 +5,7 @@ import { SignIn } from './features/auth/SignIn';
 import { SignUp } from './features/auth/SignUp';
 import { SearchPage } from './features/search/SearchPage';
 import { RotationPage } from './features/rotation/RotationPage';
+import { PairingPage } from './features/pairing/PairingPage';
 
 /**
  * App routes. Home is the shell; pairing/noms land in their own slices and
@@ -21,6 +22,9 @@ export function AppRoutes() {
       </Route>
       <Route exact path="/rotation">
         <RotationPage />
+      </Route>
+      <Route exact path="/partner">
+        <PairingPage />
       </Route>
       <Route exact path="/signin">
         <SignIn />

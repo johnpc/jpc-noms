@@ -38,6 +38,12 @@ export function Home() {
                 </span>
                 <span className="home-card__name">Your rotation</span>
               </Link>
+              <Link className="home-card" to="/partner" data-testid="home-partner">
+                <span className="home-card__emoji" aria-hidden="true">
+                  👫
+                </span>
+                <span className="home-card__name">Your partner</span>
+              </Link>
               <Link className="home-card" to="/noms" data-testid="home-noms">
                 <span className="home-card__emoji" aria-hidden="true">
                   🍽️

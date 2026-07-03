@@ -2,6 +2,8 @@ import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
 import { searchPlacesFunction } from '../places/searchPlaces/resource';
 import { getPlaceFunction } from '../places/getPlace/resource';
 import { getPlaceImageFunction } from '../places/getPlaceImage/resource';
+import { createPairingFunction } from '../pairing/createPairing/resource';
+import { acceptPairingFunction } from '../pairing/acceptPairing/resource';
 
 /**
  * Noms data schema.
@@ -35,6 +37,24 @@ const schema = a
         googlePlaceId: a.string().required(),
       })
       .authorization((allow) => [allow.owner()]),
+
+    // The household of two. `members` holds both partners' Cognito subs and
+    // grants each read/write (ownersDefinedIn). Created by the inviter (their
+    // sub + the invitee's email, status PENDING); the acceptPairing Lambda adds
+    // the invitee's sub to `members` and flips it to ACTIVE. inviterEmail /
+    // inviteeEmail let each side find their pairing before both subs are known.
+    Pairing: a
+      .model({
+        members: a.string().array().required(),
+        inviterEmail: a.string().required(),
+        inviteeEmail: a.string().required(),
+        status: a.enum(['PENDING', 'ACTIVE']),
+      })
+      .secondaryIndexes((index) => [index('inviteeEmail')])
+      .authorization((allow) => [
+        allow.ownersDefinedIn('members'),
+        allow.authenticated().to(['read']),
+      ]),
 
     GooglePlaceText: a.customType({
       text: a.string(),
@@ -84,6 +104,26 @@ const schema = a
       .returns(a.ref('GooglePlaceImage'))
       .authorization((allow) => [allow.authenticated(), allow.guest()])
       .handler(a.handler.function(getPlaceImageFunction)),
+
+    // Start a pairing: caller (inviter) names their partner's email. The
+    // Lambda creates a PENDING Pairing owned by the inviter. Returns its id.
+    // NB: named invitePartner (not createPairing) — the Pairing model already
+    // auto-generates a createPairing mutation; a same-named custom mutation
+    // collides ("Mutation cannot redeclare field createPairing").
+    invitePartner: a
+      .mutation()
+      .arguments({ inviteeEmail: a.string().required() })
+      .returns(a.ref('Pairing'))
+      .authorization((allow) => [allow.authenticated()])
+      .handler(a.handler.function(createPairingFunction)),
+    // Accept a pairing addressed to the caller's email: the Lambda adds the
+    // caller's sub to `members` and flips status to ACTIVE.
+    acceptInvite: a
+      .mutation()
+      .arguments({ pairingId: a.string().required() })
+      .returns(a.ref('Pairing'))
+      .authorization((allow) => [allow.authenticated()])
+      .handler(a.handler.function(acceptPairingFunction)),
   })
   .authorization((allow) => [
     allow.resource(searchPlacesFunction).to(['query', 'mutate']),
