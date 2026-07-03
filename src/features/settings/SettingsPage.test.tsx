@@ -5,6 +5,7 @@ const h = vi.hoisted(() => ({ choice: 'system' as string, setTheme: vi.fn() }));
 vi.mock('./useTheme', () => ({ useTheme: () => ({ choice: h.choice, setTheme: h.setTheme }) }));
 // AccountSection has its own tests + hooks (auth/router); stub it here.
 vi.mock('./AccountSection', () => ({ AccountSection: () => null }));
+vi.mock('./SupportSection', () => ({ SupportSection: () => null }));
 
 import { SettingsPage } from './SettingsPage';
 

@@ -8,6 +8,13 @@ Feature: Collaborative noms
     Given a visitor opens the noms page
     Then they are prompted to sign in to nominate
 
+  # You don't need a partner to start a nom — a signed-in user can always create.
+  @requires-deploy
+  Scenario: A signed-in user can start a nom without a partner
+    Given the test user signs in
+    When the test user opens the noms page
+    Then the start-a-nom control is available
+
   # Honest read of the shared (multi-owner) nom + a real selection. The seeded
   # nom "Date night" has the test user as a member and one option.
   @requires-deploy

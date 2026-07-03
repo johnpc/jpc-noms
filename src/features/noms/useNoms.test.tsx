@@ -2,7 +2,7 @@ import { renderHook } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const h = vi.hoisted(() => ({
-  auth: { status: 'authenticated' as string },
+  auth: { status: 'authenticated' as string, sub: 'me' as string | null },
   pairing: { data: null as unknown },
   noms: { data: [] as unknown[], isLoading: false },
   create: vi.fn(),
@@ -21,7 +21,7 @@ import { useNomsList } from './useNoms';
 describe('useNomsList', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    h.auth = { status: 'authenticated' };
+    h.auth = { status: 'authenticated', sub: 'me' };
     h.pairing = { data: null };
   });
 
@@ -43,7 +43,18 @@ describe('useNomsList', () => {
     });
   });
 
-  it('does not create when unpaired', () => {
+  it('creates a SOLO nom when unpaired (members: [self], pairingId solo)', () => {
+    const { result } = renderHook(() => useNomsList());
+    result.current.createNom('Solo lunch');
+    expect(h.create).toHaveBeenCalledWith({
+      pairingId: 'solo',
+      members: ['me'],
+      title: 'Solo lunch',
+    });
+  });
+
+  it('does not create when signed out', () => {
+    h.auth = { status: 'unauthenticated', sub: null };
     const { result } = renderHook(() => useNomsList());
     result.current.createNom('x');
     expect(h.create).not.toHaveBeenCalled();

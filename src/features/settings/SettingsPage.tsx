@@ -16,6 +16,7 @@ import {
 import { useTheme } from './useTheme';
 import { THEME_CHOICES, type ThemeChoice } from './theme';
 import { AccountSection } from './AccountSection';
+import { SupportSection } from './SupportSection';
 
 /** Settings — appearance (light/dark/system) today; grows as needed. */
 export function SettingsPage() {
@@ -49,6 +50,7 @@ export function SettingsPage() {
           </IonItem>
         </IonList>
         <AccountSection />
+        <SupportSection />
       </IonContent>
     </IonPage>
   );

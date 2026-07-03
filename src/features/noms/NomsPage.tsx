@@ -30,29 +30,28 @@ export function NomsPage() {
     <Shell
       body={
         <>
-          {n.paired ? (
-            <div className="noms-create">
-              <IonInput
-                label="New nom (e.g. Friday dinner)"
-                labelPlacement="stacked"
-                value={title}
-                onIonInput={(e) => setTitle(e.detail.value ?? '')}
-                data-testid="noms-title"
-              />
-              <IonButton
-                disabled={n.creating || !title.trim()}
-                onClick={() => {
-                  n.createNom(title.trim());
-                  setTitle('');
-                }}
-                data-testid="noms-create-btn"
-              >
-                Start a nom
-              </IonButton>
-            </div>
-          ) : (
+          <div className="noms-create">
+            <IonInput
+              label="New nom (e.g. Friday dinner)"
+              labelPlacement="stacked"
+              value={title}
+              onIonInput={(e) => setTitle(e.detail.value ?? '')}
+              data-testid="noms-title"
+            />
+            <IonButton
+              disabled={n.creating || !title.trim()}
+              onClick={() => {
+                n.createNom(title.trim());
+                setTitle('');
+              }}
+              data-testid="noms-create-btn"
+            >
+              Start a nom
+            </IonButton>
+          </div>
+          {!n.paired && (
             <Prompt testid="noms-unpaired">
-              Pair with your partner to start new noms — head to “Your partner”.
+              Pair with your partner (in “Your partner”) so your noms are shared.
             </Prompt>
           )}
           {n.noms.length === 0 ? (

@@ -33,9 +33,12 @@ describe('NomsPage', () => {
     expect(screen.getByTestId('noms-signin')).toBeInTheDocument();
   });
 
-  it('prompts pairing when signed in but unpaired', () => {
+  it('lets an unpaired user create a nom (form shown) with a pairing hint', () => {
     useList.mockReturnValue({ ...base, paired: false });
     render1();
+    // The create form is available even when unpaired...
+    expect(screen.getByTestId('noms-create-btn')).toBeInTheDocument();
+    // ...alongside a nudge to pair so noms are shared.
     expect(screen.getByTestId('noms-unpaired')).toBeInTheDocument();
   });
 
