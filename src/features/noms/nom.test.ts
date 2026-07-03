@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { withOption, isSelected, nomSummary } from './nom';
+import { withOption, withoutOption, pickRandomOption, isSelected, nomSummary } from './nom';
 import type { Nom } from './types';
 
 const nom = (over: Partial<Nom>): Nom => ({
@@ -34,5 +34,26 @@ describe('nomSummary', () => {
     expect(nomSummary(nom({ optionPlaceIds: ['a'] }))).toBe('1 option');
     expect(nomSummary(nom({ optionPlaceIds: ['a', 'b'] }))).toBe('2 options');
     expect(nomSummary(nom({ status: 'SELECTED', selectedPlaceId: 'a' }))).toBe('Selected');
+  });
+});
+
+describe('withoutOption', () => {
+  it('removes the given id and leaves the rest', () => {
+    expect(withoutOption(nom({ optionPlaceIds: ['a', 'b', 'c'] }), 'b')).toEqual(['a', 'c']);
+  });
+  it('is a no-op when the id is absent', () => {
+    expect(withoutOption(nom({ optionPlaceIds: ['a'] }), 'z')).toEqual(['a']);
+  });
+});
+
+describe('pickRandomOption', () => {
+  it('picks by the injected fraction (deterministic)', () => {
+    const n = nom({ optionPlaceIds: ['a', 'b', 'c'] });
+    expect(pickRandomOption(n, 0)).toBe('a');
+    expect(pickRandomOption(n, 0.5)).toBe('b');
+    expect(pickRandomOption(n, 0.99)).toBe('c');
+  });
+  it('returns null when there are no options', () => {
+    expect(pickRandomOption(nom({ optionPlaceIds: [] }), 0.5)).toBeNull();
   });
 });

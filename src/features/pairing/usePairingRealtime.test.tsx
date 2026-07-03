@@ -3,13 +3,19 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { ReactNode } from 'react';
 
-const subs = vi.hoisted(() => ({ onCreate: vi.fn(), onUpdate: vi.fn(), unsub: vi.fn() }));
+const subs = vi.hoisted(() => ({
+  onCreate: vi.fn(),
+  onUpdate: vi.fn(),
+  onDelete: vi.fn(),
+  unsub: vi.fn(),
+}));
 vi.mock('../../lib/dataClient', () => ({
   dataClient: {
     models: {
       Pairing: {
         onCreate: () => ({ subscribe: subs.onCreate }),
         onUpdate: () => ({ subscribe: subs.onUpdate }),
+        onDelete: () => ({ subscribe: subs.onDelete }),
       },
     },
   },
@@ -28,6 +34,7 @@ describe('usePairingRealtime', () => {
     qc = new QueryClient();
     subs.onCreate.mockReturnValue({ unsubscribe: subs.unsub });
     subs.onUpdate.mockReturnValue({ unsubscribe: subs.unsub });
+    subs.onDelete.mockReturnValue({ unsubscribe: subs.unsub });
   });
 
   it('does not subscribe when disabled', () => {
@@ -46,6 +53,6 @@ describe('usePairingRealtime', () => {
   it('cleans up subscriptions on unmount', () => {
     const { unmount } = renderHook(() => usePairingRealtime(true), { wrapper });
     unmount();
-    expect(subs.unsub).toHaveBeenCalledTimes(2);
+    expect(subs.unsub).toHaveBeenCalledTimes(3);
   });
 });

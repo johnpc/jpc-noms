@@ -28,3 +28,8 @@ export function upsertNom(list: Nom[] | undefined, nom: Nom): Nom[] {
   next[idx] = nom;
   return next;
 }
+
+/** Drop a nom from the list by id — the pure core of the onDelete subscription. */
+export function removeNom(list: Nom[] | undefined, id: string): Nom[] {
+  return (list ?? []).filter((n) => n.id !== id);
+}

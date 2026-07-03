@@ -1,22 +1,14 @@
 /**
- * Mutations that update a shared nom (add an option, mark selected). Either
- * partner can call these — the nom is multi-owner. Writes go via userPool; the
- * ['noms'] cache is invalidated on success (and the subscription refreshes the
- * partner's view too).
+ * Core nom mutations: add an option, mark selected. Either partner can call
+ * these — the nom is multi-owner. Writes go via userPool; the ['noms'] cache is
+ * invalidated on success (and the subscription refreshes the partner's view).
+ * Lifecycle actions (remove/reopen/delete) live in nomLifecycle.ts.
  */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { dataClient } from '../../lib/dataClient';
 import { withOption } from './nom';
+import { AUTH, type Actor } from './nomWrite';
 import type { Nom } from './types';
-
-const AUTH = { authMode: 'userPool' } as const;
-
-// Actor identity stamped on every write so the push Lambda knows who acted
-// (to notify the OTHER member) and what to say.
-interface Actor {
-  sub: string;
-  label: string;
-}
 
 /** Add a restaurant to a nom's options. */
 export function useAddOption() {

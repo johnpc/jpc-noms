@@ -8,6 +8,18 @@ export function withOption(nom: Nom, placeId: string): string[] {
     : [...nom.optionPlaceIds, placeId];
 }
 
+/** Remove a place id from a nom's options. Returns the next list. */
+export function withoutOption(nom: Nom, placeId: string): string[] {
+  return nom.optionPlaceIds.filter((id) => id !== placeId);
+}
+
+/** Pick one option at random. `rand` in [0,1) is injected for determinism. */
+export function pickRandomOption(nom: Nom, rand: number): string | null {
+  const opts = nom.optionPlaceIds;
+  if (opts.length === 0) return null;
+  return opts[Math.floor(rand * opts.length)] ?? opts[opts.length - 1];
+}
+
 /** True once a nom has a real selection. */
 export function isSelected(nom: Nom): boolean {
   return nom.status === 'SELECTED' && !!nom.selectedPlaceId;

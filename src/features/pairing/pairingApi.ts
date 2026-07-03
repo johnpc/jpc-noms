@@ -65,3 +65,14 @@ export function usePairByScan() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['pairing'] }),
   });
 }
+
+/** Undo a pairing (delete it). Both apps drop back to unpaired via the subscription. */
+export function useUnpair() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (pairingId: string) => {
+      await dataClient.models.Pairing.delete({ id: pairingId }, AUTH);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['pairing'] }),
+  });
+}

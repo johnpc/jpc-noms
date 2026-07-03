@@ -10,16 +10,13 @@ const h = vi.hoisted(() => ({
   },
   noms: { data: [] as Nom[], isLoading: false },
   rotation: { data: [] as { googlePlaceId: string }[] },
-  add: vi.fn(),
-  select: vi.fn(),
+  actions: { add: vi.fn(), select: vi.fn(), busy: false } as Record<string, unknown>,
+  useNomActions: vi.fn(),
   realtime: vi.fn(),
 }));
 vi.mock('../auth/useAuth', () => ({ useAuth: () => h.auth }));
 vi.mock('./nomsApi', () => ({ useNoms: () => h.noms }));
-vi.mock('./nomMutations', () => ({
-  useAddOption: () => ({ mutate: h.add, isPending: false }),
-  useSelectOption: () => ({ mutate: h.select, isPending: false }),
-}));
+vi.mock('./useNomActions', () => ({ useNomActions: h.useNomActions }));
 vi.mock('./useNomsRealtime', () => ({ useNomsRealtime: h.realtime }));
 vi.mock('../rotation/rotationApi', () => ({ useRotation: () => h.rotation }));
 
@@ -38,6 +35,7 @@ describe('useNomDetail', () => {
     vi.clearAllMocks();
     h.noms = { data: [nom], isLoading: false };
     h.rotation = { data: [{ googlePlaceId: 'a' }, { googlePlaceId: 'b' }] };
+    h.useNomActions.mockReturnValue(h.actions);
   });
 
   it('offers only rotation places not already an option', () => {
@@ -45,22 +43,16 @@ describe('useNomDetail', () => {
     expect(result.current.addable).toEqual(['b']);
   });
 
-  const actor = { sub: 'u1', label: 'me@x.com' };
-
-  it('adds an option to the found nom, stamped with the actor', () => {
+  it('passes the found nom + actor to useNomActions and spreads its actions', () => {
     const { result } = renderHook(() => useNomDetail('n1'));
-    result.current.add('b');
-    expect(h.add).toHaveBeenCalledWith({ nom, placeId: 'b', actor });
-  });
-
-  it('selects with the actor (sub + email label)', () => {
-    const { result } = renderHook(() => useNomDetail('n1'));
-    result.current.select('a');
-    expect(h.select).toHaveBeenCalledWith({ nom, placeId: 'a', actor });
+    expect(h.useNomActions).toHaveBeenCalledWith(nom, { sub: 'u1', label: 'me@x.com' });
+    expect(result.current.add).toBe(h.actions.add);
+    expect(result.current.busy).toBe(false);
   });
 
   it('exposes no nom when the id is unknown', () => {
     const { result } = renderHook(() => useNomDetail('missing'));
     expect(result.current.nom).toBeUndefined();
+    expect(h.useNomActions).toHaveBeenCalledWith(undefined, expect.anything());
   });
 });

@@ -34,9 +34,21 @@ export function PairingPage() {
             <p data-testid="pairing-signin">Sign in to pair with your partner.</p>
           </IonText>
         ) : p.loading ? null : view.kind === 'active' ? (
-          <IonText>
-            <p data-testid="pairing-active">Paired with {view.partnerEmail} 🎉</p>
-          </IonText>
+          <>
+            <IonText>
+              <p data-testid="pairing-active">Paired with {view.partnerEmail} 🎉</p>
+            </IonText>
+            <IonButton
+              expand="block"
+              fill="clear"
+              color="danger"
+              disabled={p.unpairing}
+              onClick={() => p.unpair(view.pairingId)}
+              data-testid="pairing-unpair-btn"
+            >
+              Unpair
+            </IonButton>
+          </>
         ) : (
           <>
             {/* Primary path: scan to connect — works from any unpaired state. */}

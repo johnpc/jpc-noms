@@ -6,10 +6,20 @@ interface Props {
   actionLabel: string;
   onAction: () => void;
   disabled: boolean;
+  /** Optional secondary action (e.g. "Remove"). */
+  secondaryLabel?: string;
+  onSecondary?: () => void;
 }
 
-/** Resolves a place id to a card with a single action (Add or Select). */
-export function NomOptionCard({ googlePlaceId, actionLabel, onAction, disabled }: Props) {
+/** Resolves a place id to a card with a primary action + optional secondary. */
+export function NomOptionCard({
+  googlePlaceId,
+  actionLabel,
+  onAction,
+  disabled,
+  secondaryLabel,
+  onSecondary,
+}: Props) {
   const { data: place, isLoading } = usePlace(googlePlaceId);
   if (isLoading || !place) return null;
   return (
@@ -18,6 +28,8 @@ export function NomOptionCard({ googlePlaceId, actionLabel, onAction, disabled }
       actionLabel={actionLabel}
       actionDisabled={disabled}
       onAction={onAction}
+      secondaryLabel={secondaryLabel}
+      onSecondary={onSecondary}
     />
   );
 }

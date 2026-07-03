@@ -20,9 +20,14 @@ export function usePairingRealtime(enabled: boolean): void {
       next: bump,
       error: () => {},
     });
+    const deleted = dataClient.models.Pairing.onDelete({ authMode: 'userPool' }).subscribe({
+      next: bump,
+      error: () => {},
+    });
     return () => {
       created.unsubscribe();
       updated.unsubscribe();
+      deleted.unsubscribe();
     };
   }, [enabled, qc]);
 }

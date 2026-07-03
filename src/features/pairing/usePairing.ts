@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { useAuth } from '../auth/useAuth';
-import { usePairing as usePairingQuery, useCreatePairing, useAcceptPairing } from './pairingApi';
+import {
+  usePairing as usePairingQuery,
+  useCreatePairing,
+  useAcceptPairing,
+  useUnpair,
+} from './pairingApi';
 import { usePairingRealtime } from './usePairingRealtime';
 import { pairingView } from './pairing';
 
@@ -16,6 +21,7 @@ export function usePairingFlow() {
   const query = usePairingQuery(signedIn);
   const create = useCreatePairing();
   const accept = useAcceptPairing();
+  const unpair = useUnpair();
   usePairingRealtime(signedIn);
   const [inviteEmail, setInviteEmail] = useState('');
 
@@ -31,5 +37,7 @@ export function usePairingFlow() {
     inviting: create.isPending,
     accept: (pairingId: string) => accept.mutate(pairingId),
     accepting: accept.isPending,
+    unpair: (pairingId: string) => unpair.mutate(pairingId),
+    unpairing: unpair.isPending,
   };
 }

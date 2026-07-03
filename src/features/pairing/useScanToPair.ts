@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../auth/useAuth';
 import { usePairByScan } from './pairingApi';
 import { scanQr } from './scanner';
+import { success } from '../../lib/haptics';
 import { decodePairToken, encodePairToken, type PairToken } from './qrToken';
 
 /**
@@ -29,6 +30,7 @@ export function useScanToPair() {
     }
     try {
       await pair.mutateAsync({ me, partner });
+      void success();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Pairing failed.');
     }

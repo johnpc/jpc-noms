@@ -17,6 +17,8 @@ const base = {
   inviting: false,
   accept: vi.fn(),
   accepting: false,
+  unpair: vi.fn(),
+  unpairing: false,
 };
 
 describe('PairingPage', () => {
@@ -53,9 +55,14 @@ describe('PairingPage', () => {
     expect(base.accept).toHaveBeenCalledWith('p1');
   });
 
-  it('shows the partner when active', () => {
-    useFlow.mockReturnValue({ ...base, view: { kind: 'active', partnerEmail: 'b@x.com' } });
+  it('shows the partner + an unpair button when active', () => {
+    useFlow.mockReturnValue({
+      ...base,
+      view: { kind: 'active', partnerEmail: 'b@x.com', pairingId: 'p1' },
+    });
     render(<PairingPage />);
     expect(screen.getByTestId('pairing-active')).toHaveTextContent('b@x.com');
+    fireEvent.click(screen.getByTestId('pairing-unpair-btn'));
+    expect(base.unpair).toHaveBeenCalledWith('p1');
   });
 });
