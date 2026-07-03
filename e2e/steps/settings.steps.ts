@@ -36,3 +36,9 @@ Then('their signed-in email is shown', async ({ page }) => {
 Then('a sign-out control is available', async ({ page }) => {
   await expect(page.getByTestId('account-signout-btn')).toBeVisible();
 });
+
+Then('a support email link is shown', async ({ page }) => {
+  const link = page.getByTestId('support-email');
+  await expect(link).toBeVisible();
+  await expect(link).toHaveAttribute('href', /^mailto:/);
+});

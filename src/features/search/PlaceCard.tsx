@@ -1,6 +1,6 @@
 import { IonCard, IonCardContent, IonButton } from '@ionic/react';
 import type { Place } from './types';
-import { placeName, placeBlurb, priceLabel } from './place';
+import { placeName, placeBlurb, priceLabel, placeAddress } from './place';
 import { PlacePhoto } from './PlacePhoto';
 import './place.css';
 
@@ -16,6 +16,7 @@ interface Props {
 export function PlaceCard({ place, actionLabel, onAction, actionDisabled }: Props) {
   const price = priceLabel(place);
   const blurb = placeBlurb(place);
+  const address = placeAddress(place);
   return (
     <IonCard className="place-card" data-testid="place-card">
       <PlacePhoto place={place} />
@@ -24,6 +25,11 @@ export function PlaceCard({ place, actionLabel, onAction, actionDisabled }: Prop
           <h2 className="place-card__name">{placeName(place)}</h2>
           {price && <span className="place-card__price">{price}</span>}
         </div>
+        {address && (
+          <p className="place-card__address" data-testid="place-card-address">
+            {address}
+          </p>
+        )}
         {blurb && <p className="place-card__blurb">{blurb}</p>}
         {actionLabel && (
           <IonButton

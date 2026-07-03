@@ -45,6 +45,12 @@
   font-weight: 600;
 }
 
+.place-card__address {
+  margin: 4px 0 0;
+  color: var(--sp-text-muted);
+  font-size: 0.85rem;
+}
+
 .place-card__blurb {
   margin: 6px 0 12px;
   color: var(--sp-text-muted);

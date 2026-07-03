@@ -18,3 +18,8 @@ Feature: Settings — appearance
     When the test user opens the settings page
     Then their signed-in email is shown
     And a sign-out control is available
+
+  # Support contact is available to anyone.
+  Scenario: A visitor finds the support email
+    Given a visitor opens the settings page
+    Then a support email link is shown

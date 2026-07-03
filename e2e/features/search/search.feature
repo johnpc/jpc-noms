@@ -7,6 +7,7 @@ Feature: Restaurant search and rotation
   Scenario: Restaurants show by default on open
     Given a visitor opens the search page
     Then at least one restaurant card is visible
+    And a restaurant card shows a street address
 
   # Guest-browsable: search works with no account. Results are REAL Google
   # Places data for the query, rendered as place cards.

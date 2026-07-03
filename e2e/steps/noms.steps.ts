@@ -40,3 +40,7 @@ When('the test user selects the first option', async ({ page }) => {
 Then('the nom shows it is selected', async ({ page }) => {
   await expect(page.getByTestId('nom-selected')).toBeVisible({ timeout: 20_000 });
 });
+
+Then('the start-a-nom control is available', async ({ page }) => {
+  await expect(page.getByTestId('noms-create-btn')).toBeVisible({ timeout: 20_000 });
+});

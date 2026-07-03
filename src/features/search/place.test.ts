@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { placeName, placeBlurb, priceLabel } from './place';
+import { placeName, placeBlurb, priceLabel, placeAddress } from './place';
 import type { Place } from './types';
 
 const base: Place = { id: 'p1', name: 'places/p1', displayName: { text: "Joe's Pizza" } };
@@ -19,11 +19,20 @@ describe('placeBlurb', () => {
       'Cozy slice shop',
     );
   });
-  it('falls back to the address when no summaries', () => {
-    expect(placeBlurb({ ...base, formattedAddress: '1 Main St' })).toBe('1 Main St');
+  it('does NOT fall back to the address (that renders on its own line)', () => {
+    expect(placeBlurb({ ...base, formattedAddress: '1 Main St' })).toBe('');
   });
-  it('is empty when nothing is available', () => {
+  it('is empty when no summaries are available', () => {
     expect(placeBlurb(base)).toBe('');
+  });
+});
+
+describe('placeAddress', () => {
+  it('returns the formatted address when present', () => {
+    expect(placeAddress({ ...base, formattedAddress: '1 Main St' })).toBe('1 Main St');
+  });
+  it('is empty when absent', () => {
+    expect(placeAddress(base)).toBe('');
   });
 });
 

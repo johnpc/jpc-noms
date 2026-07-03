@@ -21,6 +21,10 @@ Then('at least one restaurant card is visible', async ({ page }) => {
   expect(await page.getByTestId('place-card').count()).toBeGreaterThanOrEqual(1);
 });
 
+Then('a restaurant card shows a street address', async ({ page }) => {
+  await expect(page.getByTestId('place-card-address').first()).toBeVisible({ timeout: 20_000 });
+});
+
 When('they tap the {string} suggestion', async ({ page }, label: string) => {
   await page.getByTestId(`suggestion-${label}`).click();
 });
