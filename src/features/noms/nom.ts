@@ -31,3 +31,9 @@ export function nomSummary(nom: Nom): string {
   const n = nom.optionPlaceIds.length;
   return n === 0 ? 'No options yet' : `${n} option${n === 1 ? '' : 's'}`;
 }
+
+/** "Emily picked this" style credit for the selected banner, or '' if unknown. */
+export function selectedByLabel(nom: Nom): string {
+  const who = nom.selectedBy?.trim();
+  return who ? `${who} picked this` : '';
+}
