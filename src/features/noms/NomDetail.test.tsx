@@ -5,6 +5,7 @@ import type { Nom } from './types';
 const useDetail = vi.hoisted(() => vi.fn());
 vi.mock('./useNomDetail', () => ({ useNomDetail: useDetail }));
 vi.mock('react-router-dom', () => ({ useParams: () => ({ id: 'n1' }) }));
+vi.mock('./NomFooterActions', () => ({ NomFooterActions: () => <div data-testid="nom-footer" /> }));
 vi.mock('./NomOptionCard', () => ({
   NomOptionCard: ({
     googlePlaceId,
@@ -35,9 +36,12 @@ const base = {
   nom,
   addable: ['b'],
   add: vi.fn(),
-  adding: false,
   select: vi.fn(),
-  selecting: false,
+  remove: vi.fn(),
+  reopen: vi.fn(),
+  decideForUs: vi.fn(),
+  del: vi.fn(),
+  busy: false,
 };
 
 describe('NomDetail', () => {

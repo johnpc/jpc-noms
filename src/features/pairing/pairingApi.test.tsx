@@ -8,15 +8,22 @@ const m = vi.hoisted(() => ({
   create: vi.fn(),
   accept: vi.fn(),
   pairingCreate: vi.fn(),
+  pairingDelete: vi.fn(),
 }));
 vi.mock('../../lib/dataClient', () => ({
   dataClient: {
-    models: { Pairing: { list: m.list, create: m.pairingCreate } },
+    models: { Pairing: { list: m.list, create: m.pairingCreate, delete: m.pairingDelete } },
     mutations: { invitePartner: m.create, acceptInvite: m.accept },
   },
 }));
 
-import { usePairing, useCreatePairing, useAcceptPairing, usePairByScan } from './pairingApi';
+import {
+  usePairing,
+  useCreatePairing,
+  useAcceptPairing,
+  usePairByScan,
+  useUnpair,
+} from './pairingApi';
 
 function wrapper({ children }: { children: ReactNode }) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -86,5 +93,14 @@ describe('pairingApi', () => {
       }),
     ).rejects.toThrow('own code');
     expect(m.pairingCreate).not.toHaveBeenCalled();
+  });
+
+  it('useUnpair deletes the pairing by id', async () => {
+    m.pairingDelete.mockResolvedValue({});
+    const { result } = renderHook(() => useUnpair(), { wrapper });
+    await act(async () => {
+      await result.current.mutateAsync('p1');
+    });
+    expect(m.pairingDelete).toHaveBeenCalledWith({ id: 'p1' }, { authMode: 'userPool' });
   });
 });

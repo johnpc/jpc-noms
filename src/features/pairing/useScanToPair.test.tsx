@@ -9,6 +9,7 @@ const h = vi.hoisted(() => ({
 }));
 vi.mock('../auth/useAuth', () => ({ useAuth: () => h.auth }));
 vi.mock('./scanner', () => ({ scanQr: h.scanQr }));
+vi.mock('../../lib/haptics', () => ({ success: vi.fn() }));
 vi.mock('./pairingApi', () => ({
   usePairByScan: () => ({ mutateAsync: h.mutateAsync, isPending: false }),
 }));

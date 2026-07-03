@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { dataClient } from '../../lib/dataClient';
-import { nomFromRecord, upsertNom } from './nomRecord';
+import { nomFromRecord, upsertNom, removeNom } from './nomRecord';
 import type { Nom } from './types';
 
 /**
@@ -26,9 +26,15 @@ export function useNomsRealtime(enabled: boolean): void {
       next: apply,
       error: () => {},
     });
+    const deleted = dataClient.models.Nom.onDelete({ authMode: 'userPool' }).subscribe({
+      next: (raw: Record<string, unknown>) =>
+        qc.setQueryData<Nom[]>(['noms'], (list) => removeNom(list, String(raw.id))),
+      error: () => {},
+    });
     return () => {
       created.unsubscribe();
       updated.unsubscribe();
+      deleted.unsubscribe();
     };
   }, [enabled, qc]);
 }

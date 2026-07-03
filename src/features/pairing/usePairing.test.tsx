@@ -12,6 +12,7 @@ vi.mock('./pairingApi', () => ({
   usePairing: () => h.query,
   useCreatePairing: () => ({ mutate: h.create, isPending: false }),
   useAcceptPairing: () => ({ mutate: h.accept, isPending: false }),
+  useUnpair: () => ({ mutate: vi.fn(), isPending: false }),
 }));
 vi.mock('./usePairingRealtime', () => ({ usePairingRealtime: vi.fn() }));
 

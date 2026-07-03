@@ -35,10 +35,12 @@ describe('pairingView', () => {
     expect(pairingView(p({ status: 'ACTIVE', members: ['u1', 'u2'] }), 'a@x.com')).toEqual({
       kind: 'active',
       partnerEmail: 'b@x.com',
+      pairingId: 'p1',
     });
     expect(pairingView(p({ status: 'ACTIVE', members: ['u1', 'u2'] }), 'b@x.com')).toEqual({
       kind: 'active',
       partnerEmail: 'a@x.com',
+      pairingId: 'p1',
     });
   });
 });

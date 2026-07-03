@@ -10,10 +10,20 @@ interface Props {
   actionLabel?: string;
   onAction?: () => void;
   actionDisabled?: boolean;
+  /** Optional secondary action (e.g. "Remove") shown as a subtle text button. */
+  secondaryLabel?: string;
+  onSecondary?: () => void;
 }
 
-/** Render-only restaurant card. Shows name, price, a blurb, and an optional action. */
-export function PlaceCard({ place, actionLabel, onAction, actionDisabled }: Props) {
+/** Render-only restaurant card. Shows name, price, a blurb, and optional actions. */
+export function PlaceCard({
+  place,
+  actionLabel,
+  onAction,
+  actionDisabled,
+  secondaryLabel,
+  onSecondary,
+}: Props) {
   const price = priceLabel(place);
   const blurb = placeBlurb(place);
   const address = placeAddress(place);
@@ -40,6 +50,18 @@ export function PlaceCard({ place, actionLabel, onAction, actionDisabled }: Prop
             data-testid="place-card-action"
           >
             {actionLabel}
+          </IonButton>
+        )}
+        {secondaryLabel && (
+          <IonButton
+            size="small"
+            fill="clear"
+            color="medium"
+            onClick={onSecondary}
+            disabled={actionDisabled}
+            data-testid="place-card-secondary"
+          >
+            {secondaryLabel}
           </IonButton>
         )}
       </IonCardContent>
