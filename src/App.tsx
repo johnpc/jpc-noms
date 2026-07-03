@@ -5,6 +5,7 @@ import { queryClient } from './lib/queryClient';
 import { AuthProvider } from './features/auth/AuthProvider';
 import { AppRoutes } from './AppRoutes';
 import { usePushRegistration } from './features/push/usePushRegistration';
+import { useTheme } from './features/settings/useTheme';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -15,8 +16,9 @@ import '@ionic/react/css/padding.css';
 import '@ionic/react/css/flex-utils.css';
 import '@ionic/react/css/display.css';
 
-/* Dark mode follows the system setting */
-import '@ionic/react/css/palettes/dark.system.css';
+/* Dark mode is class-toggled (.ion-palette-dark on <html>) so it's
+ * configurable in Settings — see features/settings/useTheme. */
+import '@ionic/react/css/palettes/dark.class.css';
 
 /* Brand fonts (bundled) + design tokens */
 import './theme/fonts';
@@ -24,8 +26,9 @@ import './theme/variables.css';
 
 setupIonicReact();
 
-/** Registers this device for push once signed in (native only). Renders nothing. */
-const PushRegistrar: React.FC = () => {
+/** Applies the saved theme (and registers push once signed in). Renders nothing. */
+const AppEffects: React.FC = () => {
+  useTheme();
   usePushRegistration();
   return null;
 };
@@ -34,7 +37,7 @@ const App: React.FC = () => (
   <IonApp>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <PushRegistrar />
+        <AppEffects />
         <IonReactRouter>
           <AppRoutes />
         </IonReactRouter>

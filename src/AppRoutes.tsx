@@ -8,6 +8,7 @@ import { RotationPage } from './features/rotation/RotationPage';
 import { PairingPage } from './features/pairing/PairingPage';
 import { NomsPage } from './features/noms/NomsPage';
 import { NomDetail } from './features/noms/NomDetail';
+import { SettingsPage } from './features/settings/SettingsPage';
 
 /**
  * App routes. Home is the shell; pairing/noms land in their own slices and
@@ -33,6 +34,9 @@ export function AppRoutes() {
       </Route>
       <Route exact path="/noms/:id">
         <NomDetail />
+      </Route>
+      <Route exact path="/settings">
+        <SettingsPage />
       </Route>
       <Route exact path="/signin">
         <SignIn />
