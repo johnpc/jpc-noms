@@ -22,3 +22,17 @@ Then('the app is in dark mode', async ({ page }) => {
 Then('the app is in light mode', async ({ page }) => {
   await expect(page.locator('html')).not.toHaveClass(/ion-palette-dark/);
 });
+
+// `the test user signs in` is defined in search.steps.ts (shared step).
+
+When('the test user opens the settings page', async ({ page }) => {
+  await page.goto('/settings');
+});
+
+Then('their signed-in email is shown', async ({ page }) => {
+  await expect(page.getByTestId('account-email')).toBeVisible({ timeout: 20_000 });
+});
+
+Then('a sign-out control is available', async ({ page }) => {
+  await expect(page.getByTestId('account-signout-btn')).toBeVisible();
+});

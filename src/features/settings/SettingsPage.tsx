@@ -15,6 +15,7 @@ import {
 } from '@ionic/react';
 import { useTheme } from './useTheme';
 import { THEME_CHOICES, type ThemeChoice } from './theme';
+import { AccountSection } from './AccountSection';
 
 /** Settings — appearance (light/dark/system) today; grows as needed. */
 export function SettingsPage() {
@@ -47,6 +48,7 @@ export function SettingsPage() {
             </IonSegment>
           </IonItem>
         </IonList>
+        <AccountSection />
       </IonContent>
     </IonPage>
   );
