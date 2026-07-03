@@ -1,13 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+const send = vi.hoisted(() => vi.fn());
+vi.mock('@aws-sdk/client-secrets-manager', () => ({
+  SecretsManagerClient: vi.fn(() => ({ send })),
+  GetSecretValueCommand: vi.fn((input) => ({ input })),
+}));
+
 import { searchText, placeDetail, photoUri } from './googleApi';
 
 describe('googleApi edges', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
-    process.env.GOOGLE_PLACES_API_KEY = 'test-key';
+    process.env.GOOGLE_SECRET_ARN = 'arn:secret:google';
+    // The key is cached per module after the first fetch; provide it every time.
+    send.mockResolvedValue({ SecretString: JSON.stringify({ GOOGLE_PLACES_API_KEY: 'test-key' }) });
   });
 
-  it('searchText posts a text query and returns places', async () => {
+  it('searchText posts a text query with the secret key and returns places', async () => {
     const fetchMock = vi
       .spyOn(globalThis, 'fetch')
       .mockResolvedValue({ json: async () => ({ places: [{ id: 'p1' }] }) } as Response);
@@ -16,6 +25,9 @@ describe('googleApi edges', () => {
     const [url, init] = fetchMock.mock.calls[0];
     expect(String(url)).toContain('places:searchText');
     expect((init as RequestInit).method).toBe('POST');
+    expect((init as { headers: Record<string, string> }).headers['X-Goog-Api-Key']).toBe(
+      'test-key',
+    );
   });
 
   it('searchText returns [] when Google omits places', async () => {
@@ -36,10 +48,5 @@ describe('googleApi edges', () => {
     expect(await photoUri('ph/1')).toBe('https://img/1');
     f.mockResolvedValueOnce({ json: async () => ({}) } as Response);
     expect(await photoUri('ph/2')).toBe('');
-  });
-
-  it('throws when the API key is unset', async () => {
-    delete process.env.GOOGLE_PLACES_API_KEY;
-    await expect(placeDetail('p')).rejects.toThrow('GOOGLE_PLACES_API_KEY not set');
   });
 });
