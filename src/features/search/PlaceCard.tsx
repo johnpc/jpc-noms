@@ -1,6 +1,7 @@
 import { IonCard, IonCardContent, IonButton } from '@ionic/react';
 import type { Place } from './types';
 import { placeName, placeBlurb, priceLabel } from './place';
+import { PlacePhoto } from './PlacePhoto';
 import './place.css';
 
 interface Props {
@@ -17,6 +18,7 @@ export function PlaceCard({ place, actionLabel, onAction, actionDisabled }: Prop
   const blurb = placeBlurb(place);
   return (
     <IonCard className="place-card" data-testid="place-card">
+      <PlacePhoto place={place} />
       <IonCardContent>
         <div className="place-card__head">
           <h2 className="place-card__name">{placeName(place)}</h2>

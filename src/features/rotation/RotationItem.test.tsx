@@ -2,7 +2,10 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const usePlaceMock = vi.hoisted(() => vi.fn());
-vi.mock('../search/searchApi', () => ({ usePlace: usePlaceMock }));
+vi.mock('../search/searchApi', () => ({
+  usePlace: usePlaceMock,
+  usePlaceImage: () => ({ data: null }),
+}));
 
 import { RotationItem } from './RotationItem';
 

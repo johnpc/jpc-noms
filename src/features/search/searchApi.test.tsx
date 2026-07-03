@@ -3,13 +3,19 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { ReactNode } from 'react';
 
-const q = vi.hoisted(() => ({ search: vi.fn(), getPlace: vi.fn() }));
+const q = vi.hoisted(() => ({ search: vi.fn(), getPlace: vi.fn(), getImage: vi.fn() }));
 vi.mock('../../lib/dataClient', () => ({
-  dataClient: { queries: { searchGooglePlaces: q.search, getGooglePlace: q.getPlace } },
+  dataClient: {
+    queries: {
+      searchGooglePlaces: q.search,
+      getGooglePlace: q.getPlace,
+      getGooglePlaceImage: q.getImage,
+    },
+  },
   readAuthMode: () => Promise.resolve('identityPool'),
 }));
 
-import { useSearchPlaces, usePlace } from './searchApi';
+import { useSearchPlaces, usePlace, usePlaceImage } from './searchApi';
 
 function wrapper({ children }: { children: ReactNode }) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -46,6 +52,22 @@ describe('searchApi', () => {
 
   it('usePlace is disabled without an id', () => {
     const { result } = renderHook(() => usePlace(undefined), { wrapper });
+    expect(result.current.fetchStatus).toBe('idle');
+  });
+
+  it('usePlaceImage resolves a photo id to a uri', async () => {
+    q.getImage.mockResolvedValue({ data: { photoUri: 'https://img/1' } });
+    const { result } = renderHook(() => usePlaceImage('ph/1'), { wrapper });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toBe('https://img/1');
+    expect(q.getImage).toHaveBeenCalledWith(
+      { photoId: 'ph/1', widthPx: 800, heightPx: 500 },
+      { authMode: 'identityPool' },
+    );
+  });
+
+  it('usePlaceImage is disabled without a photo id', () => {
+    const { result } = renderHook(() => usePlaceImage(undefined), { wrapper });
     expect(result.current.fetchStatus).toBe('idle');
   });
 });
