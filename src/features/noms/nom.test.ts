@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { withOption, withoutOption, pickRandomOption, isSelected, nomSummary } from './nom';
+import {
+  withOption,
+  withoutOption,
+  pickRandomOption,
+  isSelected,
+  nomSummary,
+  selectedByLabel,
+} from './nom';
 import type { Nom } from './types';
 
 const nom = (over: Partial<Nom>): Nom => ({
@@ -55,5 +62,14 @@ describe('pickRandomOption', () => {
   });
   it('returns null when there are no options', () => {
     expect(pickRandomOption(nom({ optionPlaceIds: [] }), 0.5)).toBeNull();
+  });
+});
+
+describe('selectedByLabel', () => {
+  it('credits who picked', () => {
+    expect(selectedByLabel(nom({ selectedBy: 'Emily' }))).toBe('Emily picked this');
+  });
+  it('is empty when unknown', () => {
+    expect(selectedByLabel(nom({}))).toBe('');
   });
 });

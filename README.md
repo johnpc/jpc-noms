@@ -25,21 +25,26 @@ together.
 - 🔔 **Real push notifications.** Your partner adds Joe's Pizza to tonight's nom → your phone buzzes.
 - 🚗 **Winner routes to the car.** Mark a nom selected and Noms sends the restaurant's address to your
   Tesla's navigation (via Tessie) — no copy-paste, no "what's the address again?".
-- 👫 **Pair once.** Set up your household of two; every nom is automatically shared between you.
+- 👫 **Pair in one scan.** Point one phone's camera at your partner's QR code and you're connected —
+  both apps update instantly and buzz. (Email invite works too.)
+- 🎲 **Can't decide? "Decide for us"** picks one of the nom's options at random — and still routes the
+  winner to the car.
 
 ## Features
 
-| Feature                                    | Status |
-| ------------------------------------------ | ------ |
-| Guest-browsable restaurant search + photos | ✅     |
-| Save favorites to a rotation               | ✅     |
-| Fixed partner pairing                      | ✅     |
-| Collaborative noms (add / select, live)    | ✅     |
-| APNs push on partner activity              | ✅     |
-| Tesla navigation on selection              | ✅     |
-| Dining stats & decision history            | ✅     |
-| Account management (password / delete)     | ✅     |
-| Light / dark theme (Settings)              | ✅     |
+| Feature                                          | Status |
+| ------------------------------------------------ | ------ |
+| Guest-browsable restaurant search + photos       | ✅     |
+| Save favorites to a rotation                     | ✅     |
+| Partner pairing — **QR scan-to-connect** + email | ✅     |
+| Collaborative noms (add / remove / select, live) | ✅     |
+| 🎲 "Decide for us" — random pick from a nom      | ✅     |
+| Re-open / delete a nom; unpair                   | ✅     |
+| APNs push on partner activity + on connect       | ✅     |
+| Tesla navigation on selection                    | ✅     |
+| Dining stats & decision history                  | ✅     |
+| Account management (password / delete)           | ✅     |
+| Light / dark theme (Settings)                    | ✅     |
 
 ## Stack
 
@@ -54,9 +59,12 @@ a DynamoDB-stream Lambda calling the Tessie API. Architecture, quality gates, an
   `getGooglePlace` / `getGooglePlaceImage` trio of Lambda resolvers proxies Places and caches every
   response in a `GoogleApiCache` DynamoDB table (keyed by a stable hash), so repeat lookups are free
   and the app never ships the API key to the client. Photos are hosted image URLs resolved on demand.
+- **Pairing is one scan.** Your QR encodes your Cognito id + email; scanning your partner's creates a
+  single multi-owner `Pairing` with both of you (no server round-trip). A Pairing-stream Lambda pushes
+  "You're paired!" to both. Either can unpair.
 - **A nom is shared, not copied.** The `Nom` model is multi-owner (`members` + `ownersDefinedIn`), so
-  both partners read and write the _same_ row. Edits propagate live over **AppSync subscriptions**,
-  applied straight into the client cache (no refetch) for an instant feel.
+  both partners read and write the _same_ row. Edits (add / remove / select / re-open / delete)
+  propagate live over **AppSync subscriptions**, applied straight into the client cache (no refetch).
 - **Push** rides a DynamoDB stream on the `Nom` table → a Lambda that notifies the _other_ partner via
   **APNs** (SNS) when an option is added or a nom is decided.
 - **The Tesla hand-off** is a second consumer of that stream: when a nom is marked selected, a Lambda

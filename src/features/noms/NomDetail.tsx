@@ -4,7 +4,7 @@ import { useNomDetail } from './useNomDetail';
 import { NomOptionsSection } from './NomOptionsSection';
 import { NomFooterActions } from './NomFooterActions';
 import { NomShell } from './NomShell';
-import { isSelected } from './nom';
+import { isSelected, selectedByLabel } from './nom';
 
 /** One shared nom: its options (either partner can select) + your rotation to add from. */
 export function NomDetail() {
@@ -25,7 +25,12 @@ export function NomDetail() {
     <NomShell title={nom.title || 'Nom'}>
       {selected && (
         <IonText color="success">
-          <p data-testid="nom-selected">Selected — navigation sent to the car 🚗</p>
+          <p data-testid="nom-selected">
+            Selected — navigation sent to the car 🚗
+            {selectedByLabel(nom) && (
+              <span data-testid="nom-selected-by"> · {selectedByLabel(nom)}</span>
+            )}
+          </p>
         </IonText>
       )}
       <NomOptionsSection
