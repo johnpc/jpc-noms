@@ -3,11 +3,22 @@ Feature: Restaurant search and rotation
   I want to search restaurants and save favorites
   So that I can build up a rotation to nominate from later
 
+  # The page isn't empty on load — it runs a default "food" search near the user.
+  Scenario: Restaurants show by default on open
+    Given a visitor opens the search page
+    Then at least one restaurant card is visible
+
   # Guest-browsable: search works with no account. Results are REAL Google
   # Places data for the query, rendered as place cards.
   Scenario: A guest searches for restaurants
     Given a visitor opens the search page
     When they search for "pizza"
+    Then at least one restaurant card is visible
+
+  # Tappable cuisine suggestions run a search without typing.
+  Scenario: A guest taps a cuisine suggestion
+    Given a visitor opens the search page
+    When they tap the "Sushi" suggestion
     Then at least one restaurant card is visible
 
   # Saving requires an account — a guest who tries to save is routed to sign-in.

@@ -4,6 +4,7 @@ import { useGeolocation } from './useGeolocation';
 import { useSearchPlaces } from './searchApi';
 import { useAuth } from '../auth/useAuth';
 import { useAddToRotation, useRotation } from '../rotation/rotationApi';
+import { DEFAULT_QUERY, SEARCH_SUGGESTIONS } from './suggestions';
 
 /**
  * Search-page logic: debounce-free term state, geolocated search, and an
@@ -14,7 +15,8 @@ export function useSearch() {
   const coords = useGeolocation();
   const { status } = useAuth();
   const history = useHistory();
-  const [term, setTerm] = useState('');
+  // Default to a "food" search near the user so the page isn't empty on load.
+  const [term, setTerm] = useState(DEFAULT_QUERY);
 
   const search = useSearchPlaces(coords, term);
   const rotation = useRotation(status === 'authenticated');
@@ -33,6 +35,7 @@ export function useSearch() {
   return {
     term,
     setTerm,
+    suggestions: SEARCH_SUGGESTIONS,
     places: search.data ?? [],
     isLoading: search.isFetching && term.trim().length > 0,
     savedIds,

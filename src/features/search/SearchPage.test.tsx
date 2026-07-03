@@ -11,6 +11,7 @@ import { SearchPage } from './SearchPage';
 const base = {
   term: 'pizza',
   setTerm: vi.fn(),
+  suggestions: ['Pizza', 'Sushi'] as const,
   places: [
     { id: 'p1', name: 'places/p1', displayName: { text: 'Joe' } },
     { id: 'p2', name: 'places/p2', displayName: { text: 'Ann' } },

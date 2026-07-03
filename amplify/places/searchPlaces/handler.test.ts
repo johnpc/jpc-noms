@@ -45,4 +45,12 @@ describe('searchGooglePlaces handler', () => {
     expect(e.writeCache).toHaveBeenCalledWith('p1', expect.any(String));
     expect(e.writeCache).toHaveBeenCalledWith('p2', expect.any(String));
   });
+
+  it('does NOT cache an empty result (guards the transient-miss bug)', async () => {
+    e.readCache.mockResolvedValue(null);
+    e.searchText.mockResolvedValue([]);
+    const out = await call(evt('potbelly'));
+    expect(out).toEqual([]);
+    expect(e.writeCache).not.toHaveBeenCalled();
+  });
 });

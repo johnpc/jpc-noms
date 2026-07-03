@@ -11,6 +11,7 @@ import {
   IonToolbar,
 } from '@ionic/react';
 import { PlaceCard } from './PlaceCard';
+import { SearchSuggestions } from './SearchSuggestions';
 import { useSearch } from './useSearch';
 
 /** Guest-browsable restaurant search. Saving to rotation routes guests to sign-in. */
@@ -34,6 +35,7 @@ export function SearchPage() {
           onIonInput={(e) => s.setTerm(e.detail.value ?? '')}
           data-testid="search-input"
         />
+        <SearchSuggestions suggestions={s.suggestions} onPick={s.setTerm} />
         {s.isLoading && <IonSpinner data-testid="search-spinner" />}
         {!s.isLoading && s.term.trim() && s.places.length === 0 && (
           <IonText color="medium">

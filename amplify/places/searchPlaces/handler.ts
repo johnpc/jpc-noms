@@ -27,8 +27,13 @@ export const handler: Schema['searchGooglePlaces']['functionHandler'] = async (e
   const raw: RawPlace[] = await searchText(input);
   const places = raw.map(toGooglePlace);
 
-  await writeCache(cacheKey, JSON.stringify(places), JSON.stringify(input));
-  await Promise.all(raw.map((p, i) => writeCache(p.id, JSON.stringify(places[i]))));
+  // Never cache an empty result: a transient Google hiccup would otherwise
+  // pin "no results" forever for a query that really does have places
+  // (this was the "potbelly → nothing" bug). Only cache real hits.
+  if (places.length > 0) {
+    await writeCache(cacheKey, JSON.stringify(places), JSON.stringify(input));
+    await Promise.all(raw.map((p, i) => writeCache(p.id, JSON.stringify(places[i]))));
+  }
 
   return places;
 };
