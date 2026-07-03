@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const client = vi.hoisted(() => ({
   currentEmail: vi.fn(),
+  currentSub: vi.fn(),
   signIn: vi.fn(),
   signUp: vi.fn(),
   confirmSignUp: vi.fn(),
@@ -37,6 +38,7 @@ const renderProbe = () =>
 describe('AuthProvider', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    client.currentSub.mockResolvedValue('sub-123');
   });
 
   it('resolves to unauthenticated when no session', async () => {

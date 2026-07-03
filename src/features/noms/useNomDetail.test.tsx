@@ -3,7 +3,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Nom } from './types';
 
 const h = vi.hoisted(() => ({
-  auth: { status: 'authenticated' as string, email: 'me@x.com' as string | null },
+  auth: {
+    status: 'authenticated' as string,
+    email: 'me@x.com' as string | null,
+    sub: 'u1' as string | null,
+  },
   noms: { data: [] as Nom[], isLoading: false },
   rotation: { data: [] as { googlePlaceId: string }[] },
   add: vi.fn(),
@@ -41,16 +45,18 @@ describe('useNomDetail', () => {
     expect(result.current.addable).toEqual(['b']);
   });
 
-  it('adds an option to the found nom', () => {
+  const actor = { sub: 'u1', label: 'me@x.com' };
+
+  it('adds an option to the found nom, stamped with the actor', () => {
     const { result } = renderHook(() => useNomDetail('n1'));
     result.current.add('b');
-    expect(h.add).toHaveBeenCalledWith({ nom, placeId: 'b' });
+    expect(h.add).toHaveBeenCalledWith({ nom, placeId: 'b', actor });
   });
 
-  it('selects with the caller email as `by`', () => {
+  it('selects with the actor (sub + email label)', () => {
     const { result } = renderHook(() => useNomDetail('n1'));
     result.current.select('a');
-    expect(h.select).toHaveBeenCalledWith({ nom, placeId: 'a', by: 'me@x.com' });
+    expect(h.select).toHaveBeenCalledWith({ nom, placeId: 'a', actor });
   });
 
   it('exposes no nom when the id is unknown', () => {

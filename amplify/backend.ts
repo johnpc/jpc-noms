@@ -1,5 +1,7 @@
 import { defineBackend } from '@aws-amplify/backend';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import { StartingPosition } from 'aws-cdk-lib/aws-lambda';
+import { DynamoEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 import { auth } from './auth/resource';
 import { data } from './data/resource';
 import { searchPlacesFunction } from './places/searchPlaces/resource';
@@ -7,6 +9,7 @@ import { getPlaceFunction } from './places/getPlace/resource';
 import { getPlaceImageFunction } from './places/getPlaceImage/resource';
 import { createPairingFunction } from './pairing/createPairing/resource';
 import { acceptPairingFunction } from './pairing/acceptPairing/resource';
+import { nomPushFunction } from './notify/nomPush/resource';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -29,6 +32,7 @@ const backend = defineBackend({
   getPlaceImageFunction,
   createPairingFunction,
   acceptPairingFunction,
+  nomPushFunction,
 });
 
 const cacheTable = backend.data.resources.tables['GoogleApiCache'];
@@ -66,3 +70,35 @@ for (const fn of [backend.createPairingFunction, backend.acceptPairingFunction])
     }),
   );
 }
+
+// --- Push: nom-push consumes the Nom table stream and notifies the OTHER
+// member(s) via APNs (SNS). It reads Device tokens (by ownerSub GSI) and
+// publishes to the APNs SNS platform application. The platform-app ARN is set
+// once the Apple push key is wired (APNS_PLATFORM_ARN) — until then the apns
+// edge no-ops, so the pipeline is deployable + testable but inert. ---
+const nomTable = backend.data.resources.tables['Nom'];
+const deviceTable = backend.data.resources.tables['Device'];
+const push = backend.nomPushFunction.resources.lambda;
+
+push.addEventSource(
+  new DynamoEventSource(nomTable, {
+    startingPosition: StartingPosition.LATEST,
+    batchSize: 5,
+    retryAttempts: 2,
+  }),
+);
+backend.nomPushFunction.addEnvironment('DEVICE_TABLE_NAME', deviceTable.tableName);
+backend.nomPushFunction.addEnvironment('APNS_PLATFORM_ARN', process.env.APNS_PLATFORM_ARN ?? '');
+deviceTable.grantReadData(push);
+push.addToRolePolicy(
+  new PolicyStatement({
+    actions: ['dynamodb:Query'],
+    resources: [`${deviceTable.tableArn}/index/*`],
+  }),
+);
+push.addToRolePolicy(
+  new PolicyStatement({
+    actions: ['sns:CreatePlatformEndpoint', 'sns:Publish'],
+    resources: ['*'],
+  }),
+);

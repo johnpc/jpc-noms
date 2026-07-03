@@ -28,24 +28,33 @@ describe('nomMutations', () => {
     m.update.mockResolvedValue({});
   });
 
-  it('useAddOption appends the place id (no dup) via userPool', async () => {
+  const actor = { sub: 'u1', label: 'me@x.com' };
+
+  it('useAddOption appends the place id (no dup) + stamps the actor, via userPool', async () => {
     const { result } = renderHook(() => useAddOption(), { wrapper });
     await act(async () => {
-      await result.current.mutateAsync({ nom, placeId: 'b' });
+      await result.current.mutateAsync({ nom, placeId: 'b', actor });
     });
     expect(m.update).toHaveBeenCalledWith(
-      { id: 'n1', optionPlaceIds: ['a', 'b'] },
+      { id: 'n1', optionPlaceIds: ['a', 'b'], lastActorSub: 'u1', lastActionText: 'me@x.com' },
       { authMode: 'userPool' },
     );
   });
 
-  it('useSelectOption sets selectedPlaceId + SELECTED + selectedBy', async () => {
+  it('useSelectOption sets selectedPlaceId + SELECTED + the actor', async () => {
     const { result } = renderHook(() => useSelectOption(), { wrapper });
     await act(async () => {
-      await result.current.mutateAsync({ nom, placeId: 'a', by: 'me@x.com' });
+      await result.current.mutateAsync({ nom, placeId: 'a', actor });
     });
     expect(m.update).toHaveBeenCalledWith(
-      { id: 'n1', selectedPlaceId: 'a', selectedBy: 'me@x.com', status: 'SELECTED' },
+      {
+        id: 'n1',
+        selectedPlaceId: 'a',
+        selectedBy: 'me@x.com',
+        status: 'SELECTED',
+        lastActorSub: 'u1',
+        lastActionText: 'me@x.com',
+      },
       { authMode: 'userPool' },
     );
   });

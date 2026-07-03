@@ -22,6 +22,15 @@ export async function currentEmail(): Promise<string | null> {
   }
 }
 
+/** The signed-in user's Cognito subject (stable id), or null. */
+export async function currentSub(): Promise<string | null> {
+  try {
+    return (await getCurrentUser()).userId ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** Cognito groups for the signed-in user (from the id token), or []. */
 export async function currentGroups(): Promise<string[]> {
   try {
