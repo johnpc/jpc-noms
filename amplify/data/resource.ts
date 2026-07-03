@@ -70,9 +70,25 @@ const schema = a
         selectedPlaceId: a.string(),
         selectedBy: a.string(),
         status: a.enum(['OPEN', 'SELECTED']),
+        // Cognito sub of whoever last added/selected — the push Lambda notifies
+        // the OTHER member(s), and includes a human note (lastActionText).
+        lastActorSub: a.string(),
+        lastActionText: a.string(),
       })
       .secondaryIndexes((index) => [index('pairingId')])
       .authorization((allow) => [allow.ownersDefinedIn('members')]),
+
+    // APNs device-token registry. Owner-auth: each user registers their own
+    // device(s) after granting push permission. The push Lambda reads a
+    // partner's tokens (by owner sub) via its IAM role to deliver.
+    Device: a
+      .model({
+        token: a.string().required(),
+        platform: a.string().required(),
+        ownerSub: a.string().required(),
+      })
+      .secondaryIndexes((index) => [index('ownerSub')])
+      .authorization((allow) => [allow.owner()]),
 
     GooglePlaceText: a.customType({
       text: a.string(),

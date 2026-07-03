@@ -4,6 +4,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
 import { AuthProvider } from './features/auth/AuthProvider';
 import { AppRoutes } from './AppRoutes';
+import { usePushRegistration } from './features/push/usePushRegistration';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -23,10 +24,17 @@ import './theme/variables.css';
 
 setupIonicReact();
 
+/** Registers this device for push once signed in (native only). Renders nothing. */
+const PushRegistrar: React.FC = () => {
+  usePushRegistration();
+  return null;
+};
+
 const App: React.FC = () => (
   <IonApp>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <PushRegistrar />
         <IonReactRouter>
           <AppRoutes />
         </IonReactRouter>

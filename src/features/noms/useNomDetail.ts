@@ -11,8 +11,9 @@ import type { Nom } from './types';
  * both). Kept live via the subscription so the partner's edits stream in.
  */
 export function useNomDetail(nomId: string) {
-  const { status, email } = useAuth();
+  const { status, email, sub } = useAuth();
   const signedIn = status === 'authenticated';
+  const actor = { sub: sub ?? '', label: email ?? '' };
   const { data: noms = [], isLoading } = useNomsQuery(signedIn);
   const rotation = useRotation(signedIn);
   const addOption = useAddOption();
@@ -28,9 +29,9 @@ export function useNomDetail(nomId: string) {
     loading: isLoading,
     nom,
     addable,
-    add: (placeId: string) => nom && addOption.mutate({ nom, placeId }),
+    add: (placeId: string) => nom && addOption.mutate({ nom, placeId, actor }),
     adding: addOption.isPending,
-    select: (placeId: string) => nom && select.mutate({ nom, placeId, by: email ?? '' }),
+    select: (placeId: string) => nom && select.mutate({ nom, placeId, actor }),
     selecting: select.isPending,
   };
 }

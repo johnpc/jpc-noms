@@ -6,6 +6,8 @@ export interface AuthState {
   status: AuthStatus;
   /** Cognito username (email) of the signed-in user, when authenticated. */
   email: string | null;
+  /** Cognito subject (stable user id) of the signed-in user, else null. */
+  sub: string | null;
 }
 
 export interface SignUpResult {

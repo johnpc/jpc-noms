@@ -11,13 +11,25 @@ import type { Nom } from './types';
 
 const AUTH = { authMode: 'userPool' } as const;
 
+// Actor identity stamped on every write so the push Lambda knows who acted
+// (to notify the OTHER member) and what to say.
+interface Actor {
+  sub: string;
+  label: string;
+}
+
 /** Add a restaurant to a nom's options. */
 export function useAddOption() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ nom, placeId }: { nom: Nom; placeId: string }) => {
+    mutationFn: async ({ nom, placeId, actor }: { nom: Nom; placeId: string; actor: Actor }) => {
       await dataClient.models.Nom.update(
-        { id: nom.id, optionPlaceIds: withOption(nom, placeId) },
+        {
+          id: nom.id,
+          optionPlaceIds: withOption(nom, placeId),
+          lastActorSub: actor.sub,
+          lastActionText: actor.label,
+        },
         AUTH,
       );
     },
@@ -29,9 +41,16 @@ export function useAddOption() {
 export function useSelectOption() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ nom, placeId, by }: { nom: Nom; placeId: string; by: string }) => {
+    mutationFn: async ({ nom, placeId, actor }: { nom: Nom; placeId: string; actor: Actor }) => {
       await dataClient.models.Nom.update(
-        { id: nom.id, selectedPlaceId: placeId, selectedBy: by, status: 'SELECTED' },
+        {
+          id: nom.id,
+          selectedPlaceId: placeId,
+          selectedBy: actor.label,
+          status: 'SELECTED',
+          lastActorSub: actor.sub,
+          lastActionText: actor.label,
+        },
         AUTH,
       );
     },

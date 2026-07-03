@@ -5,11 +5,12 @@ import type { AuthState, SignUpResult } from './types';
 
 /** Provides Cognito session state + auth actions to the tree via AuthContext. */
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AuthState>({ status: 'loading', email: null });
+  const [state, setState] = useState<AuthState>({ status: 'loading', email: null, sub: null });
 
   const refresh = useCallback(async () => {
     const email = await authClient.currentEmail();
-    setState({ status: email ? 'authenticated' : 'unauthenticated', email });
+    const sub = email ? await authClient.currentSub() : null;
+    setState({ status: email ? 'authenticated' : 'unauthenticated', email, sub });
   }, []);
 
   useEffect(() => {
@@ -35,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     await authClient.signOut();
-    setState({ status: 'unauthenticated', email: null });
+    setState({ status: 'unauthenticated', email: null, sub: null });
   }, []);
 
   return (
