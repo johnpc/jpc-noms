@@ -10,3 +10,8 @@ package-lock.json
 # mirror on `cap sync` — generated artifacts, not source to format.
 ios/App/App/public
 android/app/src/main/assets/public
+# CocoaPods dependencies + Capacitor-generated native config — vendored/generated,
+# not source. (git-ignored too, but prettier walks the working tree, not git.)
+ios/App/Pods
+ios/App/App/capacitor.config.json
+ios/App/App/config.xml

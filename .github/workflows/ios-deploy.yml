@@ -19,8 +19,10 @@ concurrency:
 
 env:
   SCHEME: App
-  # Capacitor 8 uses Swift Package Manager — there is no .xcworkspace / Podfile.
+  # iOS uses CocoaPods (not SPM) so the ML Kit QR scanner — which ships only a
+  # podspec, no Package.swift — compiles in. CocoaPods builds via the workspace.
   XCODEPROJ: ios/App/App.xcodeproj
+  XCWORKSPACE: ios/App/App.xcworkspace
   BUNDLE_ID: com.johncorser.noms
 
 jobs:
@@ -68,6 +70,10 @@ jobs:
         run: |
           npm run build
           npx cap sync ios
+          # cap sync runs pod install when it detects the Podfile, but run it
+          # explicitly so a missing CocoaPods spec repo fails loudly here, not
+          # mid-archive. Regenerates ios/App/Pods + the .xcworkspace.
+          cd ios/App && pod install
 
       - name: Write App Store Connect API key
         run: |
@@ -173,7 +179,7 @@ jobs:
 
           archive_and_upload() {
             xcodebuild archive \
-              -project "$XCODEPROJ" \
+              -workspace "$XCWORKSPACE" \
               -scheme "$SCHEME" \
               -destination "generic/platform=iOS" \
               -archivePath ~/Desktop/Noms.xcarchive \
