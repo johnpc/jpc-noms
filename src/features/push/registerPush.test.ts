@@ -7,6 +7,7 @@ const h = vi.hoisted(() => ({
   addListener: vi.fn(),
   register: vi.fn(),
   registerDevice: vi.fn(),
+  unregisterDevice: vi.fn(),
 }));
 vi.mock('@capacitor/core', () => ({ Capacitor: { isNativePlatform: h.isNative } }));
 vi.mock('@capacitor/push-notifications', () => ({
@@ -17,9 +18,12 @@ vi.mock('@capacitor/push-notifications', () => ({
     register: h.register,
   },
 }));
-vi.mock('./deviceApi', () => ({ registerDevice: h.registerDevice }));
+vi.mock('./deviceApi', () => ({
+  registerDevice: h.registerDevice,
+  unregisterDevice: h.unregisterDevice,
+}));
 
-import { enablePush, pushStatus } from './registerPush';
+import { enablePush, pushStatus, disablePush, isOptedOut } from './registerPush';
 
 describe('enablePush', () => {
   beforeEach(() => {
@@ -86,5 +90,29 @@ describe('pushStatus', () => {
     expect(await pushStatus()).toBe('denied');
     h.checkPermissions.mockResolvedValue({ receive: 'prompt' });
     expect(await pushStatus()).toBe('prompt');
+  });
+});
+
+describe('opt-out (disablePush / isOptedOut)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+    h.unregisterDevice.mockResolvedValue(undefined);
+  });
+
+  it('disablePush sets the opt-out flag and removes the device token', async () => {
+    expect(isOptedOut()).toBe(false);
+    await disablePush();
+    expect(h.unregisterDevice).toHaveBeenCalled();
+    expect(isOptedOut()).toBe(true);
+  });
+
+  it('enablePush clears the opt-out flag on grant', async () => {
+    await disablePush();
+    expect(isOptedOut()).toBe(true);
+    h.isNative.mockReturnValue(true);
+    h.requestPermissions.mockResolvedValue({ receive: 'granted' });
+    await enablePush('u1');
+    expect(isOptedOut()).toBe(false);
   });
 });
