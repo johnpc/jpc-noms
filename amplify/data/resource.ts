@@ -144,9 +144,13 @@ const schema = a
     // NB: named invitePartner (not createPairing) — the Pairing model already
     // auto-generates a createPairing mutation; a same-named custom mutation
     // collides ("Mutation cannot redeclare field createPairing").
+    // callerEmail is passed as an argument (not read from a claim): AppSync's
+    // userPool authorizer surfaces ACCESS-token claims, which don't include
+    // `email` (that lives only on the ID token). The client supplies its own
+    // signed-in email — the same trust model the QR pairing path already uses.
     invitePartner: a
       .mutation()
-      .arguments({ inviteeEmail: a.string().required() })
+      .arguments({ inviteeEmail: a.string().required(), callerEmail: a.string().required() })
       .returns(a.ref('Pairing'))
       .authorization((allow) => [allow.authenticated()])
       .handler(a.handler.function(createPairingFunction)),
@@ -154,7 +158,7 @@ const schema = a
     // caller's sub to `members` and flips status to ACTIVE.
     acceptInvite: a
       .mutation()
-      .arguments({ pairingId: a.string().required() })
+      .arguments({ pairingId: a.string().required(), callerEmail: a.string().required() })
       .returns(a.ref('Pairing'))
       .authorization((allow) => [allow.authenticated()])
       .handler(a.handler.function(acceptPairingFunction)),

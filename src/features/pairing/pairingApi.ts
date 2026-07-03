@@ -23,12 +23,16 @@ export function usePairing(enabled = true) {
   });
 }
 
-/** Invite a partner by email (creates a PENDING pairing owned by the caller). */
+/**
+ * Invite a partner by email (creates a PENDING pairing owned by the caller).
+ * `callerEmail` is the inviter's own signed-in email — passed explicitly because
+ * AppSync's userPool authorizer exposes access-token claims, which omit `email`.
+ */
 export function useCreatePairing() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (inviteeEmail: string) => {
-      const { data } = await dataClient.mutations.invitePartner({ inviteeEmail }, AUTH);
+    mutationFn: async (args: { inviteeEmail: string; callerEmail: string }) => {
+      const { data } = await dataClient.mutations.invitePartner(args, AUTH);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['pairing'] }),
@@ -39,8 +43,8 @@ export function useCreatePairing() {
 export function useAcceptPairing() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (pairingId: string) => {
-      const { data } = await dataClient.mutations.acceptInvite({ pairingId }, AUTH);
+    mutationFn: async (args: { pairingId: string; callerEmail: string }) => {
+      const { data } = await dataClient.mutations.acceptInvite(args, AUTH);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['pairing'] }),

@@ -33,9 +33,11 @@ export function usePairingFlow() {
     view,
     inviteEmail,
     setInviteEmail,
-    invite: () => inviteEmail.trim() && create.mutate(inviteEmail.trim()),
+    invite: () =>
+      inviteEmail.trim() &&
+      create.mutate({ inviteeEmail: inviteEmail.trim(), callerEmail: email ?? '' }),
     inviting: create.isPending,
-    accept: (pairingId: string) => accept.mutate(pairingId),
+    accept: (pairingId: string) => accept.mutate({ pairingId, callerEmail: email ?? '' }),
     accepting: accept.isPending,
     unpair: (pairingId: string) => unpair.mutate(pairingId),
     unpairing: unpair.isPending,

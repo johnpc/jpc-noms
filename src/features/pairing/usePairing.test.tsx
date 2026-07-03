@@ -46,6 +46,19 @@ describe('usePairingFlow', () => {
     expect(h.create).not.toHaveBeenCalled();
   });
 
+  it('invites with the invitee + own signed-in email', () => {
+    const { result } = renderHook(() => usePairingFlow());
+    act(() => result.current.setInviteEmail('b@x.com'));
+    act(() => result.current.invite());
+    expect(h.create).toHaveBeenCalledWith({ inviteeEmail: 'b@x.com', callerEmail: 'a@x.com' });
+  });
+
+  it('accepts an invite forwarding the caller email', () => {
+    const { result } = renderHook(() => usePairingFlow());
+    act(() => result.current.accept('p1'));
+    expect(h.accept).toHaveBeenCalledWith({ pairingId: 'p1', callerEmail: 'a@x.com' });
+  });
+
   it('reports signed-out state', () => {
     h.auth = { status: 'unauthenticated', email: null };
     const { result } = renderHook(() => usePairingFlow());
