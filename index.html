@@ -24,6 +24,23 @@
     <meta name="apple-mobile-web-app-title" content="Noms" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <meta name="theme-color" content="#FF6B5C" />
+
+    <!-- Apply the saved theme BEFORE first paint so a dark user never sees a
+         white flash (FOUC). Mirrors features/settings/useTheme; that hook is
+         still the source of truth once React mounts. -->
+    <script>
+      (function () {
+        try {
+          var c = localStorage.getItem('noms.theme') || 'system';
+          var dark =
+            c === 'dark' ||
+            (c === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.classList.toggle('ion-palette-dark', dark);
+        } catch (e) {
+          /* no storage (private mode) — fall back to light */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

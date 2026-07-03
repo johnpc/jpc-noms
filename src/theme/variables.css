@@ -65,6 +65,13 @@ body {
   font-family: var(--sp-font-sans);
 }
 
+/* Safe-area: keep the top toolbar clear of the notch / Dynamic Island / clock.
+ * Needs index.html's viewport-fit=cover for env(safe-area-inset-*) to be non-zero.
+ * max() so it can't double-pad on top of Ionic's own inset handling. */
+ion-header ion-toolbar:first-of-type {
+  padding-top: max(var(--ion-safe-area-top, 0px), env(safe-area-inset-top, 0px));
+}
+
 /* Role classes */
 .sp-heading {
   font-family: var(--sp-font-sans);
