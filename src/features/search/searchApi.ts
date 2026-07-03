@@ -44,3 +44,20 @@ export function usePlace(placeId: string | undefined) {
     staleTime: 1000 * 60 * 60,
   });
 }
+
+/** Resolve a Google Places photo id to a hosted image URL (long-cached). */
+export function usePlaceImage(photoId: string | undefined) {
+  return useQuery({
+    queryKey: ['placeImage', photoId],
+    queryFn: async (): Promise<string | null> => {
+      const authMode = await readAuthMode();
+      const { data } = await dataClient.queries.getGooglePlaceImage(
+        { photoId: photoId as string, widthPx: 800, heightPx: 500 },
+        { authMode },
+      );
+      return (data?.photoUri as string) ?? null;
+    },
+    enabled: !!photoId,
+    staleTime: 1000 * 60 * 60 * 24,
+  });
+}

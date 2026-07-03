@@ -1,5 +1,9 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
+
+// PlacePhoto hits the image API; stub it so PlaceCard tests stay render-only.
+vi.mock('./PlacePhoto', () => ({ PlacePhoto: () => null }));
+
 import { PlaceCard } from './PlaceCard';
 import type { Place } from './types';
 

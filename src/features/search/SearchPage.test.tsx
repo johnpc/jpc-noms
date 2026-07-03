@@ -3,6 +3,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const useSearchMock = vi.hoisted(() => vi.fn());
 vi.mock('./useSearch', () => ({ useSearch: useSearchMock }));
+// PlaceCard renders PlacePhoto (hits the image API); stub it out here.
+vi.mock('./PlacePhoto', () => ({ PlacePhoto: () => null }));
 
 import { SearchPage } from './SearchPage';
 
