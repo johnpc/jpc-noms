@@ -30,6 +30,10 @@ const GOOGLE_SECRET_ARN =
   'arn:aws:secretsmanager:us-west-2:566092841021:secret:jpc-noms/google-places-4ekimt';
 const TESSIE_SECRET_ARN =
   'arn:aws:secretsmanager:us-west-2:566092841021:secret:jpc-noms/tessie-pY5skf';
+// APNs SNS platform application (token auth, key 9ZC2WPB5WT / team JW5SC3NYUV /
+// bundle com.johncorser.noms). Hardcoded like the secret ARNs so it resolves in
+// the prod build (process.env is absent there). Setting this lights up push.
+const APNS_PLATFORM_ARN = 'arn:aws:sns:us-west-2:566092841021:app/APNS/NomsAPNs';
 const backend = defineBackend({
   auth,
   data,
@@ -103,7 +107,7 @@ push.addEventSource(
   }),
 );
 backend.nomPushFunction.addEnvironment('DEVICE_TABLE_NAME', deviceTable.tableName);
-backend.nomPushFunction.addEnvironment('APNS_PLATFORM_ARN', process.env.APNS_PLATFORM_ARN ?? '');
+backend.nomPushFunction.addEnvironment('APNS_PLATFORM_ARN', APNS_PLATFORM_ARN);
 deviceTable.grantReadData(push);
 push.addToRolePolicy(
   new PolicyStatement({
@@ -130,10 +134,7 @@ pairingPush.addEventSource(
   }),
 );
 backend.pairingPushFunction.addEnvironment('DEVICE_TABLE_NAME', deviceTable.tableName);
-backend.pairingPushFunction.addEnvironment(
-  'APNS_PLATFORM_ARN',
-  process.env.APNS_PLATFORM_ARN ?? '',
-);
+backend.pairingPushFunction.addEnvironment('APNS_PLATFORM_ARN', APNS_PLATFORM_ARN);
 deviceTable.grantReadData(pairingPush);
 pairingPush.addToRolePolicy(
   new PolicyStatement({
