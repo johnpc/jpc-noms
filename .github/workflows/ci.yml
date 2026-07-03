@@ -128,6 +128,8 @@ jobs:
             paths: .features-gen/e2e/features/settings
           - name: stats
             paths: .features-gen/e2e/features/stats
+          - name: download
+            paths: .features-gen/e2e/features/download
     steps:
       - uses: actions/checkout@v7
 

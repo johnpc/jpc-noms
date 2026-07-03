@@ -71,6 +71,12 @@ export function Home() {
             </span>
             <span className="home-card__name">Settings</span>
           </Link>
+          <Link className="home-card" to="/download" data-testid="home-download">
+            <span className="home-card__emoji" aria-hidden="true">
+              📲
+            </span>
+            <span className="home-card__name">Get the app</span>
+          </Link>
         </nav>
       </IonContent>
     </IonPage>

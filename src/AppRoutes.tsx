@@ -10,6 +10,7 @@ import { NomsPage } from './features/noms/NomsPage';
 import { NomDetail } from './features/noms/NomDetail';
 import { SettingsPage } from './features/settings/SettingsPage';
 import { StatsPage } from './features/stats/StatsPage';
+import { DownloadPage } from './features/download/DownloadPage';
 
 /**
  * App routes. Home is the shell; pairing/noms land in their own slices and
@@ -41,6 +42,9 @@ export function AppRoutes() {
       </Route>
       <Route exact path="/stats">
         <StatsPage />
+      </Route>
+      <Route exact path="/download">
+        <DownloadPage />
       </Route>
       <Route exact path="/signin">
         <SignIn />

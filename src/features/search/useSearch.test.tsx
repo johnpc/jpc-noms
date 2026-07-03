@@ -50,4 +50,10 @@ describe('useSearch', () => {
     expect(result.current.savedIds.has('p1')).toBe(true);
     expect(result.current.savedIds.has('p2')).toBe(false);
   });
+
+  it('defaults to a food search and exposes suggestions', () => {
+    const { result } = renderHook(() => useSearch());
+    expect(result.current.term).toBe('food');
+    expect(result.current.suggestions.length).toBeGreaterThan(0);
+  });
 });

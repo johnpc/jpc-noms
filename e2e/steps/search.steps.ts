@@ -17,7 +17,12 @@ When('they search for {string}', async ({ page }, term: string) => {
 });
 
 Then('at least one restaurant card is visible', async ({ page }) => {
+  await expect(page.getByTestId('place-card').first()).toBeVisible({ timeout: 20_000 });
   expect(await page.getByTestId('place-card').count()).toBeGreaterThanOrEqual(1);
+});
+
+When('they tap the {string} suggestion', async ({ page }, label: string) => {
+  await page.getByTestId(`suggestion-${label}`).click();
 });
 
 When('they tap add-to-rotation on the first result', async ({ page }) => {

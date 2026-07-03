@@ -3,6 +3,22 @@
   overflow: hidden;
 }
 
+.search-suggestions {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 4px 0 12px;
+  scrollbar-width: none;
+}
+
+.search-suggestions::-webkit-scrollbar {
+  display: none;
+}
+
+.search-suggestions ion-chip {
+  flex: 0 0 auto;
+}
+
 .place-card__photo {
   display: block;
   width: 100%;

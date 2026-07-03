@@ -38,9 +38,10 @@ describe('Home', () => {
     expect(screen.queryByTestId('home-signin')).not.toBeInTheDocument();
   });
 
-  it('always links to settings', () => {
+  it('always links to settings and download', () => {
     useAuthMock.mockReturnValue({ status: 'unauthenticated' });
     renderHome();
     expect(screen.getByTestId('home-settings')).toHaveAttribute('href', '/settings');
+    expect(screen.getByTestId('home-download')).toHaveAttribute('href', '/download');
   });
 });
