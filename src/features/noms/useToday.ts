@@ -3,7 +3,7 @@ import { useNoms as useNomsQuery } from './nomsApi';
 import { useNomActions } from './useNomActions';
 import { useNomsRealtime } from './useNomsRealtime';
 import { useRotation } from '../rotation/rotationApi';
-import { todaysNom, previousDecidedNom } from './nom';
+import { todaysNom, previousDecidedNom } from './nomDates';
 import type { Nom } from './types';
 
 /**
@@ -23,7 +23,7 @@ export function useToday() {
 
   const now = new Date();
   const nom: Nom | undefined = todaysNom(noms, now);
-  const previous = previousDecidedNom(noms, now);
+  const previous = previousDecidedNom(noms, nom?.id);
   const actions = useNomActions(nom, actor, '/today');
 
   const rotationIds = (rotation.data ?? []).map((r) => r.googlePlaceId);

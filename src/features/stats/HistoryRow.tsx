@@ -3,7 +3,7 @@ import { IonIcon, IonItem, IonLabel, IonList, IonNote } from '@ionic/react';
 import { chevronForward, chevronDown } from 'ionicons/icons';
 import { usePlace } from '../search/searchApi';
 import { placeName } from '../search/place';
-import { nomDateTimeLabel } from '../noms/nom';
+import { nomDateTimeLabel } from '../noms/nomDates';
 import type { Nom } from '../noms/types';
 
 /** Resolves one place id to its name for the expanded "other options" list. */

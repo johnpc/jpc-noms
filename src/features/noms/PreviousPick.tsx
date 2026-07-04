@@ -1,7 +1,7 @@
 import { IonText } from '@ionic/react';
 import { usePlace } from '../search/searchApi';
 import { placeName } from '../search/place';
-import { nomDateLabel } from './nom';
+import { nomDateLabel } from './nomDates';
 import type { Nom } from './types';
 
 /** "Last time you picked <place> (<date>)" — reference on the Today screen. */
