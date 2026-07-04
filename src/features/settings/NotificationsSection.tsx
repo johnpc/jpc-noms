@@ -61,6 +61,13 @@ export function NotificationsSection() {
           Open iOS Settings
         </IonButton>
       )}
+      {n.lastError && (
+        <IonItem lines="none">
+          <IonNote className="notif-error" data-testid="notif-error">
+            Last push issue: {n.lastError}
+          </IonNote>
+        </IonItem>
+      )}
     </IonList>
   );
 }

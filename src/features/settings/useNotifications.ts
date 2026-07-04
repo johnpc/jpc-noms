@@ -1,6 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../auth/useAuth';
-import { pushStatus, enablePush, disablePush, isOptedOut } from '../push/registerPush';
+import {
+  pushStatus,
+  enablePush,
+  disablePush,
+  isOptedOut,
+  lastPushError,
+} from '../push/registerPush';
 
 /** UI state for the notifications control. `on`/`off` both require iOS-granted;
  * `off` is an in-app opt-out (token removed) while iOS still allows push. */
@@ -51,5 +57,5 @@ export function useNotifications() {
   // iOS maps the `app-settings:` URL to this app's Settings pane. No-op on web.
   const openIosSettings = () => window.open('app-settings:', '_blank');
 
-  return { state, working, enable, disable, openIosSettings };
+  return { state, working, enable, disable, openIosSettings, lastError: lastPushError() };
 }

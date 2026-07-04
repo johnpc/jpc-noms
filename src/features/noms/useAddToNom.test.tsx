@@ -1,5 +1,7 @@
 import { renderHook, act } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { ReactNode } from 'react';
 import type { Nom } from './types';
 
 const h = vi.hoisted(() => ({
@@ -39,8 +41,14 @@ const openNom: Nom = {
   status: 'OPEN',
 };
 
+let qc: QueryClient;
+function wrapper({ children }: { children: ReactNode }) {
+  return <QueryClientProvider client={qc}>{children}</QueryClientProvider>;
+}
+
 describe('useAddToNom', () => {
   beforeEach(() => {
+    qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     vi.clearAllMocks();
     h.membership = {
       signedIn: true,
@@ -56,7 +64,7 @@ describe('useAddToNom', () => {
 
   it('adds to the existing open nom without creating a new one', async () => {
     h.noms = [openNom];
-    const { result } = renderHook(() => useAddToNom());
+    const { result } = renderHook(() => useAddToNom(), { wrapper });
     await act(async () => {
       await result.current.addToNom('place-1');
     });
@@ -67,11 +75,14 @@ describe('useAddToNom', () => {
       actor: h.membership.actor,
     });
     expect(h.toast).toHaveBeenCalled();
+    // Optimistically written to the cache so Today shows it instantly.
+    const cached = qc.getQueryData<Nom[]>(['noms']);
+    expect(cached?.find((n) => n.id === 'open1')?.optionPlaceIds).toContain('place-1');
   });
 
   it('creates today’s nom first when none is open, then adds to it', async () => {
     h.noms = []; // nothing open
-    const { result } = renderHook(() => useAddToNom());
+    const { result } = renderHook(() => useAddToNom(), { wrapper });
     await act(async () => {
       await result.current.addToNom('place-1');
     });
@@ -85,7 +96,7 @@ describe('useAddToNom', () => {
 
   it('does nothing when signed out', async () => {
     h.membership = { ...h.membership, signedIn: false, sub: null };
-    const { result } = renderHook(() => useAddToNom());
+    const { result } = renderHook(() => useAddToNom(), { wrapper });
     await act(async () => {
       await result.current.addToNom('place-1');
     });
@@ -96,7 +107,7 @@ describe('useAddToNom', () => {
   it('aborts if creating the nom fails to return a record', async () => {
     h.noms = [];
     h.createMutate.mockResolvedValue(null);
-    const { result } = renderHook(() => useAddToNom());
+    const { result } = renderHook(() => useAddToNom(), { wrapper });
     await act(async () => {
       await result.current.addToNom('place-1');
     });

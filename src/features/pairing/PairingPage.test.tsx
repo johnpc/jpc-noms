@@ -5,6 +5,8 @@ const useFlow = vi.hoisted(() => vi.fn());
 vi.mock('./usePairing', () => ({ usePairingFlow: useFlow }));
 // QrPairing has its own tests + camera/QR deps; stub it here.
 vi.mock('./QrPairing', () => ({ QrPairing: () => <div data-testid="qr-pairing" /> }));
+// PokeButton has its own tests + push/pairing hooks; stub it here.
+vi.mock('../noms/PokeButton', () => ({ PokeButton: () => <div data-testid="poke-btn" /> }));
 
 import { PairingPage } from './PairingPage';
 
@@ -62,6 +64,7 @@ describe('PairingPage', () => {
     });
     render(<PairingPage />);
     expect(screen.getByTestId('pairing-active')).toHaveTextContent('b@x.com');
+    expect(screen.getByTestId('poke-btn')).toBeInTheDocument();
     fireEvent.click(screen.getByTestId('pairing-unpair-btn'));
     expect(base.unpair).toHaveBeenCalledWith('p1');
   });

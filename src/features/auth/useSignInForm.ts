@@ -16,7 +16,7 @@ export function useSignInForm() {
     setBusy(true);
     try {
       await signIn(email, password);
-      history.replace('/noms');
+      history.replace('/home'); // land on the main nav, not the noms history list
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Sign-in failed.');
     } finally {

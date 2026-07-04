@@ -43,21 +43,24 @@ function todaysNoms(noms: Nom[], now: Date): Nom[] {
 }
 
 /**
- * "Today's nom" = the nom for today's calendar date. Once you've DECIDED today,
- * that decided nom is what you want to see (not a leftover empty shortlist), so
- * prefer the most recent SELECTED; else the most recent OPEN one. Undefined when
- * nothing was created today — caller shows the prompt + lazily creates on add.
+ * "Today's nom" = the MOST RECENT nom created today — whatever you last touched,
+ * open or decided. Showing the latest matches expectation: after you decide,
+ * you see the decision; after you start a fresh one, you see that. Undefined
+ * when nothing was created today (caller shows the prompt + lazy-creates on add).
  */
 export function todaysNom(noms: Nom[], now: Date): Nom | undefined {
-  const today = todaysNoms(noms, now);
-  return today.find(isSelected) ?? today[0];
+  return todaysNoms(noms, now)[0];
 }
 
-/** Today's OPEN (not-yet-decided) nom — where a "➕ Nom" tap adds. When none
- * exists today, the caller creates one; this scopes find-or-create to TODAY so
- * we don't reuse a stale open nom from a past day OR spawn duplicates. */
+/**
+ * Where a "➕ Nom" tap adds: today's most-recent nom IF it's still OPEN. If
+ * today's latest is already DECIDED (or there's none today), returns undefined
+ * so the caller creates a NEW nom — starting a fresh, visible nom rather than
+ * re-opening a decision. This keeps the add-target and what Today shows in sync.
+ */
 export function todaysOpenNom(noms: Nom[], now: Date): Nom | undefined {
-  return todaysNoms(noms, now).find((n) => n.status === 'OPEN');
+  const latest = todaysNoms(noms, now)[0];
+  return latest && !isSelected(latest) ? latest : undefined;
 }
 
 /**

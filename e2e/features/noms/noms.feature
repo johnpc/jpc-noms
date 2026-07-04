@@ -32,3 +32,12 @@ Feature: Collaborative noms
     Then a restaurant option is shown
     When the test user selects the first option
     Then the nom shows it is selected
+
+  # The round-trip that was silently broken: add a restaurant via "➕ Nom" on the
+  # search page, then the Today screen must show it (no blank / stale state).
+  @requires-deploy
+  Scenario: Adding a restaurant appears on Today
+    Given the test user signs in
+    When the test user searches and adds the first result to a nom
+    And the test user opens the today page
+    Then the today nom shows a restaurant option

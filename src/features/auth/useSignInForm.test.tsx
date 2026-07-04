@@ -22,7 +22,7 @@ describe('useSignInForm', () => {
     });
     await act(async () => result.current.submit());
     expect(signIn).toHaveBeenCalledWith('a@b.com', 'pw');
-    expect(replace).toHaveBeenCalledWith('/noms');
+    expect(replace).toHaveBeenCalledWith('/home');
   });
 
   it('surfaces an error message on failure', async () => {

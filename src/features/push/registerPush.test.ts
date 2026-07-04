@@ -23,7 +23,7 @@ vi.mock('./deviceApi', () => ({
   unregisterDevice: h.unregisterDevice,
 }));
 
-import { enablePush, pushStatus, disablePush, isOptedOut } from './registerPush';
+import { enablePush, pushStatus, disablePush, isOptedOut, lastPushError } from './registerPush';
 
 describe('enablePush', () => {
   beforeEach(() => {
@@ -69,6 +69,20 @@ describe('enablePush', () => {
     h.isNative.mockReturnValue(true);
     h.requestPermissions.mockResolvedValue({ receive: 'denied' });
     expect(await enablePush('u1')).toBe('denied');
+  });
+
+  it('records an APNs registrationError so it is not swallowed', async () => {
+    localStorage.clear();
+    h.isNative.mockReturnValue(true);
+    h.requestPermissions.mockResolvedValue({ receive: 'granted' });
+    await enablePush('u1');
+    // second addListener call is the error handler
+    const errCb = h.addListener.mock.calls.find((c) => c[0] === 'registrationError')?.[1] as (
+      e: unknown,
+    ) => void;
+    expect(errCb).toBeTypeOf('function');
+    errCb({ error: 'no valid aps-environment' });
+    expect(lastPushError()).toContain('registrationError');
   });
 });
 

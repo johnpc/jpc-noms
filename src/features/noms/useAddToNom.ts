@@ -1,7 +1,10 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { useNoms as useNomsQuery, useCreateNom } from './nomsApi';
 import { useAddOption } from './nomMutations';
 import { useNomMembership } from './useNomMembership';
 import { todaysOpenNom } from './nomDates';
+import { withOption } from './nom';
+import { upsertNom } from './nomRecord';
 import { showToast } from '../../lib/toast';
 import { tap } from '../../lib/haptics';
 import type { Nom } from './types';
@@ -16,6 +19,7 @@ export function useAddToNom() {
   const { data: noms = [] } = useNomsQuery(signedIn);
   const create = useCreateNom();
   const add = useAddOption();
+  const qc = useQueryClient();
 
   const openNom = todaysOpenNom(noms, new Date());
   // Place ids already in today's open nom — the search/rotation cards use this
@@ -32,6 +36,11 @@ export function useAddToNom() {
       nom = created;
     }
     await add.mutateAsync({ nom, placeId, actor });
+    // Write the result straight into the cache so the Today screen shows it
+    // INSTANTLY — DynamoDB is eventually consistent, so a refetch right after a
+    // create can miss the new row and leave Today looking blank until the poll.
+    const next: Nom = { ...nom, optionPlaceIds: withOption(nom, placeId) };
+    qc.setQueryData<Nom[]>(['noms'], (list) => upsertNom(list, next));
     void showToast('Added to your nom 🍽️');
   };
 

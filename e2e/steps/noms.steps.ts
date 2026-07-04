@@ -54,3 +54,22 @@ Then('the nom shows it is selected', async ({ page }) => {
 Then('the start-a-nom control is available', async ({ page }) => {
   await expect(page.getByTestId('noms-create-btn')).toBeVisible({ timeout: 20_000 });
 });
+
+When('the test user searches and adds the first result to a nom', async ({ page }) => {
+  await page.goto('/search');
+  await page.getByTestId('place-card-nom').first().click({ timeout: 25_000 });
+  // Button flips to "In nom ✓" once the add lands.
+  await expect(page.getByTestId('place-card-nom').first()).toContainText('In nom', {
+    timeout: 20_000,
+  });
+});
+
+When('the test user opens the today page', async ({ page }) => {
+  await page.goto('/today');
+});
+
+Then('the today nom shows a restaurant option', async ({ page }) => {
+  await expect(page.getByTestId('nom-options').getByTestId('nom-option').first()).toBeVisible({
+    timeout: 20_000,
+  });
+});
