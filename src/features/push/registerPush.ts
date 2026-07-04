@@ -10,7 +10,7 @@
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { registerDevice, unregisterDevice } from './deviceApi';
-import { setOptOut, noteError, clearPushError } from './pushPrefs';
+import { setOptOut, noteError } from './pushPrefs';
 
 const native = (): boolean => Capacitor.isNativePlatform();
 
@@ -47,18 +47,20 @@ export async function enablePush(ownerSub: string): Promise<PushStatus> {
     }
 
     setOptOut(false); // enabling clears any prior in-app opt-out
-    // Attach BOTH listeners before register() so neither event is missed. The
-    // registration event carries the APNs token; registrationError means iOS
-    // couldn't register (usually the App ID lacks the Push capability, or an
-    // aps-environment mismatch) — record it so we can see it.
+    // Remove any prior listeners first — usePushRegistration calls this on every
+    // launch, and stacking duplicate listeners was a latent bug. Then attach
+    // BOTH before register() so neither event is missed. The registration event
+    // carries the APNs token; registrationError means iOS couldn't register.
+    await PushNotifications.removeAllListeners();
     await PushNotifications.addListener('registration', (token) => {
       void registerDevice(token.value, ownerSub)
-        .then(() => clearPushError())
+        .then(() => noteError(`registered token ok (${token.value.slice(0, 8)}…)`))
         .catch((e: unknown) => noteError(`registerDevice failed: ${String(e)}`));
     });
     await PushNotifications.addListener('registrationError', (err) => {
       noteError(`APNs registrationError: ${JSON.stringify(err)}`);
     });
+    noteError('register() called — awaiting APNs token…');
     await PushNotifications.register();
     return 'granted';
   } catch (e) {

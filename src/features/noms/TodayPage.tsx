@@ -5,7 +5,6 @@ import {
   IonContent,
   IonHeader,
   IonPage,
-  IonText,
   IonTitle,
   IonToolbar,
 } from '@ionic/react';
@@ -14,8 +13,9 @@ import { NomOptionsSection } from './NomOptionsSection';
 import { NomFooterActions } from './NomFooterActions';
 import { PreviousPick } from './PreviousPick';
 import { PokeButton } from './PokeButton';
+import { SelectedBanner } from './SelectedBanner';
 import { Prompt } from './Prompt';
-import { isSelected, selectedByLabel } from './nom';
+import { isSelected } from './nom';
 
 /**
  * Today's nom — the app's primary screen. Shows the previous pick for
@@ -49,14 +49,7 @@ export function TodayPage() {
             </div>
           ) : (
             <>
-              {selected && (
-                <IonText color="success">
-                  <p data-testid="today-selected">
-                    Selected — navigation sent to the car 🚗
-                    {selectedByLabel(nom) && <span> · {selectedByLabel(nom)}</span>}
-                  </p>
-                </IonText>
-              )}
+              {selected && <SelectedBanner nom={nom} />}
               <NomOptionsSection
                 nom={nom}
                 selected={selected}

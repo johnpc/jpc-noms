@@ -5,6 +5,7 @@ const h = vi.hoisted(() => ({
   requestPermissions: vi.fn(),
   checkPermissions: vi.fn(),
   addListener: vi.fn(),
+  removeAllListeners: vi.fn(),
   register: vi.fn(),
   registerDevice: vi.fn(),
   unregisterDevice: vi.fn(),
@@ -15,6 +16,7 @@ vi.mock('@capacitor/push-notifications', () => ({
     requestPermissions: h.requestPermissions,
     checkPermissions: h.checkPermissions,
     addListener: h.addListener,
+    removeAllListeners: h.removeAllListeners,
     register: h.register,
   },
 }));
@@ -29,6 +31,7 @@ describe('enablePush', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     h.addListener.mockResolvedValue(undefined);
+    h.removeAllListeners.mockResolvedValue(undefined);
     h.register.mockResolvedValue(undefined);
     h.registerDevice.mockResolvedValue(undefined);
   });
