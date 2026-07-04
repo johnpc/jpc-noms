@@ -12,6 +12,7 @@ import {
 } from '@ionic/react';
 import { usePairingFlow } from './usePairing';
 import { QrPairing } from './QrPairing';
+import { PokeButton } from '../noms/PokeButton';
 import './pairing.css';
 
 /** Fixed partner pairing: scan to connect (primary), or invite by email. */
@@ -38,6 +39,7 @@ export function PairingPage() {
             <IonText>
               <p data-testid="pairing-active">Paired with {view.partnerEmail} 🎉</p>
             </IonText>
+            <PokeButton />
             <IonButton
               expand="block"
               fill="clear"
