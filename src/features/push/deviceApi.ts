@@ -9,12 +9,30 @@ import { dataClient } from '../../lib/dataClient';
 const AUTH = { authMode: 'userPool' } as const;
 const TOKEN_KEY = 'noms.pushToken';
 
-/** Register (once) an APNs token for the signed-in user. */
+/** A stable, deterministic id for a token so re-registering the SAME token maps
+ * to ONE row (upsert) instead of racing to create duplicates. Not security —
+ * just a collision-resistant key derived from the token. */
+function deviceId(token: string): string {
+  let h = 0;
+  for (let i = 0; i < token.length; i++) h = (Math.imul(31, h) + token.charCodeAt(i)) | 0;
+  return `dev-${(h >>> 0).toString(16)}-${token.length}`;
+}
+
+/**
+ * Register this device's APNs token for the signed-in user — idempotent via a
+ * deterministic id, so rapid re-registers upsert the one row (no duplicates,
+ * race-proof). Create-or-update by that id.
+ */
 export async function registerDevice(token: string, ownerSub: string): Promise<void> {
   localStorage.setItem(TOKEN_KEY, token);
-  const { data } = await dataClient.models.Device.list(AUTH);
-  if ((data ?? []).some((d) => d.token === token)) return;
-  await dataClient.models.Device.create({ token, platform: 'ios', ownerSub }, AUTH);
+  const id = deviceId(token);
+  const fields = { id, token, platform: 'ios', ownerSub };
+  const existing = await dataClient.models.Device.get({ id }, AUTH);
+  if (existing.data) {
+    await dataClient.models.Device.update(fields, AUTH);
+  } else {
+    await dataClient.models.Device.create(fields, AUTH);
+  }
 }
 
 /**
