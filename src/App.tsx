@@ -3,6 +3,7 @@ import { IonReactRouter } from '@ionic/react-router';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
 import { AuthProvider } from './features/auth/AuthProvider';
+import { AuthGate } from './features/auth/AuthGate';
 import { AppRoutes } from './AppRoutes';
 import { usePushRegistration } from './features/push/usePushRegistration';
 import { useTheme } from './features/settings/useTheme';
@@ -38,9 +39,11 @@ const App: React.FC = () => (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <AppEffects />
-        <IonReactRouter>
-          <AppRoutes />
-        </IonReactRouter>
+        <AuthGate>
+          <IonReactRouter>
+            <AppRoutes />
+          </IonReactRouter>
+        </AuthGate>
       </AuthProvider>
     </QueryClientProvider>
   </IonApp>

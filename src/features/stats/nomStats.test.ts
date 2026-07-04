@@ -28,11 +28,22 @@ describe('computeNomStats', () => {
     expect(stats.openCount).toBe(1);
   });
 
-  it('history is most-recent-first (input order reversed)', () => {
-    const first = nom({ id: 'first', status: 'SELECTED', selectedPlaceId: 'a' });
-    const second = nom({ id: 'second', status: 'SELECTED', selectedPlaceId: 'b' });
-    const stats = computeNomStats([first, second]);
-    expect(stats.history.map((n) => n.id)).toEqual(['second', 'first']);
+  it('history is reverse-chronological by createdAt (newest first), regardless of input order', () => {
+    const older = nom({
+      id: 'older',
+      status: 'SELECTED',
+      selectedPlaceId: 'a',
+      createdAt: '2026-01-01T00:00:00Z',
+    });
+    const newer = nom({
+      id: 'newer',
+      status: 'SELECTED',
+      selectedPlaceId: 'b',
+      createdAt: '2026-06-01T00:00:00Z',
+    });
+    expect(computeNomStats([older, newer]).history.map((n) => n.id)).toEqual(['newer', 'older']);
+    // shuffled input still sorts correctly
+    expect(computeNomStats([newer, older]).history.map((n) => n.id)).toEqual(['newer', 'older']);
   });
 
   it('handles an empty list', () => {
