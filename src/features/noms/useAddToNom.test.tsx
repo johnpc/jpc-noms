@@ -32,6 +32,9 @@ const openNom: Nom = {
   id: 'open1',
   pairingId: 'solo',
   members: ['me'],
+  // Created "today" so todaysOpenNom() finds it (the ➕ Nom target is scoped to
+  // today; a stale open nom from a past day must NOT be reused).
+  createdAt: new Date().toISOString(),
   optionPlaceIds: [],
   status: 'OPEN',
 };

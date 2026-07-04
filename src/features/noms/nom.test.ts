@@ -6,12 +6,14 @@ import {
   isSelected,
   nomSummary,
   selectedByLabel,
+} from './nom';
+import {
   nomDateLabel,
   nomDateTimeLabel,
-  firstOpenNom,
   todaysNom,
+  todaysOpenNom,
   previousDecidedNom,
-} from './nom';
+} from './nomDates';
 import type { Nom } from './types';
 
 const nom = (over: Partial<Nom>): Nom => ({
@@ -103,18 +105,6 @@ describe('nomDateTimeLabel', () => {
   });
 });
 
-describe('firstOpenNom', () => {
-  it('returns the first OPEN nom', () => {
-    const selected = nom({ id: 's', status: 'SELECTED', selectedPlaceId: 'a' });
-    const open = nom({ id: 'o', status: 'OPEN' });
-    expect(firstOpenNom([selected, open])?.id).toBe('o');
-  });
-  it('is undefined when none are open', () => {
-    expect(firstOpenNom([nom({ status: 'SELECTED', selectedPlaceId: 'a' })])).toBeUndefined();
-    expect(firstOpenNom([])).toBeUndefined();
-  });
-});
-
 describe('todaysNom', () => {
   const now = new Date('2026-07-03T18:00:00'); // local
   it('returns a nom created today (calendar day)', () => {
@@ -122,15 +112,15 @@ describe('todaysNom', () => {
     const old = nom({ id: 'o', createdAt: '2026-07-01T09:00:00' });
     expect(todaysNom([old, t], now)?.id).toBe('t');
   });
-  it('prefers the OPEN one when several exist today', () => {
+  it('prefers a DECIDED nom today over a leftover open one (the Chela’s bug)', () => {
+    const openLater = nom({ id: 'open', createdAt: '2026-07-03T17:17:00', status: 'OPEN' });
     const decided = nom({
-      id: 'd',
-      createdAt: '2026-07-03T08:00:00',
+      id: 'chelas',
+      createdAt: '2026-07-03T17:33:00',
       status: 'SELECTED',
       selectedPlaceId: 'a',
     });
-    const open = nom({ id: 'o2', createdAt: '2026-07-03T12:00:00', status: 'OPEN' });
-    expect(todaysNom([decided, open], now)?.id).toBe('o2');
+    expect(todaysNom([openLater, decided], now)?.id).toBe('chelas');
   });
   it('is undefined when nothing was created today', () => {
     expect(todaysNom([nom({ createdAt: '2026-07-01T09:00:00' })], now)).toBeUndefined();
@@ -138,9 +128,33 @@ describe('todaysNom', () => {
   });
 });
 
-describe('previousDecidedNom', () => {
+describe('todaysOpenNom', () => {
   const now = new Date('2026-07-03T18:00:00');
-  it('returns the most recent DECIDED nom before today', () => {
+  it('returns today’s OPEN nom (the ➕ Nom target), ignoring decided + past days', () => {
+    const decided = nom({
+      id: 'd',
+      createdAt: '2026-07-03T08:00:00',
+      status: 'SELECTED',
+      selectedPlaceId: 'a',
+    });
+    const openToday = nom({ id: 'o', createdAt: '2026-07-03T12:00:00', status: 'OPEN' });
+    const openOld = nom({ id: 'old', createdAt: '2026-07-01T09:00:00', status: 'OPEN' });
+    expect(todaysOpenNom([decided, openToday, openOld], now)?.id).toBe('o');
+  });
+  it('is undefined when today has no open nom (→ caller creates one)', () => {
+    const decided = nom({
+      id: 'd',
+      createdAt: '2026-07-03T08:00:00',
+      status: 'SELECTED',
+      selectedPlaceId: 'a',
+    });
+    expect(todaysOpenNom([decided], now)).toBeUndefined();
+    expect(todaysOpenNom([], now)).toBeUndefined();
+  });
+});
+
+describe('previousDecidedNom', () => {
+  it('returns the most recent DECIDED nom, excluding the currently-shown one', () => {
     const a = nom({
       id: 'a',
       createdAt: '2026-06-30T12:00:00',
@@ -153,16 +167,13 @@ describe('previousDecidedNom', () => {
       status: 'SELECTED',
       selectedPlaceId: 'y',
     });
-    expect(previousDecidedNom([a, b], now)?.id).toBe('b');
+    // no current → most recent decided
+    expect(previousDecidedNom([a, b])?.id).toBe('b');
+    // exclude b (today's shown) → falls back to a (an earlier decision)
+    expect(previousDecidedNom([a, b], 'b')?.id).toBe('a');
   });
-  it('ignores today’s noms and undecided ones', () => {
-    const todayDecided = nom({
-      id: 't',
-      createdAt: '2026-07-03T09:00:00',
-      status: 'SELECTED',
-      selectedPlaceId: 'z',
-    });
+  it('ignores undecided noms', () => {
     const openOld = nom({ id: 'o', createdAt: '2026-07-01T09:00:00', status: 'OPEN' });
-    expect(previousDecidedNom([todayDecided, openOld], now)).toBeUndefined();
+    expect(previousDecidedNom([openOld])).toBeUndefined();
   });
 });

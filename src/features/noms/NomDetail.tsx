@@ -4,7 +4,8 @@ import { useNomDetail } from './useNomDetail';
 import { NomOptionsSection } from './NomOptionsSection';
 import { NomFooterActions } from './NomFooterActions';
 import { NomShell } from './NomShell';
-import { isSelected, selectedByLabel, nomDateLabel } from './nom';
+import { isSelected, selectedByLabel } from './nom';
+import { nomDateLabel } from './nomDates';
 
 /** One shared nom: its options (either partner can select) + your rotation to add from. */
 export function NomDetail() {

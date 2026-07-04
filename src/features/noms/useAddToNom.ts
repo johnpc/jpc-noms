@@ -1,7 +1,7 @@
 import { useNoms as useNomsQuery, useCreateNom } from './nomsApi';
 import { useAddOption } from './nomMutations';
 import { useNomMembership } from './useNomMembership';
-import { firstOpenNom } from './nom';
+import { todaysOpenNom } from './nomDates';
 import { showToast } from '../../lib/toast';
 import { tap } from '../../lib/haptics';
 import type { Nom } from './types';
@@ -17,7 +17,7 @@ export function useAddToNom() {
   const create = useCreateNom();
   const add = useAddOption();
 
-  const openNom = firstOpenNom(noms);
+  const openNom = todaysOpenNom(noms, new Date());
   // Place ids already in today's open nom — the search/rotation cards use this
   // to show a place as already nominated (so the ➕ Nom button reflects state).
   const nominatedIds = new Set(openNom?.optionPlaceIds ?? []);

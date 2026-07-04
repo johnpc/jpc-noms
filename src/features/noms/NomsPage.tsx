@@ -13,7 +13,8 @@ import {
   IonToolbar,
 } from '@ionic/react';
 import { useNomsList } from './useNoms';
-import { nomSummary, nomDateLabel } from './nom';
+import { nomSummary } from './nom';
+import { nomDateLabel } from './nomDates';
 import { Prompt } from './Prompt';
 
 /** The shared noms list — start a dated nom, or open any to add options / select. */
