@@ -1,25 +1,20 @@
 /**
  * Platform-aware APNs registration. On native iOS: request permission, register
  * with APNs, and on the `registration` event persist the token via
- * registerDevice. No-op on web (Capacitor.isNativePlatform() === false), so the
- * PWA build is unaffected. Errors are swallowed — push is best-effort.
+ * registerDevice. No-op on web (Capacitor.isNativePlatform() === false).
+ *
+ * Failures are NO LONGER swallowed silently (that hid a "0 devices registered"
+ * bug): the APNs `registrationError` + any registerDevice failure are recorded
+ * in localStorage (lastPushError) so Settings can surface why push isn't working.
  */
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { registerDevice, unregisterDevice } from './deviceApi';
+import { setOptOut, noteError, clearPushError } from './pushPrefs';
 
 const native = (): boolean => Capacitor.isNativePlatform();
-const OPT_OUT_KEY = 'noms.pushOptOut';
 
-/** Has the user turned push OFF in-app? (Distinct from iOS permission — lets us
- * not auto-re-register on next sign-in.) */
-export function isOptedOut(): boolean {
-  return localStorage.getItem(OPT_OUT_KEY) === '1';
-}
-const setOptOut = (v: boolean): void => {
-  if (v) localStorage.setItem(OPT_OUT_KEY, '1');
-  else localStorage.removeItem(OPT_OUT_KEY);
-};
+export { isOptedOut, lastPushError } from './pushPrefs';
 
 /** Push permission as the Settings UI needs it. `web` = not a native build
  * (push is iOS-only); `prompt` = not asked yet; `denied` = blocked in iOS. */
@@ -44,15 +39,32 @@ export async function pushStatus(): Promise<PushStatus> {
  */
 export async function enablePush(ownerSub: string): Promise<PushStatus> {
   if (!native() || !ownerSub) return native() ? 'prompt' : 'web';
-  const perm = await PushNotifications.requestPermissions();
-  if (perm.receive !== 'granted') return perm.receive === 'denied' ? 'denied' : 'prompt';
+  try {
+    const perm = await PushNotifications.requestPermissions();
+    if (perm.receive !== 'granted') {
+      noteError(`permission not granted (${perm.receive})`);
+      return perm.receive === 'denied' ? 'denied' : 'prompt';
+    }
 
-  setOptOut(false); // enabling clears any prior in-app opt-out
-  await PushNotifications.addListener('registration', (token) => {
-    void registerDevice(token.value, ownerSub).catch(() => {});
-  });
-  await PushNotifications.register();
-  return 'granted';
+    setOptOut(false); // enabling clears any prior in-app opt-out
+    // Attach BOTH listeners before register() so neither event is missed. The
+    // registration event carries the APNs token; registrationError means iOS
+    // couldn't register (usually the App ID lacks the Push capability, or an
+    // aps-environment mismatch) — record it so we can see it.
+    await PushNotifications.addListener('registration', (token) => {
+      void registerDevice(token.value, ownerSub)
+        .then(() => clearPushError())
+        .catch((e: unknown) => noteError(`registerDevice failed: ${String(e)}`));
+    });
+    await PushNotifications.addListener('registrationError', (err) => {
+      noteError(`APNs registrationError: ${JSON.stringify(err)}`);
+    });
+    await PushNotifications.register();
+    return 'granted';
+  } catch (e) {
+    noteError(`enablePush threw: ${String(e)}`);
+    return 'prompt';
+  }
 }
 
 /**

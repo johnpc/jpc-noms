@@ -14,6 +14,7 @@ vi.mock('../push/registerPush', () => ({
   enablePush: h.enablePush,
   disablePush: h.disablePush,
   isOptedOut: h.isOptedOut,
+  lastPushError: () => '',
 }));
 
 import { useNotifications } from './useNotifications';

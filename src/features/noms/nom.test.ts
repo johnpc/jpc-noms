@@ -112,15 +112,16 @@ describe('todaysNom', () => {
     const old = nom({ id: 'o', createdAt: '2026-07-01T09:00:00' });
     expect(todaysNom([old, t], now)?.id).toBe('t');
   });
-  it('prefers a DECIDED nom today over a leftover open one (the Chela’s bug)', () => {
-    const openLater = nom({ id: 'open', createdAt: '2026-07-03T17:17:00', status: 'OPEN' });
+  it('shows the MOST RECENT nom today (a fresh open one after a decision)', () => {
     const decided = nom({
       id: 'chelas',
       createdAt: '2026-07-03T17:33:00',
       status: 'SELECTED',
       selectedPlaceId: 'a',
     });
-    expect(todaysNom([openLater, decided], now)?.id).toBe('chelas');
+    const freshOpen = nom({ id: 'new', createdAt: '2026-07-03T18:00:00', status: 'OPEN' });
+    // started a new nom after deciding → Today shows the new one, not Chela's
+    expect(todaysNom([decided, freshOpen], now)?.id).toBe('new');
   });
   it('is undefined when nothing was created today', () => {
     expect(todaysNom([nom({ createdAt: '2026-07-01T09:00:00' })], now)).toBeUndefined();
@@ -128,26 +129,21 @@ describe('todaysNom', () => {
   });
 });
 
-describe('todaysOpenNom', () => {
+describe('todaysOpenNom (➕ Nom target)', () => {
   const now = new Date('2026-07-03T18:00:00');
-  it('returns today’s OPEN nom (the ➕ Nom target), ignoring decided + past days', () => {
-    const decided = nom({
-      id: 'd',
-      createdAt: '2026-07-03T08:00:00',
-      status: 'SELECTED',
-      selectedPlaceId: 'a',
-    });
+  it('adds to today’s latest nom while it is still OPEN', () => {
     const openToday = nom({ id: 'o', createdAt: '2026-07-03T12:00:00', status: 'OPEN' });
     const openOld = nom({ id: 'old', createdAt: '2026-07-01T09:00:00', status: 'OPEN' });
-    expect(todaysOpenNom([decided, openToday, openOld], now)?.id).toBe('o');
+    expect(todaysOpenNom([openToday, openOld], now)?.id).toBe('o');
   });
-  it('is undefined when today has no open nom (→ caller creates one)', () => {
+  it('starts a NEW nom (undefined) when today’s latest is already decided', () => {
     const decided = nom({
       id: 'd',
-      createdAt: '2026-07-03T08:00:00',
+      createdAt: '2026-07-03T17:33:00',
       status: 'SELECTED',
       selectedPlaceId: 'a',
     });
+    // this is the "we already picked today, I expected a new one" case
     expect(todaysOpenNom([decided], now)).toBeUndefined();
     expect(todaysOpenNom([], now)).toBeUndefined();
   });
