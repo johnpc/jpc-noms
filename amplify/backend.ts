@@ -12,6 +12,7 @@ import { acceptPairingFunction } from './pairing/acceptPairing/resource';
 import { nomPushFunction } from './notify/nomPush/resource';
 import { pairingPushFunction } from './notify/pairingPush/resource';
 import { sendToTeslaFunction } from './tesla/sendToTesla/resource';
+import { pokeFunction } from './notify/poke/resource';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -45,6 +46,7 @@ const backend = defineBackend({
   nomPushFunction,
   pairingPushFunction,
   sendToTeslaFunction,
+  pokeFunction,
 });
 
 const cacheTable = backend.data.resources.tables['GoogleApiCache'];
@@ -143,6 +145,26 @@ pairingPush.addToRolePolicy(
   }),
 );
 pairingPush.addToRolePolicy(
+  new PolicyStatement({
+    actions: ['sns:CreatePlatformEndpoint', 'sns:Publish'],
+    resources: ['*'],
+  }),
+);
+
+// --- Poke: the pokePartner mutation resolver pushes an on-demand nudge to the
+// partner's devices. Same Device-read + SNS-publish grants as the stream push
+// Lambdas; no stream (it's a data resolver invoked directly). ---
+const poke = backend.pokeFunction.resources.lambda;
+backend.pokeFunction.addEnvironment('DEVICE_TABLE_NAME', deviceTable.tableName);
+backend.pokeFunction.addEnvironment('APNS_PLATFORM_ARN', APNS_PLATFORM_ARN);
+deviceTable.grantReadData(poke);
+poke.addToRolePolicy(
+  new PolicyStatement({
+    actions: ['dynamodb:Query'],
+    resources: [`${deviceTable.tableArn}/index/*`],
+  }),
+);
+poke.addToRolePolicy(
   new PolicyStatement({
     actions: ['sns:CreatePlatformEndpoint', 'sns:Publish'],
     resources: ['*'],

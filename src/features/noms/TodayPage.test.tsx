@@ -9,6 +9,7 @@ vi.mock('./NomFooterActions', () => ({ NomFooterActions: () => <div data-testid=
 vi.mock('./NomOptionsSection', () => ({
   NomOptionsSection: () => <div data-testid="nom-options" />,
 }));
+vi.mock('./PokeButton', () => ({ PokeButton: () => <div data-testid="poke-btn" /> }));
 vi.mock('./PreviousPick', () => ({
   PreviousPick: () => <div data-testid="today-previous">prev</div>,
 }));

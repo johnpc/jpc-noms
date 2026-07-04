@@ -7,6 +7,7 @@ vi.mock('./useTheme', () => ({ useTheme: () => ({ choice: h.choice, setTheme: h.
 // (auth/router/push); stub them here.
 vi.mock('./AccountSection', () => ({ AccountSection: () => null }));
 vi.mock('./NotificationsSection', () => ({ NotificationsSection: () => null }));
+vi.mock('./ShareSection', () => ({ ShareSection: () => null }));
 vi.mock('./SupportSection', () => ({ SupportSection: () => null }));
 
 import { SettingsPage } from './SettingsPage';
