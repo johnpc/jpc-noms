@@ -61,6 +61,17 @@ export function NotificationsSection() {
           Open iOS Settings
         </IonButton>
       )}
+      {/* Explicit manual register — forces the permission→APNs→save flow and
+          shows the result below, for when auto-registration didn't land a token. */}
+      <IonButton
+        expand="block"
+        fill="outline"
+        disabled={n.working}
+        onClick={() => void n.enable()}
+        data-testid="notif-register"
+      >
+        {n.working ? 'Registering…' : 'Register this device'}
+      </IonButton>
       {n.lastError && (
         <IonItem lines="none">
           <IonNote className="notif-error" data-testid="notif-error">
