@@ -26,3 +26,37 @@
   font-size: 0.8rem;
   color: var(--sp-text-muted);
 }
+
+/* History rows: date is the bold title, the winning restaurant the light
+   subtitle BELOW it — stacked so long names never collide with the date. */
+.history-row__body {
+  white-space: normal;
+}
+
+.history-row__date {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--sp-text);
+}
+
+.history-row__pick {
+  margin: 2px 0 0;
+  font-size: 0.9rem;
+  color: var(--sp-text-muted);
+}
+
+.history-row__count {
+  font-size: 0.8rem;
+  color: var(--sp-text-muted);
+}
+
+.history-others {
+  padding-left: 32px;
+  background: var(--sp-surface);
+}
+
+.history-opt__name {
+  font-size: 0.9rem;
+  color: var(--sp-text-muted);
+}

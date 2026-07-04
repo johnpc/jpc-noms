@@ -7,6 +7,7 @@ import {
   nomSummary,
   selectedByLabel,
   nomDateLabel,
+  nomDateTimeLabel,
   firstOpenNom,
   todaysNom,
   previousDecidedNom,
@@ -87,6 +88,18 @@ describe('nomDateLabel', () => {
   });
   it('falls back when the date is missing', () => {
     expect(nomDateLabel(nom({ createdAt: null }))).toBe('New nom');
+  });
+});
+
+describe('nomDateTimeLabel', () => {
+  it('includes date + time so same-day noms are distinct', () => {
+    const label = nomDateTimeLabel(nom({ createdAt: '2026-07-03T14:05:00' }));
+    expect(label).toMatch(/Jul/);
+    expect(label).toContain('·');
+    expect(label).toMatch(/\d/); // a time component
+  });
+  it('falls back when the date is missing', () => {
+    expect(nomDateTimeLabel(nom({ createdAt: null }))).toBe('New nom');
   });
 });
 

@@ -4,6 +4,7 @@ import { getPlaceFunction } from '../places/getPlace/resource';
 import { getPlaceImageFunction } from '../places/getPlaceImage/resource';
 import { createPairingFunction } from '../pairing/createPairing/resource';
 import { acceptPairingFunction } from '../pairing/acceptPairing/resource';
+import { pokeFunction } from '../notify/poke/resource';
 
 /**
  * Noms data schema.
@@ -162,6 +163,14 @@ const schema = a
       .returns(a.ref('Pairing'))
       .authorization((allow) => [allow.authenticated()])
       .handler(a.handler.function(acceptPairingFunction)),
+    // Poke your partner: an on-demand nudge push (not stream-driven). The Lambda
+    // pushes to partnerSub's devices. Returns the number of devices notified.
+    pokePartner: a
+      .mutation()
+      .arguments({ partnerSub: a.string().required(), fromLabel: a.string() })
+      .returns(a.integer())
+      .authorization((allow) => [allow.authenticated()])
+      .handler(a.handler.function(pokeFunction)),
   })
   .authorization((allow) => [
     allow.resource(searchPlacesFunction).to(['query', 'mutate']),

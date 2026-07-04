@@ -48,6 +48,20 @@ export function nomDateLabel(nom: Nom): string {
   });
 }
 
+/** Date + time — used in history where several noms can share a day (2 picks
+ * seconds apart shouldn't look like one garbled row). Falls back to the date. */
+export function nomDateTimeLabel(nom: Nom): string {
+  if (!nom.createdAt) return 'New nom';
+  const d = new Date(nom.createdAt);
+  const date = d.toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+  const time = d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  return `${date} · ${time}`;
+}
+
 /** The current open nom (most recent first), or undefined — where a "➕ Nom"
  * tap lands. When none is open, the caller starts a fresh dated nom. */
 export function firstOpenNom(noms: Nom[]): Nom | undefined {

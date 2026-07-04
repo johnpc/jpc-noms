@@ -13,6 +13,7 @@ import { useToday } from './useToday';
 import { NomOptionsSection } from './NomOptionsSection';
 import { NomFooterActions } from './NomFooterActions';
 import { PreviousPick } from './PreviousPick';
+import { PokeButton } from './PokeButton';
 import { Prompt } from './Prompt';
 import { isSelected, selectedByLabel } from './nom';
 
@@ -35,6 +36,7 @@ export function TodayPage() {
       body={
         <>
           {d.previous && <PreviousPick nom={d.previous} />}
+          <PokeButton />
 
           {!nom || nom.optionPlaceIds.length === 0 ? (
             <div data-testid="today-empty">
