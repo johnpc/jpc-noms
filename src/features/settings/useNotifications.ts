@@ -22,22 +22,28 @@ export function useNotifications() {
   const { sub } = useAuth();
   const [state, setState] = useState<NotifState>('web');
   const [working, setWorking] = useState(false);
+  const [lastError, setLastError] = useState('');
 
   const refresh = useCallback(async () => {
     const perm = await pushStatus();
     if (perm === 'granted') setState(isOptedOut() ? 'off' : 'on');
     else setState(perm); // 'prompt' | 'denied' | 'web'
+    setLastError(lastPushError()); // reactive so the diagnostic updates after Register
   }, []);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
 
+  // Explicit "Register this device" — forces the full permission→APNs→save flow
+  // and (via refresh) surfaces the resulting breadcrumb/error. Give the async
+  // registration event a beat to land before re-reading the diagnostic.
   const enable = useCallback(async () => {
     if (!sub) return;
     setWorking(true);
     try {
       await enablePush(sub);
+      await new Promise((r) => setTimeout(r, 1500));
     } finally {
       setWorking(false);
       await refresh();
@@ -57,5 +63,5 @@ export function useNotifications() {
   // iOS maps the `app-settings:` URL to this app's Settings pane. No-op on web.
   const openIosSettings = () => window.open('app-settings:', '_blank');
 
-  return { state, working, enable, disable, openIosSettings, lastError: lastPushError() };
+  return { state, working, enable, disable, openIosSettings, lastError };
 }

@@ -10,6 +10,9 @@ vi.mock('./NomOptionsSection', () => ({
   NomOptionsSection: () => <div data-testid="nom-options" />,
 }));
 vi.mock('./PokeButton', () => ({ PokeButton: () => <div data-testid="poke-btn" /> }));
+vi.mock('./SelectedBanner', () => ({
+  SelectedBanner: () => <div data-testid="today-selected">selected</div>,
+}));
 vi.mock('./PreviousPick', () => ({
   PreviousPick: () => <div data-testid="today-previous">prev</div>,
 }));

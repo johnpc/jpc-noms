@@ -48,4 +48,21 @@ describe('NotificationsSection', () => {
     fireEvent.click(screen.getByTestId('notif-open-settings'));
     expect(base.openIosSettings).toHaveBeenCalled();
   });
+
+  it('always offers an explicit "Register this device" that fires enable', () => {
+    h.useNotifications.mockReturnValue({ ...base, state: 'on' });
+    render(<NotificationsSection />);
+    fireEvent.click(screen.getByTestId('notif-register'));
+    expect(base.enable).toHaveBeenCalled();
+  });
+
+  it('surfaces the last push diagnostic when present', () => {
+    h.useNotifications.mockReturnValue({
+      ...base,
+      state: 'on',
+      lastError: 'APNs registrationError: x',
+    });
+    render(<NotificationsSection />);
+    expect(screen.getByTestId('notif-error')).toHaveTextContent('registrationError');
+  });
 });
