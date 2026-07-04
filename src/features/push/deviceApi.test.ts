@@ -1,8 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const m = vi.hoisted(() => ({ list: vi.fn(), create: vi.fn(), del: vi.fn() }));
+const m = vi.hoisted(() => ({
+  list: vi.fn(),
+  get: vi.fn(),
+  create: vi.fn(),
+  update: vi.fn(),
+  del: vi.fn(),
+}));
 vi.mock('../../lib/dataClient', () => ({
-  dataClient: { models: { Device: { list: m.list, create: m.create, delete: m.del } } },
+  dataClient: {
+    models: {
+      Device: { list: m.list, get: m.get, create: m.create, update: m.update, delete: m.del },
+    },
+  },
 }));
 
 import { registerDevice, unregisterDevice } from './deviceApi';
@@ -12,22 +22,34 @@ describe('registerDevice', () => {
     vi.clearAllMocks();
     localStorage.clear();
     m.create.mockResolvedValue({});
+    m.update.mockResolvedValue({});
   });
 
-  it('creates a Device row for a new token via userPool + caches the token', async () => {
-    m.list.mockResolvedValue({ data: [] });
+  it('creates a Device row (deterministic id) for a new token + caches the token', async () => {
+    m.get.mockResolvedValue({ data: null }); // no existing row for this token's id
     await registerDevice('tok-new', 'u1');
-    expect(m.create).toHaveBeenCalledWith(
-      { token: 'tok-new', platform: 'ios', ownerSub: 'u1' },
-      { authMode: 'userPool' },
-    );
+    expect(m.create).toHaveBeenCalledTimes(1);
+    const [fields, opts] = m.create.mock.calls[0];
+    expect(fields).toMatchObject({ token: 'tok-new', platform: 'ios', ownerSub: 'u1' });
+    expect(fields.id).toMatch(/^dev-/); // deterministic id derived from the token
+    expect(opts).toEqual({ authMode: 'userPool' });
     expect(localStorage.getItem('noms.pushToken')).toBe('tok-new');
   });
 
-  it('does not duplicate an already-registered token', async () => {
-    m.list.mockResolvedValue({ data: [{ token: 'tok-1' }] });
+  it('upserts (no duplicate) when the same token is already registered', async () => {
+    m.get.mockResolvedValue({ data: { id: 'dev-abc', token: 'tok-1' } });
     await registerDevice('tok-1', 'u1');
     expect(m.create).not.toHaveBeenCalled();
+    expect(m.update).toHaveBeenCalledTimes(1); // updates the existing row instead
+  });
+
+  it('maps the same token to the same deterministic id every time', async () => {
+    m.get.mockResolvedValue({ data: null });
+    await registerDevice('same-token', 'u1');
+    await registerDevice('same-token', 'u1');
+    const id1 = m.create.mock.calls[0][0].id;
+    const id2 = m.create.mock.calls[1][0].id;
+    expect(id1).toBe(id2);
   });
 });
 
