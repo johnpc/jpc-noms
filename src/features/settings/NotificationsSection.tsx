@@ -2,21 +2,22 @@ import { IonButton, IonItem, IonLabel, IonList, IonListHeader, IonNote } from '@
 import { useNotifications } from './useNotifications';
 
 const LABEL: Record<string, string> = {
-  granted: 'On',
-  denied: 'Blocked in iOS',
+  on: 'On',
+  off: 'Off',
   prompt: 'Off',
+  denied: 'Blocked in iOS',
   web: 'iOS app only',
 };
 
 /**
- * Push-notifications control: shows the current permission and the right action
- * — enable it (prompt + register) when off, or a link to iOS Settings when the
- * user previously blocked it (the app can't re-prompt then). Hidden on web,
- * where push isn't available.
+ * Push-notifications control. Shows the current state and the right action:
+ * On → Turn off (in-app opt-out; removes this device's token), Off/prompt →
+ * Turn on (register / fire the prompt), Blocked → Open iOS Settings (the app
+ * can't re-prompt once iOS denied). Hidden on web (push is iOS-only).
  */
 export function NotificationsSection() {
   const n = useNotifications();
-  if (n.status === 'web') return null;
+  if (n.state === 'web') return null;
 
   return (
     <IonList>
@@ -24,10 +25,22 @@ export function NotificationsSection() {
       <IonItem>
         <IonLabel>Partner activity</IonLabel>
         <IonNote slot="end" data-testid="notif-status">
-          {LABEL[n.status]}
+          {LABEL[n.state]}
         </IonNote>
       </IonItem>
-      {n.status === 'prompt' && (
+      {n.state === 'on' && (
+        <IonButton
+          expand="block"
+          fill="clear"
+          color="medium"
+          disabled={n.working}
+          onClick={() => void n.disable()}
+          data-testid="notif-disable"
+        >
+          Turn off
+        </IonButton>
+      )}
+      {(n.state === 'off' || n.state === 'prompt') && (
         <IonButton
           expand="block"
           fill="clear"
@@ -35,10 +48,10 @@ export function NotificationsSection() {
           onClick={() => void n.enable()}
           data-testid="notif-enable"
         >
-          Enable notifications
+          Turn on notifications
         </IonButton>
       )}
-      {n.status === 'denied' && (
+      {n.state === 'denied' && (
         <IonButton
           expand="block"
           fill="clear"

@@ -6,9 +6,20 @@
  */
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
-import { registerDevice } from './deviceApi';
+import { registerDevice, unregisterDevice } from './deviceApi';
 
 const native = (): boolean => Capacitor.isNativePlatform();
+const OPT_OUT_KEY = 'noms.pushOptOut';
+
+/** Has the user turned push OFF in-app? (Distinct from iOS permission — lets us
+ * not auto-re-register on next sign-in.) */
+export function isOptedOut(): boolean {
+  return localStorage.getItem(OPT_OUT_KEY) === '1';
+}
+const setOptOut = (v: boolean): void => {
+  if (v) localStorage.setItem(OPT_OUT_KEY, '1');
+  else localStorage.removeItem(OPT_OUT_KEY);
+};
 
 /** Push permission as the Settings UI needs it. `web` = not a native build
  * (push is iOS-only); `prompt` = not asked yet; `denied` = blocked in iOS. */
@@ -36,9 +47,20 @@ export async function enablePush(ownerSub: string): Promise<PushStatus> {
   const perm = await PushNotifications.requestPermissions();
   if (perm.receive !== 'granted') return perm.receive === 'denied' ? 'denied' : 'prompt';
 
+  setOptOut(false); // enabling clears any prior in-app opt-out
   await PushNotifications.addListener('registration', (token) => {
     void registerDevice(token.value, ownerSub).catch(() => {});
   });
   await PushNotifications.register();
   return 'granted';
+}
+
+/**
+ * In-app "turn off": iOS permission stays granted (only iOS Settings can revoke
+ * it), but we delete this device's token so the push Lambda can't deliver, and
+ * set a local opt-out so we don't auto-re-register on the next sign-in.
+ */
+export async function disablePush(): Promise<void> {
+  setOptOut(true);
+  await unregisterDevice().catch(() => {});
 }
