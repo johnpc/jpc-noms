@@ -18,12 +18,12 @@ export function Home() {
     <IonPage>
       <IonHeader>
         <IonToolbar>
-          <IonTitle>Noms</IonTitle>
+          <IonTitle>jpc.noms</IonTitle>
         </IonToolbar>
       </IonHeader>
       <IonContent className="ion-padding">
         <header className="home-hero">
-          <h1 className="home-hero__title">Noms</h1>
+          <h1 className="home-hero__title">jpc.noms</h1>
           <p className="home-hero__sub">Pick where to eat, together.</p>
         </header>
         <nav className="home-actions" data-testid="home-actions">

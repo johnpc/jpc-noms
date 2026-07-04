@@ -157,7 +157,9 @@ AWS_PROFILE=personal npx ampx sandbox   # deploy/refresh the personal backend
 
 - **AWS:** profile `personal` (account 566092841021), region `us-west-2`. Never inline keys.
 - **Sandbox stack:** `amplify-jpcnoms-xss-sandbox-c38bb97e0e` (wired into `e2e-config`).
-- **Bundle id:** `com.johncorser.noms`. **Apple team:** `JW5SC3NYUV` (pinned in `project.pbxproj`).
+- **Bundle id:** `com.johncorser.eats` — Noms ships through the existing **eats** App Store listing
+  (John retired jpc-eats and replaced it with Noms; history was migrated). On-screen name is `jpc.noms`,
+  MARKETING_VERSION 3.0. **Apple team:** `JW5SC3NYUV` (pinned in `project.pbxproj`).
 - **Editor test user:** reused stoop creds in `.env.local` (`TEST_USERNAME`/`TEST_PASSWORD`); created in
   the sandbox Cognito pool and added to the `editors` group. Re-create if the sandbox pool is recycled.
 - **Secrets** (`.env`, git-ignored): `GOOGLE_PLACES_API_KEY`, `TESSIE_API_KEY`, `TESLA_VIN`.
