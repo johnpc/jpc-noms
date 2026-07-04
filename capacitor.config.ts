@@ -1,8 +1,11 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.johncorser.noms',
-  appName: 'Noms',
+  // Ships through the existing eats App Store listing (John retired eats and
+  // replaced it with Noms; history was migrated). Bundle id stays eats; the
+  // on-screen name is jpc.noms.
+  appId: 'com.johncorser.eats',
+  appName: 'jpc.noms',
   webDir: 'dist',
 };
 

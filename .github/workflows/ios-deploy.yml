@@ -23,7 +23,7 @@ env:
   # podspec, no Package.swift — compiles in. CocoaPods builds via the workspace.
   XCODEPROJ: ios/App/App.xcodeproj
   XCWORKSPACE: ios/App/App.xcworkspace
-  BUNDLE_ID: com.johncorser.noms
+  BUNDLE_ID: com.johncorser.eats
 
 jobs:
   deploy:

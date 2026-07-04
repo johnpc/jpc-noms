@@ -1,6 +1,6 @@
 {
-  "name": "Noms — pick where to eat, together",
-  "short_name": "Noms",
+  "name": "jpc.noms — pick where to eat, together",
+  "short_name": "jpc.noms",
   "description": "Search restaurants, save favorites, and nominate where to eat together — the winner sets your Tesla's navigation.",
   "id": "/",
   "start_url": "/",
