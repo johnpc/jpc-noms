@@ -5,7 +5,7 @@ export interface NomStats {
   totalNoms: number;
   decidedCount: number;
   openCount: number;
-  /** Selected noms, most-recent-ish first (input order reversed), for a history list. */
+  /** Decided noms in reverse-chronological order (newest first) for the history list. */
   history: Nom[];
 }
 
@@ -18,6 +18,8 @@ export function computeNomStats(noms: Nom[]): NomStats {
     totalNoms: noms.length,
     decidedCount: decided.length,
     openCount: noms.length - decided.length,
-    history: [...decided].reverse(),
+    // Sort by createdAt desc so history is reliably newest-first, regardless of
+    // the order Nom.list returned (which isn't guaranteed chronological).
+    history: [...decided].sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? '')),
   };
 }
