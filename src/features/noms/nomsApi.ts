@@ -27,8 +27,16 @@ export function useNoms(enabled = true) {
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
     queryFn: async (): Promise<Nom[]> => {
-      const { data } = await dataClient.models.Nom.list(AUTH);
-      return (data ?? []).map((r) => toNom(r as Record<string, unknown>));
+      // Page through ALL noms — the default list caps at 100, which silently hid
+      // most of the migrated history (259 rows) from Stats + the previous-pick.
+      const rows: Record<string, unknown>[] = [];
+      let nextToken: string | undefined;
+      do {
+        const { data, nextToken: nt } = await dataClient.models.Nom.list({ ...AUTH, nextToken });
+        rows.push(...((data ?? []) as Record<string, unknown>[]));
+        nextToken = nt ?? undefined;
+      } while (nextToken);
+      return rows.map((r) => toNom(r));
     },
   });
 }
