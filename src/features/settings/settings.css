@@ -1,0 +1,72 @@
+/* Settings — iOS grouped-list look: a muted title above a rounded surface
+ * card per section. Consumes --sp-* tokens; no hardcoded hex/px colors. */
+
+.settings-content {
+  --background: var(--sp-bg);
+}
+
+.settings-section {
+  margin: 0 0 22px;
+}
+
+.settings-section:first-of-type {
+  margin-top: 4px;
+}
+
+.settings-section__title {
+  margin: 0 0 8px;
+  padding-inline-start: 14px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sp-text-muted);
+}
+
+.settings-card {
+  padding: 0;
+  border-radius: var(--sp-radius);
+  background: var(--sp-surface);
+  box-shadow: var(--sp-shadow);
+  overflow: hidden;
+}
+
+.settings-card ion-item {
+  --background: transparent;
+  --padding-start: 16px;
+  --inner-padding-end: 16px;
+  --min-height: 52px;
+}
+
+/* Full-width theme segment fills the card edge-to-edge with a little inset. */
+.settings-card__segment {
+  padding: 10px 12px;
+}
+
+/* Action buttons stacked inside a card get breathing room from the edges. */
+.settings-card ion-button {
+  margin: 10px 12px;
+}
+
+.settings-card ion-button:first-of-type {
+  margin-top: 14px;
+}
+
+.settings-card ion-button:last-of-type {
+  margin-bottom: 14px;
+}
+
+/* Stacked outlined inputs (change-password) inside the account card. */
+.settings-card__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 6px 16px 4px;
+}
+
+/* Inline status/error messages under the account controls. */
+.settings-card ion-text p {
+  margin: 0 0 12px;
+  padding-inline: 16px;
+  font-size: 0.9rem;
+}

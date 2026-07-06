@@ -1,4 +1,5 @@
-import { IonItem, IonLabel, IonList, IonListHeader, IonNote } from '@ionic/react';
+import { IonItem, IonLabel, IonNote } from '@ionic/react';
+import { SettingsSection } from './SettingsSection';
 import { showToast } from '../../lib/toast';
 
 /** The App Store link for the app (ships through the jpc.eats listing). */
@@ -10,18 +11,17 @@ export function ShareSection() {
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(APP_STORE_URL);
-      void showToast('App link copied 📋');
+      void showToast('Link copied 📋');
     } catch {
       void showToast(APP_STORE_URL); // fallback: show it so they can copy manually
     }
   };
   return (
-    <IonList>
-      <IonListHeader>Share</IonListHeader>
-      <IonItem button detail onClick={() => void copy()} data-testid="share-app">
+    <SettingsSection title="Share">
+      <IonItem lines="none" button detail onClick={() => void copy()} data-testid="share-app">
         <IonLabel>Share app</IonLabel>
         <IonNote slot="end">Copy link</IonNote>
       </IonItem>
-    </IonList>
+    </SettingsSection>
   );
 }
