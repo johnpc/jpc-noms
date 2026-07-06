@@ -1,4 +1,5 @@
-import { IonCard, IonCardContent } from '@ionic/react';
+import { IonCard, IonCardContent, IonIcon } from '@ionic/react';
+import { openOutline } from 'ionicons/icons';
 import type { Place } from './types';
 import { placeName, placeBlurb, priceLabel, placeAddress, placeLink } from './place';
 import { PlacePhoto } from './PlacePhoto';
@@ -7,8 +8,9 @@ import './place.css';
 
 type Props = { place: Place } & PlaceActions;
 
-/** Render-only restaurant card. Shows name, price, a blurb, a website/Maps
- * link, and an optional action row (add-to-rotation / ➕ Nom / remove). */
+/** Render-only restaurant card. Shows name (with a link-out icon to the
+ * website/Maps), price, a blurb, and an optional action row
+ * (add-to-rotation / ➕ Nom / remove). */
 export function PlaceCard({ place, ...actions }: Props) {
   const price = priceLabel(place);
   const blurb = placeBlurb(place);
@@ -19,7 +21,19 @@ export function PlaceCard({ place, ...actions }: Props) {
       <PlacePhoto place={place} />
       <IonCardContent>
         <div className="place-card__head">
-          <h2 className="place-card__name">{placeName(place)}</h2>
+          <h2 className="place-card__name">
+            {placeName(place)}
+            <a
+              className="place-card__link"
+              href={link.href}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={link.label}
+              data-testid="place-card-website"
+            >
+              <IonIcon icon={openOutline} aria-hidden="true" />
+            </a>
+          </h2>
           {price && <span className="place-card__price">{price}</span>}
         </div>
         {address && (
@@ -28,15 +42,6 @@ export function PlaceCard({ place, ...actions }: Props) {
           </p>
         )}
         {blurb && <p className="place-card__blurb">{blurb}</p>}
-        <a
-          className="place-card__link"
-          href={link.href}
-          target="_blank"
-          rel="noreferrer"
-          data-testid="place-card-website"
-        >
-          {link.label} ↗
-        </a>
         <PlaceCardActions {...actions} />
       </IonCardContent>
     </IonCard>
