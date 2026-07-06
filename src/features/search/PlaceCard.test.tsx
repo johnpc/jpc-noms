@@ -32,9 +32,9 @@ describe('PlaceCard', () => {
     const { rerender } = render(<PlaceCard place={{ ...place, websiteUri: 'https://joes.x' }} />);
     const link = screen.getByTestId('place-card-website');
     expect(link).toHaveAttribute('href', 'https://joes.x');
-    expect(link).toHaveTextContent('Website');
+    expect(link).toHaveAttribute('aria-label', 'Website');
     rerender(<PlaceCard place={place} />);
-    expect(screen.getByTestId('place-card-website')).toHaveTextContent('View on Maps');
+    expect(screen.getByTestId('place-card-website')).toHaveAttribute('aria-label', 'View on Maps');
   });
 
   it('fires onAction when the action is tapped', () => {

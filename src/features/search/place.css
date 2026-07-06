@@ -34,6 +34,9 @@
 }
 
 .place-card__name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 1.1rem;
   font-weight: 600;
   margin: 0;
@@ -58,10 +61,8 @@
 }
 
 .place-card__link {
-  display: inline-block;
-  margin: 0 0 12px;
+  display: inline-flex;
+  align-items: center;
   color: var(--sp-primary, #3880ff);
-  font-size: 0.9rem;
-  font-weight: 600;
-  text-decoration: none;
+  font-size: 1rem;
 }
