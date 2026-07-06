@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const h = vi.hoisted(() => ({ create: vi.fn(), present: vi.fn() }));
-vi.mock('@ionic/core', () => ({ toastController: { create: h.create } }));
+vi.mock('@ionic/core/components', () => ({ toastController: { create: h.create } }));
+vi.mock('@ionic/core/components/ion-toast.js', () => ({ defineCustomElement: vi.fn() }));
 
 import { showError, showToast, errorMessage } from './toast';
 

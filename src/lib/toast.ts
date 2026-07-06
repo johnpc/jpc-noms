@@ -3,7 +3,15 @@
  * (e.g. the react-query mutation error handler) can surface a message. Isolated
  * here so callers/tests mock a single module.
  */
-import { toastController } from '@ionic/core';
+import { toastController } from '@ionic/core/components';
+import { defineCustomElement } from '@ionic/core/components/ion-toast.js';
+
+// Register <ion-toast> explicitly. Importing the bare `@ionic/core` controller
+// relies on Ionic's lazy loader, which never registers the element inside the
+// Capacitor iOS bundle — so create() resolves but nothing ever presents. The
+// /components entrypoint + defineCustomElement is the supported path for
+// controllers used outside JSX. Idempotent; safe to call at module load.
+defineCustomElement();
 
 /** Show a short error toast at the bottom. Best-effort — never throws. */
 export async function showError(message: string): Promise<void> {

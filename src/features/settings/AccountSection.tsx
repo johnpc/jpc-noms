@@ -1,14 +1,6 @@
 import { useState } from 'react';
-import {
-  IonButton,
-  IonInput,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonListHeader,
-  IonNote,
-  IonText,
-} from '@ionic/react';
+import { IonButton, IonInput, IonItem, IonLabel, IonNote, IonText } from '@ionic/react';
+import { SettingsSection } from './SettingsSection';
 import { useAccount } from './useAccount';
 
 /** Account management: identity, change password, sign out, delete. Signed-in only. */
@@ -19,15 +11,18 @@ export function AccountSection() {
 
   if (!a.email) {
     return (
-      <IonText color="medium">
-        <p data-testid="account-signedout">Sign in to manage your account.</p>
-      </IonText>
+      <SettingsSection title="Account">
+        <IonItem lines="none">
+          <IonLabel color="medium" data-testid="account-signedout">
+            Sign in to manage your account.
+          </IonLabel>
+        </IonItem>
+      </SettingsSection>
     );
   }
 
   return (
-    <IonList>
-      <IonListHeader>Account</IonListHeader>
+    <SettingsSection title="Account">
       <IonItem lines="none">
         <IonLabel>Signed in as</IonLabel>
         <IonNote slot="end" data-testid="account-email">
@@ -35,26 +30,26 @@ export function AccountSection() {
         </IonNote>
       </IonItem>
 
-      <IonItem lines="none">
+      <div className="settings-card__fields">
         <IonInput
           type="password"
+          fill="outline"
           label="Current password"
           labelPlacement="stacked"
           value={oldP}
           onIonInput={(e) => setOldP(e.detail.value ?? '')}
           data-testid="account-oldpw"
         />
-      </IonItem>
-      <IonItem lines="none">
         <IonInput
           type="password"
+          fill="outline"
           label="New password"
           labelPlacement="stacked"
           value={newP}
           onIonInput={(e) => setNewP(e.detail.value ?? '')}
           data-testid="account-newpw"
         />
-      </IonItem>
+      </div>
       <IonButton
         expand="block"
         disabled={a.busy || !oldP || !newP}
@@ -94,6 +89,6 @@ export function AccountSection() {
           <p data-testid="account-error">{a.error}</p>
         </IonText>
       )}
-    </IonList>
+    </SettingsSection>
   );
 }

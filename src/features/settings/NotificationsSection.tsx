@@ -1,4 +1,5 @@
-import { IonButton, IonItem, IonLabel, IonList, IonListHeader, IonNote } from '@ionic/react';
+import { IonButton, IonItem, IonLabel, IonNote } from '@ionic/react';
+import { SettingsSection } from './SettingsSection';
 import { useNotifications } from './useNotifications';
 
 const LABEL: Record<string, string> = {
@@ -20,9 +21,8 @@ export function NotificationsSection() {
   if (n.state === 'web') return null;
 
   return (
-    <IonList>
-      <IonListHeader>Notifications</IonListHeader>
-      <IonItem>
+    <SettingsSection title="Notifications">
+      <IonItem lines="none">
         <IonLabel>Partner activity</IonLabel>
         <IonNote slot="end" data-testid="notif-status">
           {LABEL[n.state]}
@@ -79,6 +79,6 @@ export function NotificationsSection() {
           </IonNote>
         </IonItem>
       )}
-    </IonList>
+    </SettingsSection>
   );
 }
