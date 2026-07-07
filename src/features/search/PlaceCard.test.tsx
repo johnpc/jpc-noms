@@ -44,6 +44,15 @@ describe('PlaceCard', () => {
     expect(onAction).toHaveBeenCalled();
   });
 
+  it('colors the action red when actionDanger is set', () => {
+    const { rerender } = render(
+      <PlaceCard place={place} actionLabel="Add to rotation" onAction={vi.fn()} />,
+    );
+    expect(screen.getByTestId('place-card-action')).not.toHaveAttribute('color', 'danger');
+    rerender(<PlaceCard place={place} actionLabel="Remove" onAction={vi.fn()} actionDanger />);
+    expect(screen.getByTestId('place-card-action')).toHaveAttribute('color', 'danger');
+  });
+
   it('renders a ➕ Nom button only when onNom is provided, and fires it', () => {
     const { rerender } = render(<PlaceCard place={place} />);
     expect(screen.queryByTestId('place-card-nom')).not.toBeInTheDocument();
