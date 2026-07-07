@@ -25,6 +25,7 @@ export function RotationItem({
     <PlaceCard
       place={place}
       actionLabel="Remove"
+      actionDanger
       actionDisabled={removing}
       onAction={onRemove}
       onNom={onNom}

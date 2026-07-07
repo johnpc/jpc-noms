@@ -5,6 +5,8 @@ export interface PlaceActions {
   actionLabel?: string;
   onAction?: () => void;
   actionDisabled?: boolean;
+  /** Render the primary action in red — for destructive actions like "Remove". */
+  actionDanger?: boolean;
   /** Optional secondary action (e.g. "Remove") shown as a subtle text button. */
   secondaryLabel?: string;
   onSecondary?: () => void;
@@ -20,6 +22,7 @@ export function PlaceCardActions({
   actionLabel,
   onAction,
   actionDisabled,
+  actionDanger,
   secondaryLabel,
   onSecondary,
   onNom,
@@ -32,6 +35,7 @@ export function PlaceCardActions({
         <IonButton
           size="small"
           fill="solid"
+          color={actionDanger ? 'danger' : undefined}
           onClick={onAction}
           disabled={actionDisabled}
           data-testid="place-card-action"
