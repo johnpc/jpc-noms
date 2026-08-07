@@ -45,6 +45,9 @@ export function SignIn() {
             onChange={f.setPassword}
           />
           {f.error && <p className="auth__error">{f.error}</p>}
+          <a className="auth__forgot" onClick={() => history.push('/reset')}>
+            Forgot password?
+          </a>
           <button type="button" className="auth__cta" disabled={f.busy} onClick={f.submit}>
             {f.busy ? 'Signing in…' : 'Sign in'}
           </button>

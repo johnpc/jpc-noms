@@ -10,6 +10,8 @@ import {
   confirmSignUp as amplifyConfirmSignUp,
   signOut as amplifySignOut,
   updatePassword as amplifyUpdatePassword,
+  resetPassword as amplifyResetPassword,
+  confirmResetPassword as amplifyConfirmResetPassword,
   deleteUser as amplifyDeleteUser,
 } from 'aws-amplify/auth';
 import type { SignUpResult } from './types';
@@ -67,6 +69,20 @@ export async function signOut(): Promise<void> {
 
 export async function changePassword(oldPassword: string, newPassword: string): Promise<void> {
   await amplifyUpdatePassword({ oldPassword, newPassword });
+}
+
+/** Starts the forgot-password flow: Cognito emails a reset code. */
+export async function resetPassword(email: string): Promise<void> {
+  await amplifyResetPassword({ username: email });
+}
+
+/** Completes the forgot-password flow with the emailed code + new password. */
+export async function confirmResetPassword(
+  email: string,
+  code: string,
+  newPassword: string,
+): Promise<void> {
+  await amplifyConfirmResetPassword({ username: email, confirmationCode: code, newPassword });
 }
 
 export async function deleteAccount(): Promise<void> {

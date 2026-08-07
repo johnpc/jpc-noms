@@ -1,4 +1,5 @@
 import { defineBackend } from '@aws-amplify/backend';
+import { Duration } from 'aws-cdk-lib';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { StartingPosition } from 'aws-cdk-lib/aws-lambda';
 import { DynamoEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
@@ -48,6 +49,21 @@ const backend = defineBackend({
   sendToTeslaFunction,
   pokeFunction,
 });
+
+// --- Long-lived sessions: Cognito defaults expire the refresh token after 30
+// days, which logs this two-person household out far too often. Push the app
+// client's token lifetimes to Cognito's maximums so a signed-in partner stays
+// signed in effectively forever. Access/ID tokens ride the refresh token, so
+// they can stay short-ish (1 day) while the refresh token spans 10 years. ---
+const { cfnUserPoolClient } = backend.auth.resources.cfnResources;
+cfnUserPoolClient.refreshTokenValidity = Duration.days(3650).toDays(); // 10y (Cognito max)
+cfnUserPoolClient.accessTokenValidity = Duration.days(1).toHours();
+cfnUserPoolClient.idTokenValidity = Duration.days(1).toHours();
+cfnUserPoolClient.tokenValidityUnits = {
+  refreshToken: 'days',
+  accessToken: 'hours',
+  idToken: 'hours',
+};
 
 const cacheTable = backend.data.resources.tables['GoogleApiCache'];
 const placesFns = [

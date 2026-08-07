@@ -8,6 +8,8 @@ const mocks = vi.hoisted(() => ({
   confirmSignUp: vi.fn(),
   signOut: vi.fn(),
   updatePassword: vi.fn(),
+  resetPassword: vi.fn(),
+  confirmResetPassword: vi.fn(),
   deleteUser: vi.fn(),
 }));
 vi.mock('aws-amplify/auth', () => mocks);
@@ -77,6 +79,20 @@ describe('authClient', () => {
   it('changePassword forwards old + new to updatePassword', async () => {
     await authClient.changePassword('old', 'new');
     expect(mocks.updatePassword).toHaveBeenCalledWith({ oldPassword: 'old', newPassword: 'new' });
+  });
+
+  it('resetPassword starts the flow for the given email', async () => {
+    await authClient.resetPassword('a@b.com');
+    expect(mocks.resetPassword).toHaveBeenCalledWith({ username: 'a@b.com' });
+  });
+
+  it('confirmResetPassword forwards code + new password', async () => {
+    await authClient.confirmResetPassword('a@b.com', '123456', 'newpw');
+    expect(mocks.confirmResetPassword).toHaveBeenCalledWith({
+      username: 'a@b.com',
+      confirmationCode: '123456',
+      newPassword: 'newpw',
+    });
   });
 
   it('deleteAccount calls deleteUser', async () => {

@@ -3,6 +3,7 @@ import { IonRouterOutlet } from '@ionic/react';
 import { Home } from './features/home/Home';
 import { SignIn } from './features/auth/SignIn';
 import { SignUp } from './features/auth/SignUp';
+import { ResetPassword } from './features/auth/ResetPassword';
 import { SearchPage } from './features/search/SearchPage';
 import { RotationPage } from './features/rotation/RotationPage';
 import { PairingPage } from './features/pairing/PairingPage';
@@ -55,6 +56,9 @@ export function AppRoutes() {
       </Route>
       <Route exact path="/signup">
         <SignUp />
+      </Route>
+      <Route exact path="/reset">
+        <ResetPassword />
       </Route>
       <Route exact path="/">
         <Redirect to="/home" />
