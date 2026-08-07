@@ -7,6 +7,8 @@ const client = vi.hoisted(() => ({
   signIn: vi.fn(),
   signUp: vi.fn(),
   confirmSignUp: vi.fn(),
+  resetPassword: vi.fn(),
+  confirmResetPassword: vi.fn(),
   signOut: vi.fn(),
 }));
 vi.mock('./authClient', () => client);
@@ -23,6 +25,10 @@ function Probe() {
       <button onClick={() => a.signIn('a@b.com', 'pw')}>signin</button>
       <button onClick={() => a.signUp('a@b.com', 'pw')}>signup</button>
       <button onClick={() => a.confirmSignUp('a@b.com', '123456')}>confirm</button>
+      <button onClick={() => a.resetPassword('a@b.com')}>reset</button>
+      <button onClick={() => a.confirmResetPassword('a@b.com', '123456', 'newpw')}>
+        confirmreset
+      </button>
       <button onClick={() => a.signOut()}>signout</button>
     </div>
   );
@@ -82,6 +88,18 @@ describe('AuthProvider', () => {
     await act(async () => void screen.getByText('confirm').click());
     expect(client.signUp).toHaveBeenCalledWith('a@b.com', 'pw');
     expect(client.confirmSignUp).toHaveBeenCalledWith('a@b.com', '123456');
+  });
+
+  it('exposes resetPassword and confirmResetPassword passthroughs', async () => {
+    client.currentEmail.mockResolvedValue(null);
+    client.resetPassword.mockResolvedValue(undefined);
+    client.confirmResetPassword.mockResolvedValue(undefined);
+    renderProbe();
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('unauthenticated'));
+    await act(async () => void screen.getByText('reset').click());
+    await act(async () => void screen.getByText('confirmreset').click());
+    expect(client.resetPassword).toHaveBeenCalledWith('a@b.com');
+    expect(client.confirmResetPassword).toHaveBeenCalledWith('a@b.com', '123456', 'newpw');
   });
 });
 

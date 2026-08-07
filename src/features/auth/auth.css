@@ -69,3 +69,11 @@
   font-weight: 600;
   cursor: pointer;
 }
+
+.auth__forgot {
+  align-self: flex-end;
+  font-size: 0.85rem;
+  color: var(--sp-accent);
+  font-weight: 600;
+  cursor: pointer;
+}

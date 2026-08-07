@@ -42,4 +42,9 @@ describe('SignIn', () => {
     expect(screen.getByText('nope')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Signing in…' })).toBeDisabled();
   });
+
+  it('offers a forgot-password link', () => {
+    renderSignIn();
+    expect(screen.getByText('Forgot password?')).toBeInTheDocument();
+  });
 });

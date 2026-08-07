@@ -34,13 +34,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await authClient.confirmSignUp(email, code);
   }, []);
 
+  const resetPassword = useCallback(async (email: string) => {
+    await authClient.resetPassword(email);
+  }, []);
+
+  const confirmResetPassword = useCallback(
+    async (email: string, code: string, newPassword: string) => {
+      await authClient.confirmResetPassword(email, code, newPassword);
+    },
+    [],
+  );
+
   const signOut = useCallback(async () => {
     await authClient.signOut();
     setState({ status: 'unauthenticated', email: null, sub: null });
   }, []);
 
   return (
-    <AuthContext.Provider value={{ ...state, signIn, signUp, confirmSignUp, signOut, refresh }}>
+    <AuthContext.Provider
+      value={{
+        ...state,
+        signIn,
+        signUp,
+        confirmSignUp,
+        resetPassword,
+        confirmResetPassword,
+        signOut,
+        refresh,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
