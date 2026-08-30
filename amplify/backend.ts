@@ -66,13 +66,14 @@ cfnUserPoolClient.tokenValidityUnits = {
 };
 
 const cacheTable = backend.data.resources.tables['GoogleApiCache'];
-const placesFns = [
-  backend.searchPlacesFunction,
-  backend.getPlaceFunction,
-  backend.getPlaceImageFunction,
-];
 
-for (const fn of placesFns) {
+// Both of these need the Google key + the GoogleApiCache table. getPlaceImage is
+// deliberately NOT here: it resolves a short-lived signed photo URL fresh on
+// every call and never caches it (caching an expiring URL served dead 403s), so
+// it needs only the Google secret — granted separately below.
+const cachePlacesFns = [backend.searchPlacesFunction, backend.getPlaceFunction];
+
+for (const fn of cachePlacesFns) {
   // Google Places key comes from Secrets Manager at runtime (see googleApi.ts).
   fn.addEnvironment('GOOGLE_SECRET_ARN', GOOGLE_SECRET_ARN);
   fn.addEnvironment('CACHE_TABLE_NAME', cacheTable.tableName);
@@ -93,6 +94,15 @@ for (const fn of placesFns) {
     }),
   );
 }
+
+// getPlaceImage: Google key only (no cache — see note above).
+backend.getPlaceImageFunction.addEnvironment('GOOGLE_SECRET_ARN', GOOGLE_SECRET_ARN);
+backend.getPlaceImageFunction.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    actions: ['secretsmanager:GetSecretValue'],
+    resources: [GOOGLE_SECRET_ARN],
+  }),
+);
 
 // Pairing Lambdas: they read/write the Pairing table (invitee joins a
 // multi-owner row they don't yet own) via their IAM role.

@@ -45,7 +45,9 @@ export function usePlace(placeId: string | undefined) {
   });
 }
 
-/** Resolve a Google Places photo id to a hosted image URL (long-cached). */
+/** Resolve a Google Places photo id to a hosted image URL. The resolved URL is
+ * a short-lived signed Google URL, so keep the client cache well under its
+ * lifetime (1h) — otherwise a long-lived session renders an expired 403 link. */
 export function usePlaceImage(photoId: string | undefined) {
   return useQuery({
     queryKey: ['placeImage', photoId],
@@ -58,6 +60,6 @@ export function usePlaceImage(photoId: string | undefined) {
       return (data?.photoUri as string) ?? null;
     },
     enabled: !!photoId,
-    staleTime: 1000 * 60 * 60 * 24,
+    staleTime: 1000 * 60 * 60,
   });
 }
