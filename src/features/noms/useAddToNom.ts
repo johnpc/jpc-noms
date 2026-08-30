@@ -1,10 +1,7 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { useNoms as useNomsQuery, useCreateNom } from './nomsApi';
 import { useAddOption } from './nomMutations';
 import { useNomMembership } from './useNomMembership';
 import { todaysOpenNom } from './nomDates';
-import { withOption } from './nom';
-import { upsertNom } from './nomRecord';
 import { showToast } from '../../lib/toast';
 import { tap } from '../../lib/haptics';
 import type { Nom } from './types';
@@ -12,14 +9,16 @@ import type { Nom } from './types';
 /**
  * The "➕ Nom" action on a restaurant card: drop this place into today's open
  * nom, starting a fresh dated nom if none is open. Zero friction — no picker,
- * no naming. Guests are handled by the caller (search routes them to sign-in).
+ * no naming. The add is optimistic (useAddOption flips the ['noms'] cache at
+ * press time), so the card shows "In nom ✓" instantly; only creating today's
+ * FIRST nom awaits the network (we need its id). Guests are handled by the
+ * caller (search routes them to sign-in).
  */
 export function useAddToNom() {
   const { signedIn, sub, actor, pairingId, members } = useNomMembership();
   const { data: noms = [] } = useNomsQuery(signedIn);
   const create = useCreateNom();
   const add = useAddOption();
-  const qc = useQueryClient();
 
   const openNom = todaysOpenNom(noms, new Date());
   // Place ids already in today's open nom — the search/rotation cards use this
@@ -35,14 +34,11 @@ export function useAddToNom() {
       if (!created) return;
       nom = created;
     }
-    await add.mutateAsync({ nom, placeId, actor });
-    // Write the result straight into the cache so the Today screen shows it
-    // INSTANTLY — DynamoDB is eventually consistent, so a refetch right after a
-    // create can miss the new row and leave Today looking blank until the poll.
-    const next: Nom = { ...nom, optionPlaceIds: withOption(nom, placeId) };
-    qc.setQueryData<Nom[]>(['noms'], (list) => upsertNom(list, next));
+    // Optimistic: the cache already shows the option; a failure rolls back and
+    // the global mutation-error toast tells the user.
+    add.mutate({ nom, placeId, actor });
     void showToast('Added to your nom 🍽️');
   };
 
-  return { addToNom, nominatedIds, busy: create.isPending || add.isPending };
+  return { addToNom, nominatedIds, busy: create.isPending };
 }

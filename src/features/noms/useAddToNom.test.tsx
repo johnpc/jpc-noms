@@ -23,7 +23,7 @@ vi.mock('./nomsApi', () => ({
   useCreateNom: () => ({ mutateAsync: h.createMutate, isPending: false }),
 }));
 vi.mock('./nomMutations', () => ({
-  useAddOption: () => ({ mutateAsync: h.addMutate, isPending: false }),
+  useAddOption: () => ({ mutate: h.addMutate, isPending: false }),
 }));
 vi.mock('../../lib/toast', () => ({ showToast: h.toast }));
 vi.mock('../../lib/haptics', () => ({ tap: vi.fn() }));
@@ -75,9 +75,8 @@ describe('useAddToNom', () => {
       actor: h.membership.actor,
     });
     expect(h.toast).toHaveBeenCalled();
-    // Optimistically written to the cache so Today shows it instantly.
-    const cached = qc.getQueryData<Nom[]>(['noms']);
-    expect(cached?.find((n) => n.id === 'open1')?.optionPlaceIds).toContain('place-1');
+    // The optimistic ['noms'] cache write lives inside useAddOption's onMutate
+    // (see useNomListMutation) — covered by nomMutations.test.tsx.
   });
 
   it('creates today’s nom first when none is open, then adds to it', async () => {
