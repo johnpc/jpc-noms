@@ -9,8 +9,8 @@ vi.mock('../../lib/dataClient', () => ({ dataClient: { models: { Nom: { update: 
 
 import { useAddOption, useSelectOption } from './nomMutations';
 
+let qc: QueryClient;
 function wrapper({ children }: { children: ReactNode }) {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return <QueryClientProvider client={qc}>{children}</QueryClientProvider>;
 }
 
@@ -26,6 +26,9 @@ describe('nomMutations', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     m.update.mockResolvedValue({});
+    qc = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
   });
 
   const actor = { sub: 'u1', label: 'me@x.com' };
@@ -39,6 +42,34 @@ describe('nomMutations', () => {
       { id: 'n1', optionPlaceIds: ['a', 'b'], lastActorSub: 'u1', lastActionText: 'me@x.com' },
       { authMode: 'userPool' },
     );
+  });
+
+  it('useAddOption updates the [noms] cache optimistically (before the network resolves)', async () => {
+    qc.setQueryData(['noms'], [nom]);
+    let release!: () => void;
+    m.update.mockReturnValue(new Promise<void>((res) => (release = () => res())));
+    const { result } = renderHook(() => useAddOption(), { wrapper });
+    act(() => {
+      result.current.mutate({ nom, placeId: 'b', actor });
+    });
+    // Cache reflects the add while the write is still in flight.
+    await act(async () => {
+      await Promise.resolve();
+    });
+    const cached = qc.getQueryData<Nom[]>(['noms']);
+    expect(cached?.[0].optionPlaceIds).toEqual(['a', 'b']);
+    await act(async () => release());
+  });
+
+  it('useAddOption rolls the cache back when the write fails', async () => {
+    qc.setQueryData(['noms'], [nom]);
+    m.update.mockRejectedValue(new Error('boom'));
+    const { result } = renderHook(() => useAddOption(), { wrapper });
+    await act(async () => {
+      await result.current.mutateAsync({ nom, placeId: 'b', actor }).catch(() => undefined);
+    });
+    const cached = qc.getQueryData<Nom[]>(['noms']);
+    expect(cached?.[0].optionPlaceIds).toEqual(['a']);
   });
 
   it('useSelectOption sets selectedPlaceId + SELECTED + the actor', async () => {

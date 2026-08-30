@@ -5,7 +5,7 @@
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { dataClient } from '../../lib/dataClient';
-import { nomFromRecord } from './nomRecord';
+import { nomFromRecord, upsertNom } from './nomRecord';
 import type { Nom } from './types';
 
 const AUTH = { authMode: 'userPool' } as const;
@@ -41,7 +41,11 @@ export function useNoms(enabled = true) {
   });
 }
 
-/** Create an OPEN nom for the pairing (both members can read/write it). */
+/** Create an OPEN nom for the pairing (both members can read/write it).
+ * The created row is written straight into the ['noms'] cache — NOT an
+ * invalidate-refetch: returning invalidateQueries from onSuccess held
+ * isPending until the FULL history re-paged (259+ rows), graying the UI for
+ * seconds after every ➕ Nom that started a fresh nom. */
 export function useCreateNom() {
   const qc = useQueryClient();
   return useMutation({
@@ -52,6 +56,8 @@ export function useCreateNom() {
       );
       return data ? nomFromRecord(data as unknown as Record<string, unknown>) : null;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['noms'] }),
+    onSuccess: (created) => {
+      if (created) qc.setQueryData<Nom[]>(['noms'], (list) => upsertNom(list, created));
+    },
   });
 }
