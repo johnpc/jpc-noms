@@ -6,14 +6,16 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { dataClient } from '../../lib/dataClient';
 import { nomFromRecord, upsertNom } from './nomRecord';
+import { useNomMembership } from './useNomMembership';
+import { fetchNoms } from './nomsFetch';
 import type { Nom } from './types';
 
 const AUTH = { authMode: 'userPool' } as const;
 
-const toNom = nomFromRecord;
-
 /** All noms the caller is a member of (both partners see the same set). */
 export function useNoms(enabled = true) {
+  const { pairingId, sub } = useNomMembership(enabled);
+  const qc = useQueryClient();
   return useQuery({
     queryKey: ['noms'],
     enabled,
@@ -26,18 +28,9 @@ export function useNoms(enabled = true) {
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
-    queryFn: async (): Promise<Nom[]> => {
-      // Page through ALL noms — the default list caps at 100, which silently hid
-      // most of the migrated history (259 rows) from Stats + the previous-pick.
-      const rows: Record<string, unknown>[] = [];
-      let nextToken: string | undefined;
-      do {
-        const { data, nextToken: nt } = await dataClient.models.Nom.list({ ...AUTH, nextToken });
-        rows.push(...((data ?? []) as Record<string, unknown>[]));
-        nextToken = nt ?? undefined;
-      } while (nextToken);
-      return rows.map((r) => toNom(r));
-    },
+    // First load pages the FULL history (Stats needs it); every later refetch
+    // is a small recently-updated query merged over the cache — see nomsFetch.
+    queryFn: () => fetchNoms(qc.getQueryData<Nom[]>(['noms']), pairingId, sub ?? ''),
   });
 }
 

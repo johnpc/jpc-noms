@@ -58,7 +58,9 @@ async function main() {
   // An OPEN nom with a selectable option (drives the noms slice e2e)...
   await client.models.Nom.create(
     {
-      pairingId: 'seed-pairing',
+      // 'solo' — the unpaired test user's partition, so the recent-noms poll
+      // (which queries by the caller's pairingId) sees these rows.
+      pairingId: 'solo',
       members: [me],
       optionPlaceIds: [SEEDED_PLACES[1].id],
       status: 'OPEN',
@@ -68,7 +70,9 @@ async function main() {
   // ...and a SELECTED nom so the stats/history page reads a real decision.
   await client.models.Nom.create(
     {
-      pairingId: 'seed-pairing',
+      // 'solo' — the unpaired test user's partition, so the recent-noms poll
+      // (which queries by the caller's pairingId) sees these rows.
+      pairingId: 'solo',
       members: [me],
       optionPlaceIds: [SEEDED_PLACES[0].id, SEEDED_PLACES[2].id],
       selectedPlaceId: SEEDED_PLACES[0].id,
