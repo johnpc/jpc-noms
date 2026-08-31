@@ -2,12 +2,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const e = vi.hoisted(() => ({
   photoUri: vi.fn(),
+  refresh: vi.fn(),
   hasPhoto: vi.fn(),
   storePhoto: vi.fn(),
   fetchImageBytes: vi.fn(),
   config: vi.fn(),
 }));
 vi.mock('../shared/googleApi', () => ({ photoUri: e.photoUri }));
+vi.mock('../shared/refreshPlacePhotos', () => ({ refreshPlacePhotos: e.refresh }));
 vi.mock('../shared/photoStore', () => ({
   photoStoreConfig: e.config,
   photoKey: (id: string, w: number, h: number) => `photos/key-${id}-${w}x${h}`,
@@ -69,12 +71,41 @@ describe('getGooglePlaceImage handler', () => {
     expect(e.storePhoto).not.toHaveBeenCalled();
   });
 
-  it('returns an empty uri on a transient Google failure', async () => {
+  it('self-heals a rotated photo name: refreshes the place, retries, stores under the REQUESTED key', async () => {
+    e.hasPhoto.mockResolvedValue(false);
+    // The stale name 400s (empty uri) → refresh yields the current name → retry succeeds.
+    e.photoUri.mockImplementation((id: string) =>
+      Promise.resolve(id === 'fresh' ? 'https://signed-fresh' : ''),
+    );
+    e.refresh.mockResolvedValue('fresh');
+    e.fetchImageBytes.mockResolvedValue({ bytes: new Uint8Array([1]), contentType: 'image/jpeg' });
+    const out = await call(evt('stale', 800, 500));
+    expect(e.refresh).toHaveBeenCalledWith('stale');
+    // Stored under the STALE (requested) key so every old reference heals once.
+    expect(e.storePhoto).toHaveBeenCalledWith(
+      'b',
+      'photos/key-stale-800x500',
+      expect.any(Uint8Array),
+      'image/jpeg',
+    );
+    expect(out.photoUri).toBe('https://cdn.example/photos/key-stale-800x500');
+  });
+
+  it('returns an empty uri when Google fails and the heal finds nothing', async () => {
     e.hasPhoto.mockResolvedValue(false);
     e.photoUri.mockResolvedValue('');
+    e.refresh.mockResolvedValue(null);
     const out = await call(evt('ph'));
     expect(out.photoUri).toBe('');
     expect(e.fetchImageBytes).not.toHaveBeenCalled();
+  });
+
+  it('returns an empty uri when the heal itself throws', async () => {
+    e.hasPhoto.mockResolvedValue(false);
+    e.photoUri.mockResolvedValue('');
+    e.refresh.mockRejectedValue(new Error('google down'));
+    const out = await call(evt('ph'));
+    expect(out.photoUri).toBe('');
   });
 
   it('resolves Google directly when the photo store is not wired', async () => {

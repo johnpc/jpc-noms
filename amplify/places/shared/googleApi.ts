@@ -60,10 +60,12 @@ export async function searchText(input: {
   return json.places ?? [];
 }
 
-/** Detail lookup for one place id. */
+/** Detail lookup for one place id. Accepts a bare id ("ChIJ…") or a full
+ * resource name ("places/ChIJ…") — the endpoint requires the places/ prefix. */
 export async function placeDetail(placeId: string): Promise<RawPlace> {
   const apiKey = await key();
-  const res = await fetch(`${BASE}/${placeId}?languageCode=en&fields=${DETAIL_FIELDS}`, {
+  const resource = placeId.startsWith('places/') ? placeId : `places/${placeId}`;
+  const res = await fetch(`${BASE}/${resource}?languageCode=en&fields=${DETAIL_FIELDS}`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': apiKey },
   });

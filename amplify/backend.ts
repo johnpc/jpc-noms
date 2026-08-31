@@ -70,11 +70,15 @@ cfnUserPoolClient.tokenValidityUnits = {
 
 const cacheTable = backend.data.resources.tables['GoogleApiCache'];
 
-// Both of these need the Google key + the GoogleApiCache table. getPlaceImage is
-// deliberately NOT here: it caches photo BYTES in S3 (not the GoogleApiCache
-// row store), so it needs only the Google secret + the photo bucket — granted
-// separately below.
-const cachePlacesFns = [backend.searchPlacesFunction, backend.getPlaceFunction];
+// All three need the Google key + the GoogleApiCache table. getPlaceImage
+// keeps photo BYTES in S3, but its stale-photo self-heal re-fetches a place's
+// details and re-caches them in GoogleApiCache, so it gets the same grants;
+// its extra photo-bucket wiring is below.
+const cachePlacesFns = [
+  backend.searchPlacesFunction,
+  backend.getPlaceFunction,
+  backend.getPlaceImageFunction,
+];
 
 for (const fn of cachePlacesFns) {
   // Google Places key comes from Secrets Manager at runtime (see googleApi.ts).
@@ -124,17 +128,11 @@ const photoCdn = new Distribution(photoStack, 'PlacePhotosCdn', {
   comment: 'jpc-noms restaurant photos',
 });
 
-// getPlaceImage: Google key + the photo store (no GoogleApiCache — see note above).
-backend.getPlaceImageFunction.addEnvironment('GOOGLE_SECRET_ARN', GOOGLE_SECRET_ARN);
+// getPlaceImage additionally reads/writes the photo bucket (Google key +
+// GoogleApiCache grants came from the cachePlacesFns loop above).
 backend.getPlaceImageFunction.addEnvironment('PHOTO_BUCKET_NAME', photoBucket.bucketName);
 backend.getPlaceImageFunction.addEnvironment('PHOTO_CDN_DOMAIN', photoCdn.distributionDomainName);
 photoBucket.grantReadWrite(backend.getPlaceImageFunction.resources.lambda);
-backend.getPlaceImageFunction.resources.lambda.addToRolePolicy(
-  new PolicyStatement({
-    actions: ['secretsmanager:GetSecretValue'],
-    resources: [GOOGLE_SECRET_ARN],
-  }),
-);
 
 // Pairing Lambdas: they read/write the Pairing table (invitee joins a
 // multi-owner row they don't yet own) via their IAM role.

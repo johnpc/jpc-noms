@@ -42,6 +42,17 @@ describe('googleApi edges', () => {
     expect(await placeDetail('places/p9')).toEqual({ id: 'p9' });
   });
 
+  it('placeDetail prefixes a BARE place id with places/ (the endpoint requires it)', async () => {
+    const f = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      json: async () => ({ id: 'p9' }),
+    } as Response);
+    await placeDetail('p9');
+    expect(String(f.mock.calls[0][0])).toContain('/places/p9?');
+    // Already-prefixed ids are not double-prefixed.
+    await placeDetail('places/p9');
+    expect(String(f.mock.calls[1][0])).not.toContain('places/places/');
+  });
+
   it('photoUri resolves a hosted uri, or "" when absent', async () => {
     const f = vi.spyOn(globalThis, 'fetch');
     f.mockResolvedValueOnce({ json: async () => ({ photoUri: 'https://img/1' }) } as Response);
