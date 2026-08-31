@@ -3,12 +3,20 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { ReactNode } from 'react';
 
-const m = vi.hoisted(() => ({ list: vi.fn(), create: vi.fn() }));
+const m = vi.hoisted(() => ({ list: vi.fn(), create: vi.fn(), recent: vi.fn() }));
 vi.mock('../../lib/dataClient', () => ({
-  dataClient: { models: { Nom: { list: m.list, create: m.create } } },
+  dataClient: {
+    models: {
+      Nom: { list: m.list, create: m.create, listNomByPairingIdAndUpdatedAt: m.recent },
+    },
+  },
+}));
+vi.mock('./useNomMembership', () => ({
+  useNomMembership: () => ({ pairingId: 'p1', sub: 'u1' }),
 }));
 
 import { useNoms, useCreateNom } from './nomsApi';
+import { resetNomsFetch } from './nomsFetch';
 
 function wrapper({ children }: { children: ReactNode }) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -18,6 +26,7 @@ function wrapper({ children }: { children: ReactNode }) {
 describe('nomsApi', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetNomsFetch();
     m.create.mockResolvedValue({ data: { id: 'n1' } });
   });
 

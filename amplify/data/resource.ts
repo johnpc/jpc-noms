@@ -75,8 +75,20 @@ const schema = a
         // the OTHER member(s), and includes a human note (lastActionText).
         lastActorSub: a.string(),
         lastActionText: a.string(),
+        // Declared explicitly (Amplify still auto-manages the value) so the
+        // recent-noms GSI below can sort by it.
+        updatedAt: a.datetime(),
       })
-      .secondaryIndexes((index) => [index('pairingId')])
+      .secondaryIndexes((index) => [
+        // Legacy sortless index — unused, but CloudFormation allows only ONE GSI
+        // create/delete per deploy, so it's removed in a follow-up, not here.
+        index('pairingId'),
+        // The 8s poll asks for "the N most recently TOUCHED noms of this
+        // pairing" — one small query instead of paging the full history.
+        // updatedAt (not createdAt) so an old nom a partner just edited still
+        // shows up: the poll's job is catching missed subscription events.
+        index('pairingId').sortKeys(['updatedAt']),
+      ])
       .authorization((allow) => [allow.ownersDefinedIn('members')]),
 
     // APNs device-token registry. Owner-auth: each user registers their own
