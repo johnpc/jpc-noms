@@ -1,8 +1,11 @@
 import { defineBackend } from '@aws-amplify/backend';
-import { Duration } from 'aws-cdk-lib';
+import { Duration, RemovalPolicy } from 'aws-cdk-lib';
+import { Distribution, ViewerProtocolPolicy, CachePolicy } from 'aws-cdk-lib/aws-cloudfront';
+import { S3BucketOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { StartingPosition } from 'aws-cdk-lib/aws-lambda';
 import { DynamoEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
+import { Bucket, BlockPublicAccess, BucketEncryption } from 'aws-cdk-lib/aws-s3';
 import { auth } from './auth/resource';
 import { data } from './data/resource';
 import { searchPlacesFunction } from './places/searchPlaces/resource';
@@ -68,9 +71,9 @@ cfnUserPoolClient.tokenValidityUnits = {
 const cacheTable = backend.data.resources.tables['GoogleApiCache'];
 
 // Both of these need the Google key + the GoogleApiCache table. getPlaceImage is
-// deliberately NOT here: it resolves a short-lived signed photo URL fresh on
-// every call and never caches it (caching an expiring URL served dead 403s), so
-// it needs only the Google secret — granted separately below.
+// deliberately NOT here: it caches photo BYTES in S3 (not the GoogleApiCache
+// row store), so it needs only the Google secret + the photo bucket — granted
+// separately below.
 const cachePlacesFns = [backend.searchPlacesFunction, backend.getPlaceFunction];
 
 for (const fn of cachePlacesFns) {
@@ -95,8 +98,37 @@ for (const fn of cachePlacesFns) {
   );
 }
 
-// getPlaceImage: Google key only (no cache — see note above).
+// --- Photo store: restaurant photo BYTES live in a private S3 bucket served
+// through CloudFront. Google's photo-media endpoint returns short-lived signed
+// URLs AND bills per resolution, so getPlaceImage downloads each photo once
+// into the bucket and hands out a permanent CDN URL — capping the Google bill
+// at one paid call per photo+size ever and giving clients cacheable, immutable
+// image URLs. The bucket blocks ALL public access; CloudFront reads via Origin
+// Access Control (the grant is added automatically by withOriginAccessControl).
+// Its own stack: photos are runtime cache data, independent of data/auth. ---
+const photoStack = backend.createStack('photo-store');
+const photoBucket = new Bucket(photoStack, 'PlacePhotos', {
+  blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+  encryption: BucketEncryption.S3_MANAGED,
+  enforceSSL: true,
+  // Cache data — safe to drop with the stack and re-warm from Google.
+  removalPolicy: RemovalPolicy.DESTROY,
+  autoDeleteObjects: true,
+});
+const photoCdn = new Distribution(photoStack, 'PlacePhotosCdn', {
+  defaultBehavior: {
+    origin: S3BucketOrigin.withOriginAccessControl(photoBucket),
+    viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+    cachePolicy: CachePolicy.CACHING_OPTIMIZED,
+  },
+  comment: 'jpc-noms restaurant photos',
+});
+
+// getPlaceImage: Google key + the photo store (no GoogleApiCache — see note above).
 backend.getPlaceImageFunction.addEnvironment('GOOGLE_SECRET_ARN', GOOGLE_SECRET_ARN);
+backend.getPlaceImageFunction.addEnvironment('PHOTO_BUCKET_NAME', photoBucket.bucketName);
+backend.getPlaceImageFunction.addEnvironment('PHOTO_CDN_DOMAIN', photoCdn.distributionDomainName);
+photoBucket.grantReadWrite(backend.getPlaceImageFunction.resources.lambda);
 backend.getPlaceImageFunction.resources.lambda.addToRolePolicy(
   new PolicyStatement({
     actions: ['secretsmanager:GetSecretValue'],
