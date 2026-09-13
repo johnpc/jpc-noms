@@ -10,7 +10,7 @@ interface Props {
   nominated: boolean;
 }
 
-/** One rotation entry: resolves the place, renders a card with ➕ Nom + Remove. */
+/** One rotation entry: resolves the place, renders a card with ➕ Nom + Unfavorite. */
 export function RotationItem({
   googlePlaceId,
   onRemove,
@@ -24,7 +24,7 @@ export function RotationItem({
   return (
     <PlaceCard
       place={place}
-      actionLabel="Remove"
+      actionLabel="Unfavorite"
       actionDanger
       actionDisabled={removing}
       onAction={onRemove}

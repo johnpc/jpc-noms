@@ -29,7 +29,7 @@ describe('RotationItem', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('renders the place with Remove + ➕ Nom actions that fire their handlers', () => {
+  it('renders the place with Unfavorite + ➕ Nom actions that fire their handlers', () => {
     usePlaceMock.mockReturnValue({
       data: { id: 'p1', name: 'places/p1', displayName: { text: 'Joe' } },
       isLoading: false,
@@ -47,6 +47,7 @@ describe('RotationItem', () => {
       />,
     );
     expect(screen.getByText('Joe')).toBeInTheDocument();
+    expect(screen.getByTestId('place-card-action')).toHaveTextContent('Unfavorite');
     fireEvent.click(screen.getByTestId('place-card-action'));
     expect(onRemove).toHaveBeenCalled();
     fireEvent.click(screen.getByTestId('place-card-nom'));
