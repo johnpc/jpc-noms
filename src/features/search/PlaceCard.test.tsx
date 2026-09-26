@@ -23,6 +23,22 @@ describe('PlaceCard', () => {
     expect(screen.getByText('Cozy slice shop')).toBeInTheDocument();
   });
 
+  it("renders today's hours when known, and omits the line when not", () => {
+    const { rerender } = render(
+      <PlaceCard
+        place={{
+          ...place,
+          regularOpeningHours: {
+            weekdayDescriptions: Array.from({ length: 7 }, () => 'Day: 11:00 AM – 9:00 PM'),
+          },
+        }}
+      />,
+    );
+    expect(screen.getByTestId('place-card-hours')).toHaveTextContent('Today: 11:00 AM – 9:00 PM');
+    rerender(<PlaceCard place={place} />);
+    expect(screen.queryByTestId('place-card-hours')).not.toBeInTheDocument();
+  });
+
   it('renders no action button without an actionLabel', () => {
     render(<PlaceCard place={place} />);
     expect(screen.queryByTestId('place-card-action')).not.toBeInTheDocument();

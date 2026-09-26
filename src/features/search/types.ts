@@ -10,6 +10,12 @@ export interface PlaceText {
   languageCode?: string | null;
 }
 
+/** Google's regularOpeningHours, trimmed to the human-readable lines
+ * ("Monday: 11:00 AM – 9:00 PM", Monday-first). */
+export interface PlaceHours {
+  weekdayDescriptions?: (string | null)[] | null;
+}
+
 /** The GooglePlace shape returned by the search/detail resolvers. */
 export interface Place {
   id: string;
@@ -22,4 +28,5 @@ export interface Place {
   primaryTypeDisplayName?: PlaceText | null;
   generativeSummary?: PlaceText | null;
   editorialSummary?: PlaceText | null;
+  regularOpeningHours?: PlaceHours | null;
 }

@@ -25,6 +25,17 @@ Then('a restaurant card shows a street address', async ({ page }) => {
   await expect(page.getByTestId('place-card-address').first()).toBeVisible({ timeout: 20_000 });
 });
 
+Then("a restaurant card shows today's opening hours", async ({ page }) => {
+  await expect(page.getByTestId('place-card-hours').first()).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByTestId('place-card-hours').first()).toContainText('Today:');
+});
+
+Then("its card shows today's hours of {string}", async ({ page }, hours: string) => {
+  await expect(page.getByTestId('place-card-hours').first()).toHaveText(hours, {
+    timeout: 20_000,
+  });
+});
+
 When('they tap the {string} suggestion', async ({ page }, label: string) => {
   await page.getByTestId(`suggestion-${label}`).click();
 });

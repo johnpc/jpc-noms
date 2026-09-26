@@ -21,10 +21,31 @@ describe('getGooglePlace handler', () => {
   });
 
   it('returns the cached place without calling Google', async () => {
-    e.readCache.mockResolvedValue(JSON.stringify({ id: 'p1', name: 'Cached' }));
+    e.readCache.mockResolvedValue(
+      JSON.stringify({
+        id: 'p1',
+        name: 'Cached',
+        regularOpeningHours: { weekdayDescriptions: [] },
+      }),
+    );
     const out = await call(evt('p1'));
     expect(out).toMatchObject({ id: 'p1', name: 'Cached' });
     expect(e.placeDetail).not.toHaveBeenCalled();
+  });
+
+  it('self-heals a pre-hours cache row: re-fetches and re-caches once', async () => {
+    e.readCache.mockResolvedValue(JSON.stringify({ id: 'p1', name: 'Stale' }));
+    e.placeDetail.mockResolvedValue({
+      id: 'p1',
+      displayName: { text: 'Fresh' },
+      regularOpeningHours: { weekdayDescriptions: ['Monday: Closed'] },
+    });
+    const out = await call(evt('p1'));
+    expect(out).toMatchObject({
+      id: 'p1',
+      regularOpeningHours: { weekdayDescriptions: ['Monday: Closed'] },
+    });
+    expect(e.writeCache).toHaveBeenCalledWith('p1', expect.stringContaining('weekdayDescriptions'));
   });
 
   it('on a miss, fetches details, caches under the id, and returns the shaped place', async () => {

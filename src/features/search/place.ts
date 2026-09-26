@@ -31,6 +31,15 @@ export function placeAddress(place: Place): string {
   return place.formattedAddress?.trim() ?? '';
 }
 
+/** Today's hours line ("Today: 11:00 AM – 9:00 PM" or "Today: Closed"), from
+ * Google's Monday-first weekdayDescriptions; '' when hours are unknown. */
+export function placeHoursToday(place: Place, now: Date = new Date()): string {
+  const days = place.regularOpeningHours?.weekdayDescriptions ?? [];
+  const line = days[(now.getDay() + 6) % 7]; // JS is Sunday-first
+  const hours = line?.replace(/^[^:]*:\s*/, '').trim() ?? '';
+  return hours ? `Today: ${hours}` : '';
+}
+
 /** Where "Visit website" points: the place's own site if Google has one, else
  * a Google Maps search for the place (name + address) so there's always a
  * useful destination. Returns { href, label }. */

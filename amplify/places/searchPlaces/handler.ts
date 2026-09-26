@@ -8,7 +8,7 @@
 import type { Schema } from '../../data/resource';
 import { readCache, writeCache } from '../shared/cache';
 import { searchText } from '../shared/googleApi';
-import { searchCacheKey, toGooglePlace, type RawPlace } from '../shared/placeShape';
+import { searchCacheKey, toGooglePlace, hasHoursShape, type RawPlace } from '../shared/placeShape';
 
 type Result = ReturnType<typeof toGooglePlace>[];
 
@@ -22,7 +22,12 @@ export const handler: Schema['searchGooglePlaces']['functionHandler'] = async (e
   const cacheKey = searchCacheKey(input);
 
   const cached = await readCache(cacheKey);
-  if (cached) return JSON.parse(cached) as Result;
+  if (cached) {
+    const places = JSON.parse(cached) as Result;
+    // Results cached before hours shipped self-heal: fall through to a live
+    // fetch + re-cache once (the cache never expires — same as photos, #44).
+    if (places.every(hasHoursShape)) return places;
+  }
 
   const raw: RawPlace[] = await searchText(input);
   const places = raw.map(toGooglePlace);

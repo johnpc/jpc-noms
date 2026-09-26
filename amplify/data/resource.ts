@@ -107,6 +107,11 @@ const schema = a
       text: a.string(),
       languageCode: a.string(),
     }),
+    // Google's regularOpeningHours, trimmed to the human-readable lines
+    // ("Monday: 11:00 AM – 9:00 PM", Monday-first).
+    GooglePlaceHours: a.customType({
+      weekdayDescriptions: a.string().array(),
+    }),
     GooglePlace: a.customType({
       id: a.string().required(),
       name: a.string().required(),
@@ -118,6 +123,7 @@ const schema = a
       displayName: a.ref('GooglePlaceText').required(),
       generativeSummary: a.ref('GooglePlaceText'),
       editorialSummary: a.ref('GooglePlaceText'),
+      regularOpeningHours: a.ref('GooglePlaceHours'),
     }),
     GooglePlaceImage: a.customType({
       name: a.string().required(),

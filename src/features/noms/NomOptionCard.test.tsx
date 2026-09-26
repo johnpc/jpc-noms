@@ -36,9 +36,16 @@ describe('NomOptionCard', () => {
     expect(onAction).toHaveBeenCalled();
   });
 
-  it('collapses to a name-only row and expands to the full card on tap', () => {
+  it("collapses to a mini row (name + today's hours) and expands to the full card on tap", () => {
     usePlaceMock.mockReturnValue({
-      data: { id: 'a', name: 'places/a', displayName: { text: 'Joe' } },
+      data: {
+        id: 'a',
+        name: 'places/a',
+        displayName: { text: 'Joe' },
+        regularOpeningHours: {
+          weekdayDescriptions: Array.from({ length: 7 }, () => 'Day: 11:00 AM – 9:00 PM'),
+        },
+      },
       isLoading: false,
     });
     render(
@@ -50,8 +57,9 @@ describe('NomOptionCard', () => {
         collapsible
       />,
     );
-    // Collapsed: name shown in the row, no full card / action yet.
+    // Collapsed: name + hours shown in the row, no full card / action yet.
     expect(screen.getByTestId('nom-option')).toHaveTextContent('Joe');
+    expect(screen.getByTestId('nom-option')).toHaveTextContent('Today: 11:00 AM – 9:00 PM');
     expect(screen.queryByTestId('place-card-action')).not.toBeInTheDocument();
     // Tap the row to expand.
     fireEvent.click(screen.getByTestId('nom-option'));
