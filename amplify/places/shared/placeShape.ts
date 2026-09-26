@@ -16,6 +16,7 @@ export interface RawPlace {
   primaryTypeDisplayName?: { text?: string; languageCode?: string };
   generativeSummary?: { text?: string; languageCode?: string };
   editorialSummary?: { text?: string; languageCode?: string };
+  regularOpeningHours?: { weekdayDescriptions?: string[] };
 }
 
 /** Stable cache key for a search: rounded coords + normalized query + flags. */
@@ -47,5 +48,17 @@ export function toGooglePlace(raw: RawPlace) {
     primaryTypeDisplayName: raw.primaryTypeDisplayName,
     generativeSummary: raw.generativeSummary,
     editorialSummary: raw.editorialSummary,
+    // Always present (even when Google has no hours) so hasHoursShape can tell
+    // a current-shape row apart from one cached before hours shipped.
+    regularOpeningHours: {
+      weekdayDescriptions: raw.regularOpeningHours?.weekdayDescriptions ?? [],
+    },
   };
+}
+
+/** True when a cached place was written with the current (hours-aware) shape.
+ * Rows cached before hours shipped lack the key — the cache never expires, so
+ * the handlers treat those as a one-time miss and re-fetch from Google. */
+export function hasHoursShape(place: { regularOpeningHours?: unknown }): boolean {
+  return place.regularOpeningHours !== undefined;
 }

@@ -25,10 +25,24 @@ describe('searchGooglePlaces handler', () => {
   });
 
   it('returns the cached result without calling Google', async () => {
-    e.readCache.mockResolvedValue(JSON.stringify([{ id: 'p1', name: 'Cached' }]));
+    const cached = [{ id: 'p1', name: 'Cached', regularOpeningHours: { weekdayDescriptions: [] } }];
+    e.readCache.mockResolvedValue(JSON.stringify(cached));
     const out = await call(evt('tacos'));
-    expect(out).toEqual([{ id: 'p1', name: 'Cached' }]);
+    expect(out).toEqual(cached);
     expect(e.searchText).not.toHaveBeenCalled();
+  });
+
+  it('self-heals a pre-hours cached search: re-fetches and re-caches once', async () => {
+    e.readCache.mockResolvedValue(JSON.stringify([{ id: 'p1', name: 'Stale' }]));
+    e.searchText.mockResolvedValue([
+      { id: 'p1', regularOpeningHours: { weekdayDescriptions: ['Monday: Closed'] } },
+    ]);
+    const out = await call(evt('tacos'));
+    expect(out[0]).toMatchObject({
+      regularOpeningHours: { weekdayDescriptions: ['Monday: Closed'] },
+    });
+    // Re-cached: 1 search-key write + 1 per place.
+    expect(e.writeCache).toHaveBeenCalledTimes(2);
   });
 
   it('on a miss, fetches, caches the search + each place by id, and returns shaped places', async () => {

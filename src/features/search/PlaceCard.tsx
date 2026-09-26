@@ -1,7 +1,14 @@
 import { IonCard, IonCardContent, IonIcon } from '@ionic/react';
 import { openOutline } from 'ionicons/icons';
 import type { Place } from './types';
-import { placeName, placeBlurb, priceLabel, placeAddress, placeLink } from './place';
+import {
+  placeName,
+  placeBlurb,
+  priceLabel,
+  placeAddress,
+  placeLink,
+  placeHoursToday,
+} from './place';
 import { PlacePhoto } from './PlacePhoto';
 import { PlaceCardActions, type PlaceActions } from './PlaceCardActions';
 import './place.css';
@@ -9,12 +16,13 @@ import './place.css';
 type Props = { place: Place } & PlaceActions;
 
 /** Render-only restaurant card. Shows name (with a link-out icon to the
- * website/Maps), price, a blurb, and an optional action row
+ * website/Maps), price, today's hours, a blurb, and an optional action row
  * (add-to-rotation / ➕ Nom / remove). */
 export function PlaceCard({ place, ...actions }: Props) {
   const price = priceLabel(place);
   const blurb = placeBlurb(place);
   const address = placeAddress(place);
+  const hours = placeHoursToday(place);
   const link = placeLink(place);
   return (
     <IonCard className="place-card" data-testid="place-card">
@@ -39,6 +47,11 @@ export function PlaceCard({ place, ...actions }: Props) {
         {address && (
           <p className="place-card__address" data-testid="place-card-address">
             {address}
+          </p>
+        )}
+        {hours && (
+          <p className="place-card__hours" data-testid="place-card-hours">
+            {hours}
           </p>
         )}
         {blurb && <p className="place-card__blurb">{blurb}</p>}

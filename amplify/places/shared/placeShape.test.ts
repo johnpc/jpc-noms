@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { searchCacheKey, toGooglePlace } from './placeShape';
+import { searchCacheKey, toGooglePlace, hasHoursShape } from './placeShape';
 
 describe('searchCacheKey', () => {
   it('is stable across coordinate jitter within 3 decimals and query casing', () => {
@@ -46,5 +46,24 @@ describe('toGooglePlace', () => {
     expect(out.name).toBe('p2');
     expect(out.displayName.text).toBe('p2');
     expect(out.photos).toEqual([]);
+  });
+
+  it('keeps weekdayDescriptions and always emits the hours key', () => {
+    const days = ['Monday: 9:00 AM – 5:00 PM'];
+    const out = toGooglePlace({
+      id: 'p3',
+      regularOpeningHours: { weekdayDescriptions: days },
+    });
+    expect(out.regularOpeningHours).toEqual({ weekdayDescriptions: days });
+    // No hours from Google still yields the key (empty), so cached rows are
+    // distinguishable from pre-hours rows and never re-heal.
+    expect(toGooglePlace({ id: 'p4' }).regularOpeningHours).toEqual({ weekdayDescriptions: [] });
+  });
+});
+
+describe('hasHoursShape', () => {
+  it('accepts current-shape places and rejects pre-hours cache rows', () => {
+    expect(hasHoursShape(toGooglePlace({ id: 'p1' }))).toBe(true);
+    expect(hasHoursShape({})).toBe(false);
   });
 });

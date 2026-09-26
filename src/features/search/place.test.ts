@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { placeName, placeBlurb, priceLabel, placeAddress, placeLink } from './place';
+import {
+  placeName,
+  placeBlurb,
+  priceLabel,
+  placeAddress,
+  placeLink,
+  placeHoursToday,
+} from './place';
 import type { Place } from './types';
 
 const base: Place = { id: 'p1', name: 'places/p1', displayName: { text: "Joe's Pizza" } };
@@ -43,6 +50,41 @@ describe('priceLabel', () => {
   it('is empty for unknown or missing levels', () => {
     expect(priceLabel(base)).toBe('');
     expect(priceLabel({ ...base, priceLevel: 'WAT' })).toBe('');
+  });
+});
+
+describe('placeHoursToday', () => {
+  const weekdayDescriptions = [
+    'Monday: Closed',
+    'Tuesday: 11:00 AM – 9:00 PM',
+    'Wednesday: 11:00 AM – 9:00 PM',
+    'Thursday: 11:00 AM – 9:00 PM',
+    'Friday: 11:00 AM – 10:00 PM',
+    'Saturday: 10:00 AM – 10:00 PM',
+    'Sunday: 10:00 AM – 8:00 PM',
+  ];
+  const withHours: Place = { ...base, regularOpeningHours: { weekdayDescriptions } };
+
+  it("picks today's line from the Monday-first list (JS days are Sunday-first)", () => {
+    // 2026-09-25 is a Friday.
+    expect(placeHoursToday(withHours, new Date(2026, 8, 25))).toBe('Today: 11:00 AM – 10:00 PM');
+    // 2026-09-27 is a Sunday — the LAST entry, not the first.
+    expect(placeHoursToday(withHours, new Date(2026, 8, 27))).toBe('Today: 10:00 AM – 8:00 PM');
+  });
+
+  it('strips the weekday prefix but keeps "Closed"', () => {
+    // 2026-09-28 is a Monday.
+    expect(placeHoursToday(withHours, new Date(2026, 8, 28))).toBe('Today: Closed');
+  });
+
+  it('is empty when hours are unknown', () => {
+    expect(placeHoursToday(base, new Date(2026, 8, 25))).toBe('');
+    expect(
+      placeHoursToday(
+        { ...base, regularOpeningHours: { weekdayDescriptions: [] } },
+        new Date(2026, 8, 25),
+      ),
+    ).toBe('');
   });
 });
 

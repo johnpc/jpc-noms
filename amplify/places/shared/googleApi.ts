@@ -10,9 +10,9 @@ import type { RawPlace } from './placeShape';
 
 const BASE = 'https://places.googleapis.com/v1';
 const SEARCH_FIELDS =
-  'places.id,places.name,places.formattedAddress,places.websiteUri,places.priceLevel,places.displayName,places.primaryTypeDisplayName,places.editorialSummary,places.generativeSummary,places.photos';
+  'places.id,places.name,places.formattedAddress,places.websiteUri,places.priceLevel,places.displayName,places.primaryTypeDisplayName,places.editorialSummary,places.generativeSummary,places.photos,places.regularOpeningHours';
 const DETAIL_FIELDS =
-  'id,name,formattedAddress,websiteUri,priceLevel,displayName,primaryTypeDisplayName,editorialSummary,generativeSummary,photos';
+  'id,name,formattedAddress,websiteUri,priceLevel,displayName,primaryTypeDisplayName,editorialSummary,generativeSummary,photos,regularOpeningHours';
 
 const sm = new SecretsManagerClient({});
 let cachedKey: string | null = null;
