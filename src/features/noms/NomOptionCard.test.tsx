@@ -36,7 +36,7 @@ describe('NomOptionCard', () => {
     expect(onAction).toHaveBeenCalled();
   });
 
-  it("collapses to a mini row (name + today's hours) and expands to the full card on tap", () => {
+  it('collapses to a name-only mini row and expands to the full card (with hours) on tap', () => {
     usePlaceMock.mockReturnValue({
       data: {
         id: 'a',
@@ -57,13 +57,14 @@ describe('NomOptionCard', () => {
         collapsible
       />,
     );
-    // Collapsed: name + hours shown in the row, no full card / action yet.
+    // Collapsed: name only — no hours, no full card / action yet.
     expect(screen.getByTestId('nom-option')).toHaveTextContent('Joe');
-    expect(screen.getByTestId('nom-option')).toHaveTextContent('Today: 11:00 AM – 9:00 PM');
+    expect(screen.queryByTestId('place-card-hours')).not.toBeInTheDocument();
     expect(screen.queryByTestId('place-card-action')).not.toBeInTheDocument();
-    // Tap the row to expand.
+    // Tap the row to expand: the full card shows the action and today's hours.
     fireEvent.click(screen.getByTestId('nom-option'));
     expect(screen.getByTestId('place-card-action')).toBeInTheDocument();
+    expect(screen.getByTestId('place-card-hours')).toHaveTextContent('Today: 11:00 AM – 9:00 PM');
     // Tap the header to collapse again.
     fireEvent.click(screen.getByTestId('nom-option-collapse'));
     expect(screen.queryByTestId('place-card-action')).not.toBeInTheDocument();
