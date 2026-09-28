@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { IonItem, IonLabel, IonIcon, IonNote } from '@ionic/react';
+import { IonItem, IonLabel, IonIcon } from '@ionic/react';
 import { chevronForward, chevronDown } from 'ionicons/icons';
 import { usePlace } from '../search/searchApi';
-import { placeName, placeHoursToday } from '../search/place';
+import { placeName } from '../search/place';
 import { PlaceCard } from '../search/PlaceCard';
 
 interface Props {
@@ -32,7 +32,6 @@ export function NomOptionCard({
   const { data: place, isLoading } = usePlace(googlePlaceId);
   if (isLoading || !place) return null;
 
-  const hours = placeHoursToday(place);
   if (collapsible && !open) {
     return (
       <IonItem
@@ -44,7 +43,6 @@ export function NomOptionCard({
       >
         <IonIcon slot="start" icon={chevronForward} aria-hidden="true" />
         <IonLabel>{placeName(place)}</IonLabel>
-        {hours && <IonNote slot="end">{hours}</IonNote>}
       </IonItem>
     );
   }
@@ -61,7 +59,6 @@ export function NomOptionCard({
         >
           <IonIcon slot="start" icon={chevronDown} aria-hidden="true" />
           <IonLabel>{placeName(place)}</IonLabel>
-          {hours && <IonNote slot="end">{hours}</IonNote>}
         </IonItem>
       )}
       <PlaceCard
