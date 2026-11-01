@@ -19,7 +19,12 @@ concurrency:
 jobs:
   quality:
     name: Lint, Test, Coverage, CRAP & Build
-    runs-on: ubuntu-latest
+    # Self-hosted Mac Mini. This workflow also runs on pull_request, and
+    # self-hosted runners on a public repo are unsafe for fork PRs (arbitrary
+    # code execution) — so only run for push-to-main or a PR authored by the
+    # repo owner. Other PRs simply skip this job.
+    if: github.event_name != 'pull_request' || github.event.pull_request.user.login == 'johnpc'
+    runs-on: [self-hosted, mac-mini]
     steps:
       - uses: actions/checkout@v7
 
@@ -79,7 +84,12 @@ jobs:
     # so every run starts from an identical, bounded state — the root fix for
     # e2e flakiness/drift.
     name: Seed sandbox
-    runs-on: ubuntu-latest
+    # Self-hosted Mac Mini. This workflow also runs on pull_request, and
+    # self-hosted runners on a public repo are unsafe for fork PRs (arbitrary
+    # code execution) — so only run for push-to-main or a PR authored by the
+    # repo owner. Other PRs simply skip this job.
+    if: github.event_name != 'pull_request' || github.event.pull_request.user.login == 'johnpc'
+    runs-on: [self-hosted, mac-mini]
     steps:
       - uses: actions/checkout@v7
       - name: Setup Node
@@ -111,7 +121,12 @@ jobs:
     # sandbox is seeded. Grows a matrix entry per feature area as slices land.
     name: Acceptance Tests (${{ matrix.area.name }})
     needs: seed
-    runs-on: ubuntu-latest
+    # Self-hosted Mac Mini. This workflow also runs on pull_request, and
+    # self-hosted runners on a public repo are unsafe for fork PRs (arbitrary
+    # code execution) — so only run for push-to-main or a PR authored by the
+    # repo owner. Other PRs simply skip this job.
+    if: github.event_name != 'pull_request' || github.event.pull_request.user.login == 'johnpc'
+    runs-on: [self-hosted, mac-mini]
     strategy:
       fail-fast: false
       matrix:
