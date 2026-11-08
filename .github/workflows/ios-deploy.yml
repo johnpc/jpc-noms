@@ -33,6 +33,7 @@ jobs:
     # triggers on workflow_run (post-merge) and workflow_dispatch — never
     # pull_request, so fork PRs can't reach this runner.
     runs-on: [self-hosted, mac-mini]
+    timeout-minutes: 60
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v7
