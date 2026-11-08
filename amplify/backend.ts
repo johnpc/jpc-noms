@@ -249,14 +249,18 @@ tesla.addToRolePolicy(
     resources: [`${cacheTable.tableArn}/index/*`],
   }),
 );
-// SAFETY: only arm Tessie on the real (prod) backend. A `ampx sandbox` deploy
-// sets AMPLIFY_DEV_ACCOUNT_ID; the prod pipeline build does not. On a sandbox
+// SAFETY: only arm Tessie on the real (prod) backend. Every `ampx sandbox`
+// deploy (CI's per-run sandboxes included) synthesizes with the CDK context
+// `amplify-backend-type=sandbox`; the prod pipeline build gets `branch`. The
+// older AMPLIFY_DEV_ACCOUNT_ID env var still forces sandbox mode. On a sandbox
 // we deliberately DON'T wire the secret ARN or the GetSecretValue grant, so
 // sendNavigation() is inert (creds()→null) and an e2e that selects a nom can
 // NEVER drive the physical car — even though sandbox ALLOWED_OWNERS is empty
 // (= allow any member). Tessie creds live in Secrets Manager (this drives the
 // car); the Lambda reads TESSIE_SECRET_ARN at runtime.
-const isSandbox = !!process.env.AMPLIFY_DEV_ACCOUNT_ID;
+const isSandbox =
+  backend.stack.node.tryGetContext('amplify-backend-type') === 'sandbox' ||
+  !!process.env.AMPLIFY_DEV_ACCOUNT_ID;
 if (!isSandbox) {
   backend.sendToTeslaFunction.addEnvironment('TESSIE_SECRET_ARN', TESSIE_SECRET_ARN);
   tesla.addToRolePolicy(

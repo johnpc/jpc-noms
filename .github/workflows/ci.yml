@@ -6,19 +6,81 @@ on:
   pull_request:
     branches: [main]
 
-# Acceptance tests seed + read ONE shared sandbox backend (clearAll + reseed
-# each run). Two CI runs overlapping there race: one run's clearAll wipes rows
-# mid-read in the other's test, or two seeds interleave and leave duplicates.
-# A SINGLE global group serializes every CI run so only one owns the sandbox at
-# a time. Don't cancel in progress: a running suite must finish its
-# clear->seed->read cycle uncorrupted before the next run starts.
+# Every run deploys its OWN ephemeral Amplify sandbox (`ci-<run id>`), seeds
+# it, tests against it, and deletes it in the final `teardown` job (which runs
+# `if: always()`, so pass, fail or cancel). Nothing is shared between runs and
+# nothing is left standing, so CI can't break when a dev sandbox is deleted.
+# Runs are still grouped per PR / ref so a new push queues behind the previous
+# run instead of piling more jobs onto the serial Mac mini.
 concurrency:
-  group: ci-shared-sandbox
+  group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: false
 
+# The one identifier every job resolves the sandbox from (scripts/sandbox.mjs
+# sanitizes it to `ci<run id>` and derives the deterministic stack name). The
+# scheduled sweep in sandbox-cleanup.yml only ever matches this shape.
+env:
+  SANDBOX_IDENTIFIER: ci-${{ github.run_id }}
+
 jobs:
+  sandbox:
+    # Deploy + seed this run's sandbox on a GitHub-hosted runner, keeping the
+    # slow CloudFormation deploy off the shared serial Mac mini. Same owner-only
+    # gate as the Mac mini jobs: fork PRs get no AWS secrets anyway.
+    name: Deploy + seed ephemeral sandbox
+    if: github.event_name != 'pull_request' || github.event.pull_request.user.login == 'johnpc'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Configure AWS "personal" profile
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          mkdir -p ~/.aws
+          printf '[personal]\naws_access_key_id=%s\naws_secret_access_key=%s\n' \
+            "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY" > ~/.aws/credentials
+          printf '[profile personal]\nregion=us-west-2\n' > ~/.aws/config
+      - name: Deploy the per-run sandbox
+        run: npm run sandbox:deploy
+      # The physical-car guard: a sandbox must never get the Tessie secret.
+      # backend.ts withholds it on sandbox deploys; prove that held before any
+      # e2e selects a nom.
+      - name: Verify the Tesla Lambda is inert
+        run: |
+          prefix=$(npm run -s sandbox:name | cut -c1-25)
+          # A multiselect hash keeps null values (a plain projection drops them).
+          fns=$(aws lambda list-functions --region us-west-2 --profile personal --output json \
+            --query "Functions[?starts_with(FunctionName,'$prefix') && contains(FunctionName,'sendtotesla')].{name:FunctionName,tessie:Environment.Variables.TESSIE_SECRET_ARN}")
+          echo "sendToTesla Lambdas: $fns"
+          [ "$(echo "$fns" | jq 'length')" -ge 1 ] || { echo "sendToTesla Lambda not found"; exit 1; }
+          [ "$(echo "$fns" | jq 'map(select(.tessie != null)) | length')" -eq 0 ] || { echo "Tessie is ARMED on a sandbox"; exit 1; }
+      - name: Generate amplify_outputs.json (sandbox)
+        run: npm run e2e-config
+      # A fresh sandbox has an empty Cognito pool: create the editor account
+      # the seed and e2e sign in as before seeding.
+      - name: Ensure the seed/e2e Cognito account exists
+        env:
+          TEST_USERNAME: ${{ secrets.TEST_USERNAME }}
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+        run: npm run ensure-editor
+      - name: Seed the sandbox to a known state
+        env:
+          TEST_USERNAME: ${{ secrets.TEST_USERNAME }}
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+        run: npm run seed
+
   quality:
     name: Lint, Test, Coverage, CRAP & Build
+    needs: sandbox
     # Self-hosted Mac Mini. This workflow also runs on pull_request, and
     # self-hosted runners on a public repo are unsafe for fork PRs (arbitrary
     # code execution) — so only run for push-to-main or a PR authored by the
@@ -80,49 +142,11 @@ jobs:
           path: coverage/
           retention-days: 7
 
-  seed:
-    # Acceptance tests run against the shared sandbox backend, seeded fresh here
-    # so every run starts from an identical, bounded state — the root fix for
-    # e2e flakiness/drift.
-    name: Seed sandbox
-    # Self-hosted Mac Mini. This workflow also runs on pull_request, and
-    # self-hosted runners on a public repo are unsafe for fork PRs (arbitrary
-    # code execution) — so only run for push-to-main or a PR authored by the
-    # repo owner. Other PRs simply skip this job.
-    if: github.event_name != 'pull_request' || github.event.pull_request.user.login == 'johnpc'
-    runs-on: [self-hosted, mac-mini]
-    steps:
-      - uses: actions/checkout@v7
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          # No setup-node cache on the self-hosted Mac mini: ~/.npm persists there, and saving it was a ~1.8 GB upload per run.
-          package-manager-cache: false
-      - name: Install dependencies
-        run: npm ci
-      - name: Configure AWS "personal" profile
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: |
-          mkdir -p ~/.aws
-          printf '[personal]\naws_access_key_id=%s\naws_secret_access_key=%s\n' \
-            "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY" > ~/.aws/credentials
-          printf '[profile personal]\nregion=us-west-2\n' > ~/.aws/config
-      - name: Generate amplify_outputs.json (sandbox)
-        run: npm run e2e-config
-      - name: Seed the sandbox to a known state
-        env:
-          TEST_USERNAME: ${{ secrets.TEST_USERNAME }}
-          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
-        run: npm run seed
-
   acceptance:
     # One job per feature area, each its own independent check. Runs after the
-    # sandbox is seeded. Grows a matrix entry per feature area as slices land.
+    # sandbox is deployed + seeded. Grows a matrix entry per feature area as slices land.
     name: Acceptance Tests (${{ matrix.area.name }})
-    needs: seed
+    needs: sandbox
     # Self-hosted Mac Mini. This workflow also runs on pull_request, and
     # self-hosted runners on a public repo are unsafe for fork PRs (arbitrary
     # code execution) — so only run for push-to-main or a PR authored by the
@@ -189,3 +213,30 @@ jobs:
           name: playwright-report-${{ matrix.area.name }}
           path: playwright-report/
           retention-days: 7
+
+  teardown:
+    # ALWAYS delete this run's sandbox — after success, failure, or cancel, on
+    # PRs and on main alike — so no CI sandbox outlives its run. `sandbox:delete`
+    # is a no-op when the deploy never created the stack, and FAILS if the stack
+    # is still there afterwards, so a leak turns the run red. Anything that slips
+    # through anyway is reaped by the scheduled sweep in sandbox-cleanup.yml.
+    name: Tear down ephemeral sandbox
+    needs: [sandbox, quality, acceptance]
+    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.user.login == 'johnpc')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      # No `npm ci`: deletion needs only node + the aws CLI, so teardown still
+      # works when the run itself failed installing dependencies.
+      - uses: actions/checkout@v7
+      - name: Configure AWS "personal" profile
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          mkdir -p ~/.aws
+          printf '[personal]\naws_access_key_id=%s\naws_secret_access_key=%s\n' \
+            "$AWS_ACCESS_KEY_ID" "$AWS_SECRET_ACCESS_KEY" > ~/.aws/credentials
+          printf '[profile personal]\nregion=us-west-2\n' > ~/.aws/config
+      - name: Delete the per-run sandbox
+        run: npm run sandbox:delete

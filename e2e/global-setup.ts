@@ -1,17 +1,22 @@
 import { existsSync, readFileSync } from 'node:fs';
+import {
+  CognitoIdentityProviderClient,
+  DescribeUserPoolCommand,
+} from '@aws-sdk/client-cognito-identity-provider';
 
 /**
- * SAFETY GUARD: e2e must ONLY run against the sandbox backend, never prod.
+ * SAFETY GUARD: e2e must ONLY run against a sandbox backend, never prod.
  * e2e writes (create pairings, select noms) would otherwise pollute the real
  * user's prod data — and a nom-select on prod could drive the physical Tesla.
  *
- * The sandbox Cognito pool id is pinned here; if amplify_outputs.json points
- * anywhere else (e.g. someone ran `npm run prod-config`), we refuse to run.
- * Re-pin after a sandbox recycle. Set E2E_ALLOW_ANY_BACKEND=1 to bypass (don't).
+ * CI deploys a fresh sandbox per run, so the pool id changes every time and
+ * can't be pinned. Instead we ask Cognito: Amplify tags every resource it
+ * deploys with `amplify:deployment-type` (`sandbox` for `ampx sandbox`,
+ * `branch` for the prod pipeline). Anything that isn't tagged `sandbox` —
+ * including a pool we can't describe — is refused. Set E2E_ALLOW_ANY_BACKEND=1
+ * to bypass (don't).
  */
-const SANDBOX_USER_POOL_ID = 'us-west-2_va3f0CsT5';
-
-export default function globalSetup(): void {
+export default async function globalSetup(): Promise<void> {
   if (process.env.E2E_ALLOW_ANY_BACKEND) return;
   if (!existsSync('amplify_outputs.json')) {
     throw new Error(
@@ -19,14 +24,18 @@ export default function globalSetup(): void {
     );
   }
   const outputs = JSON.parse(readFileSync('amplify_outputs.json', 'utf8')) as {
-    auth?: { user_pool_id?: string };
+    auth?: { user_pool_id?: string; aws_region?: string };
   };
   const pool = outputs.auth?.user_pool_id;
-  if (pool !== SANDBOX_USER_POOL_ID) {
+  process.env.AWS_PROFILE ??= 'personal';
+  const cognito = new CognitoIdentityProviderClient({ region: outputs.auth?.aws_region });
+  const { UserPool } = await cognito.send(new DescribeUserPoolCommand({ UserPoolId: pool }));
+  const type = UserPool?.UserPoolTags?.['amplify:deployment-type'];
+  if (type !== 'sandbox') {
     throw new Error(
-      `e2e REFUSING to run: amplify_outputs.json points at "${pool}", not the sandbox ` +
-        `pool "${SANDBOX_USER_POOL_ID}". Run \`npm run e2e-config\` to point at the sandbox. ` +
-        `(This guard prevents e2e writes from hitting prod / the real Tesla.)`,
+      `e2e REFUSING to run: amplify_outputs.json points at "${pool}", whose ` +
+        `amplify:deployment-type is "${type}", not "sandbox". Run \`npm run e2e-config\` ` +
+        `to point at a sandbox. (This guard prevents e2e writes from hitting prod / the real Tesla.)`,
     );
   }
 }
