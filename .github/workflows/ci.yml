@@ -32,7 +32,8 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 22
-          cache: npm
+          # No setup-node cache on the self-hosted Mac mini: ~/.npm persists there, and saving it was a ~1.8 GB upload per run.
+          package-manager-cache: false
 
       - name: Install dependencies
         run: npm ci
@@ -96,7 +97,8 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 22
-          cache: npm
+          # No setup-node cache on the self-hosted Mac mini: ~/.npm persists there, and saving it was a ~1.8 GB upload per run.
+          package-manager-cache: false
       - name: Install dependencies
         run: npm ci
       - name: Configure AWS "personal" profile
@@ -152,7 +154,8 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 22
-          cache: npm
+          # No setup-node cache on the self-hosted Mac mini: ~/.npm persists there, and saving it was a ~1.8 GB upload per run.
+          package-manager-cache: false
 
       - name: Install dependencies
         run: npm ci
