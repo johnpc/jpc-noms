@@ -156,12 +156,18 @@ AWS_PROFILE=personal npx ampx sandbox   # deploy/refresh the personal backend
 ## Key facts
 
 - **AWS:** profile `personal` (account 566092841021), region `us-west-2`. Never inline keys.
-- **Sandbox stack:** `amplify-jpcnoms-xss-sandbox-c38bb97e0e` (wired into `e2e-config`).
+- **Sandboxes:** `npm run e2e-config` targets your personal sandbox (`ampx`'s default identifier,
+  your system user — `amplify-jpcnoms-xss-sandbox-c38bb97e0e` for `xss`); `SANDBOX_IDENTIFIER=<id>`
+  picks another (`scripts/sandbox.mjs`). **CI never uses it:** every run deploys its own `ci-<run id>`
+  sandbox, seeds it, tests, and deletes it in an `if: always()` `teardown` job;
+  `sandbox-cleanup.yml` sweeps leaked `ci<digits>` sandboxes older than 6h. The e2e guard
+  (`e2e/global-setup.ts`) refuses any pool not tagged `amplify:deployment-type=sandbox`.
 - **Bundle id:** `com.johncorser.eats` — Noms ships through the existing **eats** App Store listing
   (John retired jpc-eats and replaced it with Noms; history was migrated). On-screen name is `jpc.noms`,
   MARKETING_VERSION 3.0. **Apple team:** `JW5SC3NYUV` (pinned in `project.pbxproj`).
 - **Editor test user:** reused stoop creds in `.env.local` (`TEST_USERNAME`/`TEST_PASSWORD`); created in
-  the sandbox Cognito pool and added to the `editors` group. Re-create if the sandbox pool is recycled.
+  the sandbox Cognito pool and added to the `editors` group. `npm run ensure-editor` (re)creates it
+  idempotently — CI runs it against every fresh per-run pool.
 - **Secrets** (`.env`, git-ignored): `GOOGLE_PLACES_API_KEY`, `TESSIE_API_KEY`, `TESLA_VIN`.
 - iOS deploy runs on `macos-26` (iOS 26 SDK required). `ITSAppUsesNonExemptEncryption=false` is set so
   App Store uploads don't prompt for export compliance.
