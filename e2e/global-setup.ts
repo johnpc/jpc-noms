@@ -9,7 +9,7 @@ import { existsSync, readFileSync } from 'node:fs';
  * anywhere else (e.g. someone ran `npm run prod-config`), we refuse to run.
  * Re-pin after a sandbox recycle. Set E2E_ALLOW_ANY_BACKEND=1 to bypass (don't).
  */
-const SANDBOX_USER_POOL_ID = 'us-west-2_w82k8IVv5';
+const SANDBOX_USER_POOL_ID = 'us-west-2_va3f0CsT5';
 
 export default function globalSetup(): void {
   if (process.env.E2E_ALLOW_ANY_BACKEND) return;
