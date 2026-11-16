@@ -12,11 +12,14 @@ const base = {
   term: 'pizza',
   setTerm: vi.fn(),
   suggestions: ['Pizza', 'Sushi'] as const,
-  places: [
-    { id: 'p1', name: 'places/p1', displayName: { text: 'Joe' } },
-    { id: 'p2', name: 'places/p2', displayName: { text: 'Ann' } },
-  ],
-  isLoading: false,
+  results: {
+    kind: 'ready',
+    places: [
+      { id: 'p1', name: 'places/p1', displayName: { text: 'Joe' } },
+      { id: 'p2', name: 'places/p2', displayName: { text: 'Ann' } },
+    ],
+  },
+  retry: vi.fn(),
   savedIds: new Set<string>(['p1']),
   add: vi.fn(),
   adding: false,
@@ -44,14 +47,22 @@ describe('SearchPage', () => {
   });
 
   it('shows an empty message when a search returns nothing', () => {
-    useSearchMock.mockReturnValue({ ...base, places: [] });
+    useSearchMock.mockReturnValue({ ...base, results: { kind: 'empty' } });
     render(<SearchPage />);
     expect(screen.getByText(/No restaurants found/)).toBeInTheDocument();
   });
 
   it('shows a spinner while loading', () => {
-    useSearchMock.mockReturnValue({ ...base, isLoading: true, places: [] });
+    useSearchMock.mockReturnValue({ ...base, results: { kind: 'loading' } });
     render(<SearchPage />);
     expect(screen.getByTestId('search-spinner')).toBeInTheDocument();
+  });
+
+  it('shows the failure + a retry button when the search errors', () => {
+    useSearchMock.mockReturnValue({ ...base, results: { kind: 'error', message: 'Nope' } });
+    render(<SearchPage />);
+    expect(screen.getByTestId('search-error')).toHaveTextContent('Nope');
+    screen.getByTestId('search-retry').click();
+    expect(base.retry).toHaveBeenCalled();
   });
 });

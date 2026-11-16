@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from './useAuth';
+import { useSubmission } from '../../lib/useSubmission';
 
 /** Form state + action for email/password sign-in. */
 export function useSignInForm() {
@@ -8,21 +9,12 @@ export function useSignInForm() {
   const history = useHistory();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const { run, busy, error } = useSubmission();
 
   const submit = useCallback(async () => {
-    setError(null);
-    setBusy(true);
-    try {
-      await signIn(email, password);
-      history.replace('/home'); // land on the main nav, not the noms history list
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Sign-in failed.');
-    } finally {
-      setBusy(false);
-    }
-  }, [email, password, signIn, history]);
+    const ok = await run(() => signIn(email, password), { fallback: 'Sign-in failed.' });
+    if (ok) history.replace('/home'); // land on the main nav, not the noms history list
+  }, [email, password, signIn, history, run]);
 
   return { email, setEmail, password, setPassword, error, busy, submit };
 }

@@ -1,21 +1,28 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { AuthContext } from './AuthContext';
 import * as authClient from './authClient';
+import { LOADING, SIGNED_OUT, publishAuthStatus, sessionFrom } from './authSession';
 import type { AuthState, SignUpResult } from './types';
 
-/** Provides Cognito session state + auth actions to the tree via AuthContext. */
+/**
+ * Provides Cognito session state + auth actions to the tree via AuthContext.
+ * The ONE writer of AuthState: every transition is `sessionFrom(identity)` or
+ * SIGNED_OUT, and the current status is mirrored onto <html data-auth>.
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AuthState>({ status: 'loading', email: null, sub: null });
+  const [state, setState] = useState<AuthState>(LOADING);
 
   const refresh = useCallback(async () => {
-    const email = await authClient.currentEmail();
-    const sub = email ? await authClient.currentSub() : null;
-    setState({ status: email ? 'authenticated' : 'unauthenticated', email, sub });
+    setState(sessionFrom(await authClient.currentIdentity()));
   }, []);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    publishAuthStatus(document.documentElement, state);
+  }, [state]);
 
   const signIn = useCallback(
     async (email: string, password: string) => {
@@ -47,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     await authClient.signOut();
-    setState({ status: 'unauthenticated', email: null, sub: null });
+    setState(SIGNED_OUT);
   }, []);
 
   return (

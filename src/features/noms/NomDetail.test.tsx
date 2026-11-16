@@ -31,9 +31,7 @@ const nom: Nom = {
   status: 'OPEN',
 };
 const base = {
-  signedIn: true,
-  loading: false,
-  nom,
+  screen: { kind: 'open', nom } as const,
   addable: ['b'],
   add: vi.fn(),
   select: vi.fn(),
@@ -59,7 +57,7 @@ describe('NomDetail', () => {
   it('shows the selected banner and hides addable once selected', () => {
     useDetail.mockReturnValue({
       ...base,
-      nom: { ...nom, status: 'SELECTED', selectedPlaceId: 'a' },
+      screen: { kind: 'decided', nom: { ...nom, status: 'SELECTED', selectedPlaceId: 'a' } },
     });
     render(<NomDetail />);
     expect(screen.getByTestId('nom-selected')).toBeInTheDocument();
@@ -67,8 +65,21 @@ describe('NomDetail', () => {
   });
 
   it('prompts sign-in when signed out', () => {
-    useDetail.mockReturnValue({ ...base, signedIn: false, nom: undefined });
+    useDetail.mockReturnValue({ ...base, screen: { kind: 'signed-out' } });
     render(<NomDetail />);
     expect(screen.getByTestId('nom-signin')).toBeInTheDocument();
+  });
+
+  it('explains a missing nom instead of a blank page', () => {
+    useDetail.mockReturnValue({ ...base, screen: { kind: 'missing' } });
+    render(<NomDetail />);
+    expect(screen.getByTestId('nom-missing')).toBeInTheDocument();
+  });
+
+  it('renders only the shell while loading', () => {
+    useDetail.mockReturnValue({ ...base, screen: { kind: 'loading' } });
+    render(<NomDetail />);
+    expect(screen.queryByTestId('nom-signin')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('nom-missing')).not.toBeInTheDocument();
   });
 });

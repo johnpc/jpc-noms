@@ -1,5 +1,6 @@
 /** Pure stats derivation from the shared noms — no I/O, unit-tested. */
 import type { Nom } from '../noms/types';
+import { isSelected } from '../noms/nom';
 
 export interface NomStats {
   totalNoms: number;
@@ -9,11 +10,9 @@ export interface NomStats {
   history: Nom[];
 }
 
-const isDecided = (n: Nom): boolean => n.status === 'SELECTED' && !!n.selectedPlaceId;
-
 /** Summarize a list of noms into counts + a decided-history list. */
 export function computeNomStats(noms: Nom[]): NomStats {
-  const decided = noms.filter(isDecided);
+  const decided = noms.filter(isSelected);
   return {
     totalNoms: noms.length,
     decidedCount: decided.length,

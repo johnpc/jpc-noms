@@ -7,13 +7,13 @@ import {
   useUnpair,
 } from './pairingApi';
 import { usePairingRealtime } from './usePairingRealtime';
-import { pairingView } from './pairing';
+import { pairingScreen } from './pairing';
 
 /**
- * Pairing-page logic: resolves the caller's pairing into a view (none /
- * pending-sent / pending-received / active) and exposes invite + accept
- * actions. Kept live via the Pairing subscription so both apps reflect a
- * scan-to-pair instantly. Gated on a signed-in session.
+ * Pairing-page logic: ONE `screen` union (signed-out / loading / none /
+ * pending-sent / pending-received / active) from the caller's pairing, plus
+ * invite + accept + unpair actions. Kept live via the Pairing subscription so
+ * both apps reflect a scan-to-pair instantly.
  */
 export function usePairingFlow() {
   const { status, email } = useAuth();
@@ -25,12 +25,8 @@ export function usePairingFlow() {
   usePairingRealtime(signedIn);
   const [inviteEmail, setInviteEmail] = useState('');
 
-  const view = pairingView(query.data ?? null, email ?? '');
-
   return {
-    signedIn,
-    loading: query.isLoading,
-    view,
+    screen: pairingScreen(signedIn, query.isLoading, query.data ?? null, email ?? ''),
     inviteEmail,
     setInviteEmail,
     invite: () =>

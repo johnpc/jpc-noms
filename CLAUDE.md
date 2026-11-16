@@ -144,7 +144,9 @@ npm run dev            # Vite dev server on :5173
 npm run build          # tsc + typecheck:amplify + vite build
 npm run test           # unit tests (vitest)
 npm run test:coverage  # unit tests + coverage (80% floor)
-npm run test:e2e       # bddgen + playwright (Gherkin acceptance)
+npm run test:e2e       # bddgen + playwright (Gherkin acceptance) against the sandbox
+npm run test:e2e:fake  # the same suite on the in-browser fake backend (no AWS)
+npm run dev:fake       # Vite dev server on :5173 with the fake backend aliased in
 npm run quality        # the full gate (lint, format, lines, features, coverage, crap, build)
 npm run e2e-config     # pull amplify_outputs.json from the sandbox
 npm run prod-config    # pull amplify_outputs.json from the prod (main) backend
@@ -179,6 +181,17 @@ AWS_PROFILE=personal npx ampx sandbox   # deploy/refresh the personal backend
 
 ## Decisions
 
+- **2026-11-16 Explicit state machines + fake backend.** ~20 implicit machines (parallel
+  `busy`/`error` booleans in five forms, nested signed-out/loading/empty ternaries in six pages, a
+  `useRef(false)` push once-guard, a 1.5 s `setTimeout` in Settings, "decided" computed two ways, a
+  failed search shown as "no results") became catalogued unions with one owner each
+  (`docs/state-machines.md`, gate-checked). UX fixes that fell out: no empty-state flash on Today /
+  Noms / Stats / Rotation before the first load, a deleted nom says so instead of a blank page,
+  search shows an error + retry, the push Register button names its real phase. `AuthProvider`
+  publishes `html[data-auth]`; the e2e sign-in waits on that. The Gherkin suite now also runs on an
+  in-browser fake backend (`src/fake-backend`, `FAKE_BACKEND=1`) on every PR with no AWS — the
+  sandbox legs remain the live check. Playwright `retries: 0` everywhere; `check:e2e-waits` refuses
+  sleeps/skips/retries.
 - **Fixed partner pairing** (not per-nom invites): the app is for a couple; pair once, all noms shared.
 - **Real APNs push** (not Web Push / iMessage): first-class native notifications on partner activity.
 - **iOS only** — no Android project, no android-deploy workflow.

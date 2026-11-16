@@ -17,11 +17,13 @@ vi.mock('../push/registerPush', () => ({
   lastPushError: () => '',
 }));
 
-import { useNotifications } from './useNotifications';
+import { notifState, registrationLabel, useNotifications } from './useNotifications';
+import { dispatchPush } from '../push/pushStore';
 
 describe('useNotifications', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    dispatchPush({ type: 'reset' });
     h.auth = { sub: 'u1' };
     h.pushStatus.mockResolvedValue('granted');
     h.isOptedOut.mockReturnValue(false);
@@ -68,5 +70,36 @@ describe('useNotifications', () => {
     });
     expect(h.enablePush).toHaveBeenCalledWith('u1');
     expect(result.current.state).toBe('on');
+  });
+});
+
+describe('notifState / registrationLabel (pure)', () => {
+  it('maps permission × opt-out', () => {
+    expect(notifState('granted', false)).toBe('on');
+    expect(notifState('granted', true)).toBe('off');
+    expect(notifState('denied', false)).toBe('denied');
+    expect(notifState('web', true)).toBe('web');
+  });
+  it('names each in-flight phase', () => {
+    expect(registrationLabel({ kind: 'idle' })).toBe('Register this device');
+    expect(registrationLabel({ kind: 'requesting' })).toMatch(/permission/);
+    expect(registrationLabel({ kind: 'awaiting-token' })).toMatch(/Apple/);
+    expect(registrationLabel({ kind: 'saving', token: 't' })).toMatch(/Saving/);
+  });
+});
+
+describe('useNotifications ↔ push machine', () => {
+  it('reports working + the phase label while a token is in flight, then the failure', async () => {
+    const { result } = renderHook(() => useNotifications());
+    await waitFor(() => expect(result.current.state).toBe('on'));
+    act(() => {
+      dispatchPush({ type: 'start' });
+      dispatchPush({ type: 'permission', receive: 'granted' });
+    });
+    expect(result.current.working).toBe(true);
+    expect(result.current.registerLabel).toBe('Waiting for Apple…');
+    act(() => dispatchPush({ type: 'error', reason: 'aps down' }));
+    expect(result.current.working).toBe(false);
+    expect(result.current.lastError).toBe('aps down');
   });
 });

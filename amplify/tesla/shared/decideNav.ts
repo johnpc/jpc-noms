@@ -1,3 +1,4 @@
+// @state-machine tesla-nav-decision
 /**
  * Pure decision for the Tesla nav hand-off — no I/O, unit-tested. Mirrors the
  * recovered jpc-eats sendToTesla gate, adapted to the Nom model: fire only when

@@ -35,13 +35,26 @@ describe('useStats', () => {
       isLoading: false,
     };
     const { result } = renderHook(() => useStats());
-    expect(result.current.stats).toMatchObject({ decidedCount: 1, openCount: 1, totalNoms: 2 });
+    expect(result.current.screen.kind).toBe('ready');
+    if (result.current.screen.kind !== 'ready') throw new Error('expected ready');
+    expect(result.current.screen.stats).toMatchObject({
+      decidedCount: 1,
+      openCount: 1,
+      totalNoms: 2,
+    });
     expect(h.realtime).toHaveBeenCalledWith(true);
   });
 
   it('reports signed-out state', () => {
     h.auth = { status: 'unauthenticated' };
     const { result } = renderHook(() => useStats());
-    expect(result.current.signedIn).toBe(false);
+    expect(result.current.screen).toEqual({ kind: 'signed-out' });
+  });
+
+  it('is loading, then empty with no decisions', () => {
+    h.noms = { data: [], isLoading: true };
+    expect(renderHook(() => useStats()).result.current.screen).toEqual({ kind: 'loading' });
+    h.noms = { data: [], isLoading: false };
+    expect(renderHook(() => useStats()).result.current.screen).toEqual({ kind: 'empty' });
   });
 });

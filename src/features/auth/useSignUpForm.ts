@@ -1,7 +1,11 @@
 import { useCallback, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from './useAuth';
+import { useSubmission } from '../../lib/useSubmission';
 
+// @state-machine sign-up-wizard
+
+/** collect → confirm (only when Cognito wants an emailed code) → signed in. */
 type Phase = 'collect' | 'confirm';
 
 /** Form state + actions for the two-step Cognito sign-up (details, then code). */
@@ -12,40 +16,37 @@ export function useSignUpForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const { run, busy, error } = useSubmission();
 
   const finish = useCallback(async () => {
     await signIn(email, password);
     history.replace('/noms');
   }, [email, password, signIn, history]);
 
-  const submitDetails = useCallback(async () => {
-    setError(null);
-    setBusy(true);
-    try {
-      const { needsConfirmation } = await signUp(email, password);
-      if (needsConfirmation) setPhase('confirm');
-      else await finish();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Sign-up failed.');
-    } finally {
-      setBusy(false);
-    }
-  }, [email, password, signUp, finish]);
+  const submitDetails = useCallback(
+    () =>
+      run(
+        async () => {
+          const { needsConfirmation } = await signUp(email, password);
+          if (needsConfirmation) setPhase('confirm');
+          else await finish();
+        },
+        { fallback: 'Sign-up failed.' },
+      ),
+    [email, password, signUp, finish, run],
+  );
 
-  const submitCode = useCallback(async () => {
-    setError(null);
-    setBusy(true);
-    try {
-      await confirmSignUp(email, code);
-      await finish();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Confirmation failed.');
-    } finally {
-      setBusy(false);
-    }
-  }, [email, code, confirmSignUp, finish]);
+  const submitCode = useCallback(
+    () =>
+      run(
+        async () => {
+          await confirmSignUp(email, code);
+          await finish();
+        },
+        { fallback: 'Confirmation failed.' },
+      ),
+    [email, code, confirmSignUp, finish, run],
+  );
 
   return {
     phase,

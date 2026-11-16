@@ -70,7 +70,7 @@ export function NotificationsSection() {
         onClick={() => void n.enable()}
         data-testid="notif-register"
       >
-        {n.working ? 'Registering…' : 'Register this device'}
+        {n.registerLabel}
       </IonButton>
       {n.lastError && (
         <IonItem lines="none">

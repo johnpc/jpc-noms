@@ -10,6 +10,8 @@ import { nomFromRecord, upsertNom } from './nomRecord';
 import { AUTH } from './nomWrite';
 import type { Nom } from './types';
 
+// @state-machine noms-history-load
+
 /** How many recently-updated noms one poll pulls — plenty for a household of
  * two to reconcile anything a dropped subscription missed. */
 export const RECENT_LIMIT = 50;

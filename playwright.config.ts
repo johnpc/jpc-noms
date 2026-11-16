@@ -14,6 +14,20 @@ if (existsSync('.env.local')) {
 }
 
 /**
+ * FAKE_BACKEND=1 runs the SAME Gherkin suite against the in-browser fake
+ * backend (src/fake-backend): no AWS, no secrets, no network. The dev server
+ * is started with the fake aliased in, on its own port so a real-backend dev
+ * server already running on :5173 is never mistaken for it, and the demo
+ * account's credentials stand in for TEST_USERNAME / TEST_PASSWORD.
+ */
+const FAKE = process.env.FAKE_BACKEND === '1';
+const PORT = FAKE ? 5174 : 5173;
+if (FAKE) {
+  process.env.TEST_USERNAME ??= 'demo@noms.test';
+  process.env.TEST_PASSWORD ??= 'noms-demo';
+}
+
+/**
  * Acceptance tests are written as Gherkin .feature files in e2e/features/
  * with step definitions in e2e/steps/. playwright-bdd compiles them into
  * Playwright specs under .features-gen/ at run time.
@@ -23,9 +37,10 @@ const testDir = defineBddConfig({
   steps: 'e2e/steps/**/*.ts',
   // Scenarios tagged @requires-deploy assert LIVE backend behavior (authz,
   // owner isolation, seeded reads) that only holds once a schema change is
-  // deployed; excluded from default runs (local + CI) so they don't go red
-  // pre-deploy. Include them with RUN_PENDING_DEPLOY=1 against a real sandbox.
-  tags: process.env.RUN_PENDING_DEPLOY ? undefined : 'not @requires-deploy',
+  // deployed; excluded from default LIVE runs so they don't go red pre-deploy
+  // (include them with RUN_PENDING_DEPLOY=1 against a real sandbox). The fake
+  // backend always has the current schema, so it runs every scenario.
+  tags: FAKE || process.env.RUN_PENDING_DEPLOY ? undefined : 'not @requires-deploy',
 });
 
 export default defineConfig({
@@ -39,7 +54,10 @@ export default defineConfig({
   // A small pool trades a little wall-clock for stability against shared state.
   workers: 4,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  // NO retries, anywhere. An intermittent failure is a race in the harness or
+  // the app; retrying hides it. Find the condition the step should wait on
+  // instead (AGENTS.md "No flaky tests").
+  retries: 0,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   // A multi-step authoring scenario (sign in → compose → publish → reopen)
   // does several slow reads/writes against the loaded backend; 60s gives the
@@ -51,7 +69,7 @@ export default defineConfig({
   // actions more headroom so genuine slowness doesn't read as a failure.
   expect: { timeout: 15_000 },
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: `http://localhost:${PORT}`,
     trace: 'on-first-retry',
     actionTimeout: 15_000,
     navigationTimeout: 30_000,
@@ -69,8 +87,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
+    // FAKE_BACKEND is inherited from this process's env by the dev server.
+    command: `npx vite --port ${PORT} --strictPort`,
+    url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },

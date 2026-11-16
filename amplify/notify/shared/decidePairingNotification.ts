@@ -1,3 +1,4 @@
+// @state-machine pairing-push-decision
 /**
  * Pure decision for pairing push — no I/O, unit-tested. When a Pairing becomes
  * ACTIVE (a scan connected two people), notify BOTH members that they're paired.

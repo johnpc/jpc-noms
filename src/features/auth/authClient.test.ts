@@ -21,22 +21,23 @@ describe('authClient', () => {
     vi.clearAllMocks();
   });
 
-  it('currentEmail returns loginId when signed in', async () => {
+  it('currentIdentity returns loginId + sub when signed in', async () => {
     mocks.getCurrentUser.mockResolvedValue({
       username: 'u1',
+      userId: 'sub-1',
       signInDetails: { loginId: 'a@b.com' },
     });
-    expect(await authClient.currentEmail()).toBe('a@b.com');
+    expect(await authClient.currentIdentity()).toEqual({ email: 'a@b.com', sub: 'sub-1' });
   });
 
-  it('currentEmail falls back to username', async () => {
-    mocks.getCurrentUser.mockResolvedValue({ username: 'u1' });
-    expect(await authClient.currentEmail()).toBe('u1');
+  it('currentIdentity falls back to username for the email', async () => {
+    mocks.getCurrentUser.mockResolvedValue({ username: 'u1', userId: 'sub-1' });
+    expect(await authClient.currentIdentity()).toEqual({ email: 'u1', sub: 'sub-1' });
   });
 
-  it('currentEmail returns null when not signed in', async () => {
+  it('currentIdentity returns null when not signed in', async () => {
     mocks.getCurrentUser.mockRejectedValue(new Error('no user'));
-    expect(await authClient.currentEmail()).toBeNull();
+    expect(await authClient.currentIdentity()).toBeNull();
   });
 
   it('currentGroups reads the cognito:groups claim', async () => {

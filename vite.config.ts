@@ -1,12 +1,41 @@
 /// <reference types="vitest" />
 
+import { fileURLToPath } from 'node:url';
 import legacy from '@vitejs/plugin-legacy';
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
+
+/**
+ * FAKE_BACKEND=1 swaps the Amplify SDK for the in-browser fake under
+ * src/fake-backend (no Cognito, no AppSync, no network): the three `aws-amplify`
+ * entry points the app imports are aliased to the shims, and the generated
+ * `amplify_outputs.json` resolves to a stub so the build needs no deployed
+ * backend at all. App code is untouched — see README "Fake backend".
+ */
+const FAKE = process.env.FAKE_BACKEND === '1';
+const shim = (file: string) =>
+  fileURLToPath(new URL(`./src/fake-backend/${file}`, import.meta.url));
+
+const fakeBackendPlugin = (): Plugin => ({
+  name: 'noms-fake-backend',
+  enforce: 'pre',
+  resolveId(source) {
+    return source.endsWith('amplify_outputs.json') ? shim('outputs.json') : null;
+  },
+});
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), legacy()],
+  plugins: [react(), legacy(), ...(FAKE ? [fakeBackendPlugin()] : [])],
+  resolve: {
+    alias: FAKE
+      ? [
+          { find: /^aws-amplify$/, replacement: shim('amplify.ts') },
+          { find: /^aws-amplify\/auth$/, replacement: shim('session.ts') },
+          { find: /^aws-amplify\/data$/, replacement: shim('data.ts') },
+        ]
+      : [],
+  },
   test: {
     globals: true,
     environment: 'jsdom',

@@ -18,7 +18,7 @@ import './pairing.css';
 /** Fixed partner pairing: scan to connect (primary), or invite by email. */
 export function PairingPage() {
   const p = usePairingFlow();
-  const view = p.view; // local so TS narrows the discriminated union across branches
+  const { screen } = p; // local so TS narrows the discriminated union across branches
   return (
     <IonPage>
       <IonHeader>
@@ -30,14 +30,15 @@ export function PairingPage() {
         </IonToolbar>
       </IonHeader>
       <IonContent className="ion-padding">
-        {!p.signedIn ? (
+        {screen.kind === 'signed-out' && (
           <IonText color="medium">
             <p data-testid="pairing-signin">Sign in to pair with your partner.</p>
           </IonText>
-        ) : p.loading ? null : view.kind === 'active' ? (
+        )}
+        {screen.kind === 'active' && (
           <>
             <IonText>
-              <p data-testid="pairing-active">Paired with {view.partnerEmail} 🎉</p>
+              <p data-testid="pairing-active">Paired with {screen.partnerEmail} 🎉</p>
             </IonText>
             <PokeButton />
             <IonButton
@@ -45,35 +46,36 @@ export function PairingPage() {
               fill="clear"
               color="danger"
               disabled={p.unpairing}
-              onClick={() => p.unpair(view.pairingId)}
+              onClick={() => p.unpair(screen.pairingId)}
               data-testid="pairing-unpair-btn"
             >
               Unpair
             </IonButton>
           </>
-        ) : (
+        )}
+        {(screen.kind === 'none' ||
+          screen.kind === 'pending-sent' ||
+          screen.kind === 'pending-received') && (
           <>
             {/* Primary path: scan to connect — works from any unpaired state. */}
             <QrPairing />
-
-            {view.kind === 'pending-received' && (
+            {screen.kind === 'pending-received' && (
               <div data-testid="pairing-received">
-                <p>{view.partnerEmail} invited you by email.</p>
+                <p>{screen.partnerEmail} invited you by email.</p>
                 <IonButton
                   disabled={p.accepting}
-                  onClick={() => p.accept(view.pairingId)}
+                  onClick={() => p.accept(screen.pairingId)}
                   data-testid="pairing-accept-btn"
                 >
                   Accept invite
                 </IonButton>
               </div>
             )}
-            {view.kind === 'pending-sent' && (
+            {screen.kind === 'pending-sent' && (
               <IonText color="medium">
-                <p data-testid="pairing-sent">Invite sent to {view.partnerEmail}.</p>
+                <p data-testid="pairing-sent">Invite sent to {screen.partnerEmail}.</p>
               </IonText>
             )}
-
             <p className="pairing-divider">— or invite by email —</p>
             <div data-testid="pairing-invite">
               <IonInput

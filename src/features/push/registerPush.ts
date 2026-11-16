@@ -3,14 +3,15 @@
  * with APNs, and on the `registration` event persist the token via
  * registerDevice. No-op on web (Capacitor.isNativePlatform() === false).
  *
- * Failures are NO LONGER swallowed silently (that hid a "0 devices registered"
- * bug): the APNs `registrationError` + any registerDevice failure are recorded
- * in localStorage (lastPushError) so Settings can surface why push isn't working.
+ * Every step drives the PushRegistration machine (pushStore) so Settings shows
+ * the real phase instead of guessing; failures ALSO land in the localStorage
+ * breadcrumb (lastPushError) so a device can be diagnosed after a relaunch.
  */
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { registerDevice, unregisterDevice } from './deviceApi';
 import { setOptOut, noteError } from './pushPrefs';
+import { dispatchPush } from './pushStore';
 
 const native = (): boolean => Capacitor.isNativePlatform();
 
@@ -33,39 +34,42 @@ export async function pushStatus(): Promise<PushStatus> {
   }
 }
 
+const fail = (reason: string) => {
+  noteError(reason);
+  dispatchPush({ type: 'error', reason });
+};
+
 /**
- * Request permission + register this device's APNs token for `ownerSub`.
- * Returns the resulting PushStatus so a caller (Settings) can reflect it.
+ * Request permission + register this device's APNs token for `ownerSub`. The
+ * outcome is published through the machine; this resolves once iOS has been
+ * asked to register (the token itself arrives on the listener).
  */
-export async function enablePush(ownerSub: string): Promise<PushStatus> {
-  if (!native() || !ownerSub) return native() ? 'prompt' : 'web';
+export async function enablePush(ownerSub: string): Promise<void> {
+  if (!native() || !ownerSub) return;
+  dispatchPush({ type: 'start' });
   try {
     const perm = await PushNotifications.requestPermissions();
-    if (perm.receive !== 'granted') {
-      noteError(`permission not granted (${perm.receive})`);
-      return perm.receive === 'denied' ? 'denied' : 'prompt';
-    }
+    const next = dispatchPush({ type: 'permission', receive: perm.receive });
+    if (next.kind !== 'awaiting-token')
+      return noteError(`permission not granted (${perm.receive})`);
 
     setOptOut(false); // enabling clears any prior in-app opt-out
-    // Remove any prior listeners first — usePushRegistration calls this on every
+    // Remove any prior listeners first — enablePush can run more than once per
     // launch, and stacking duplicate listeners was a latent bug. Then attach
-    // BOTH before register() so neither event is missed. The registration event
-    // carries the APNs token; registrationError means iOS couldn't register.
+    // BOTH before register() so neither event is missed.
     await PushNotifications.removeAllListeners();
     await PushNotifications.addListener('registration', (token) => {
+      dispatchPush({ type: 'token', token: token.value });
       void registerDevice(token.value, ownerSub)
-        .then(() => noteError(`registered token ok (${token.value.slice(0, 8)}…)`))
-        .catch((e: unknown) => noteError(`registerDevice failed: ${String(e)}`));
+        .then(() => dispatchPush({ type: 'saved' }))
+        .catch((e: unknown) => fail(`registerDevice failed: ${String(e)}`));
     });
     await PushNotifications.addListener('registrationError', (err) => {
-      noteError(`APNs registrationError: ${JSON.stringify(err)}`);
+      fail(`APNs registrationError: ${JSON.stringify(err)}`);
     });
-    noteError('register() called — awaiting APNs token…');
     await PushNotifications.register();
-    return 'granted';
   } catch (e) {
-    noteError(`enablePush threw: ${String(e)}`);
-    return 'prompt';
+    fail(`enablePush threw: ${String(e)}`);
   }
 }
 
@@ -77,4 +81,5 @@ export async function enablePush(ownerSub: string): Promise<PushStatus> {
 export async function disablePush(): Promise<void> {
   setOptOut(true);
   await unregisterDevice().catch(() => {});
+  dispatchPush({ type: 'reset' });
 }

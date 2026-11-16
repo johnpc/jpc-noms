@@ -2,8 +2,7 @@ import { render, screen, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const client = vi.hoisted(() => ({
-  currentEmail: vi.fn(),
-  currentSub: vi.fn(),
+  currentIdentity: vi.fn(),
   signIn: vi.fn(),
   signUp: vi.fn(),
   confirmSignUp: vi.fn(),
@@ -44,24 +43,26 @@ const renderProbe = () =>
 describe('AuthProvider', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    client.currentSub.mockResolvedValue('sub-123');
   });
 
   it('resolves to unauthenticated when no session', async () => {
-    client.currentEmail.mockResolvedValue(null);
+    client.currentIdentity.mockResolvedValue(null);
     renderProbe();
     await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('unauthenticated'));
   });
 
   it('resolves to authenticated and exposes the email', async () => {
-    client.currentEmail.mockResolvedValue('a@b.com');
+    client.currentIdentity.mockResolvedValue({ email: 'a@b.com', sub: 'sub-123' });
     renderProbe();
     await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('authenticated'));
     expect(screen.getByTestId('email')).toHaveTextContent('a@b.com');
+    expect(document.documentElement.dataset.auth).toBe('authenticated');
   });
 
   it('signIn refreshes session state', async () => {
-    client.currentEmail.mockResolvedValueOnce(null).mockResolvedValue('a@b.com');
+    client.currentIdentity
+      .mockResolvedValueOnce(null)
+      .mockResolvedValue({ email: 'a@b.com', sub: 'sub-123' });
     client.signIn.mockResolvedValue(undefined);
     renderProbe();
     await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('unauthenticated'));
@@ -70,7 +71,7 @@ describe('AuthProvider', () => {
   });
 
   it('signOut clears the session', async () => {
-    client.currentEmail.mockResolvedValue('a@b.com');
+    client.currentIdentity.mockResolvedValue({ email: 'a@b.com', sub: 'sub-123' });
     client.signOut.mockResolvedValue(undefined);
     renderProbe();
     await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('authenticated'));
@@ -79,7 +80,7 @@ describe('AuthProvider', () => {
   });
 
   it('exposes signUp and confirmSignUp passthroughs', async () => {
-    client.currentEmail.mockResolvedValue(null);
+    client.currentIdentity.mockResolvedValue(null);
     client.signUp.mockResolvedValue({ needsConfirmation: true });
     client.confirmSignUp.mockResolvedValue(undefined);
     renderProbe();
@@ -91,7 +92,7 @@ describe('AuthProvider', () => {
   });
 
   it('exposes resetPassword and confirmResetPassword passthroughs', async () => {
-    client.currentEmail.mockResolvedValue(null);
+    client.currentIdentity.mockResolvedValue(null);
     client.resetPassword.mockResolvedValue(undefined);
     client.confirmResetPassword.mockResolvedValue(undefined);
     renderProbe();

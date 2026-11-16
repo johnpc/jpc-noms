@@ -10,3 +10,9 @@ Feature: App shell (guest)
     Then they are taken to the home shell
     And a link to find a restaurant is visible
     And a prompt to sign in to nominate is visible
+
+  # Honesty check for the two CI paths: the fake-backend legs must really be on
+  # the fake, the sandbox legs must really be on Amplify.
+  Scenario: The app says which backend it is talking to
+    Given a visitor opens the app at the root
+    Then the app announces the backend this run expects

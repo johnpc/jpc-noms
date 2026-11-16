@@ -1,5 +1,7 @@
 /** Pure theme helpers — no I/O, unit-tested. */
 
+// @state-machine theme-choice
+
 export type ThemeChoice = 'system' | 'light' | 'dark';
 
 const KEY = 'noms.theme';

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { pairingView } from './pairing';
+import { pairingScreen, pairingView } from './pairing';
 import type { Pairing } from './types';
 
 const p = (over: Partial<Pairing>): Pairing => ({
@@ -42,5 +42,13 @@ describe('pairingView', () => {
       partnerEmail: 'a@x.com',
       pairingId: 'p1',
     });
+  });
+});
+
+describe('pairingScreen', () => {
+  it('gates on signed-out / loading before classifying', () => {
+    expect(pairingScreen(false, false, null, 'a@x.com')).toEqual({ kind: 'signed-out' });
+    expect(pairingScreen(true, true, null, 'a@x.com')).toEqual({ kind: 'loading' });
+    expect(pairingScreen(true, false, null, 'a@x.com')).toEqual({ kind: 'none' });
   });
 });

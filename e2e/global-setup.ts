@@ -17,7 +17,8 @@ import {
  * to bypass (don't).
  */
 export default async function globalSetup(): Promise<void> {
-  if (process.env.E2E_ALLOW_ANY_BACKEND) return;
+  // The in-browser fake (FAKE_BACKEND=1) talks to no pool at all — nothing to guard.
+  if (process.env.FAKE_BACKEND === '1' || process.env.E2E_ALLOW_ANY_BACKEND) return;
   if (!existsSync('amplify_outputs.json')) {
     throw new Error(
       'e2e: amplify_outputs.json missing — run `npm run e2e-config` (sandbox) first.',

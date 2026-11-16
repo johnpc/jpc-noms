@@ -28,9 +28,7 @@ const nom: Nom = {
   status: 'OPEN',
 };
 const base = {
-  signedIn: true,
-  loading: false,
-  nom,
+  screen: { kind: 'open', nom } as const,
   previous: undefined,
   addable: ['b'],
   add: vi.fn(),
@@ -54,13 +52,13 @@ describe('TodayPage', () => {
   });
 
   it('prompts sign-in when signed out', () => {
-    useToday.mockReturnValue({ ...base, signedIn: false, nom: undefined });
+    useToday.mockReturnValue({ ...base, screen: { kind: 'signed-out' } });
     renderPage();
     expect(screen.getByTestId('today-signin')).toBeInTheDocument();
   });
 
   it('shows the empty state + find link when no nom today', () => {
-    useToday.mockReturnValue({ ...base, nom: undefined });
+    useToday.mockReturnValue({ ...base, screen: { kind: 'empty' } });
     renderPage();
     expect(screen.getByTestId('today-empty')).toBeInTheDocument();
     expect(screen.getByTestId('today-find')).toBeInTheDocument();
@@ -82,9 +80,19 @@ describe('TodayPage', () => {
   it('shows the selected banner once decided', () => {
     useToday.mockReturnValue({
       ...base,
-      nom: { ...nom, status: 'SELECTED', selectedPlaceId: 'a' },
+      screen: { kind: 'decided', nom: { ...nom, status: 'SELECTED', selectedPlaceId: 'a' } },
     });
     renderPage();
     expect(screen.getByTestId('today-selected')).toBeInTheDocument();
+  });
+});
+
+describe('TodayPage loading', () => {
+  it('renders nothing but the shell while the first load is in flight (no empty-state flash)', () => {
+    useToday.mockReturnValue({ ...base, screen: { kind: 'loading' } });
+    renderPage();
+    expect(screen.queryByTestId('today-empty')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('nom-options')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('poke-btn')).not.toBeInTheDocument();
   });
 });

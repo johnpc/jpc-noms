@@ -37,7 +37,7 @@ describe('usePairingFlow', () => {
       isLoading: false,
     };
     const { result } = renderHook(() => usePairingFlow());
-    expect(result.current.view).toEqual({ kind: 'pending-sent', partnerEmail: 'b@x.com' });
+    expect(result.current.screen).toEqual({ kind: 'pending-sent', partnerEmail: 'b@x.com' });
   });
 
   it('does not invite with an empty email', () => {
@@ -62,6 +62,12 @@ describe('usePairingFlow', () => {
   it('reports signed-out state', () => {
     h.auth = { status: 'unauthenticated', email: null };
     const { result } = renderHook(() => usePairingFlow());
-    expect(result.current.signedIn).toBe(false);
+    expect(result.current.screen).toEqual({ kind: 'signed-out' });
+  });
+
+  it('is loading while the pairing query is in flight', () => {
+    h.query = { data: null, isLoading: true };
+    const { result } = renderHook(() => usePairingFlow());
+    expect(result.current.screen).toEqual({ kind: 'loading' });
   });
 });

@@ -17,7 +17,7 @@ import './stats.css';
 
 /** Dining stats + history: how many noms you've decided, and where you ended up. */
 export function StatsPage() {
-  const s = useStats();
+  const { screen } = useStats();
   return (
     <IonPage>
       <IonHeader>
@@ -29,26 +29,28 @@ export function StatsPage() {
         </IonToolbar>
       </IonHeader>
       <IonContent className="ion-padding">
-        {!s.signedIn ? (
+        {screen.kind === 'signed-out' && (
           <IonText color="medium">
             <p data-testid="stats-signin">Sign in to see your dining stats.</p>
           </IonText>
-        ) : s.loading ? null : s.stats.decidedCount === 0 ? (
+        )}
+        {screen.kind === 'empty' && (
           <IonText color="medium">
             <p data-testid="stats-empty">
               No decisions yet. Pick a restaurant in a nom and it shows up here.
             </p>
           </IonText>
-        ) : (
+        )}
+        {screen.kind === 'ready' && (
           <>
             <div className="stats-tiles" data-testid="stats-tiles">
-              <Tile n={s.stats.decidedCount} label="decided" />
-              <Tile n={s.stats.openCount} label="open" />
-              <Tile n={s.stats.totalNoms} label="total" />
+              <Tile n={screen.stats.decidedCount} label="decided" />
+              <Tile n={screen.stats.openCount} label="open" />
+              <Tile n={screen.stats.totalNoms} label="total" />
             </div>
             <IonList>
               <IonListHeader>Where you ended up</IonListHeader>
-              {s.stats.history.map((nom) => (
+              {screen.stats.history.map((nom) => (
                 <HistoryRow key={nom.id} nom={nom} />
               ))}
             </IonList>

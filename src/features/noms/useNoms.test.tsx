@@ -52,3 +52,19 @@ describe('useNomsList', () => {
     expect(h.create).not.toHaveBeenCalled();
   });
 });
+
+describe('useNomsList screen', () => {
+  it('is signed-out / empty / list', () => {
+    h.auth = { status: 'unauthenticated', sub: null };
+    expect(renderHook(() => useNomsList()).result.current.screen).toEqual({ kind: 'signed-out' });
+    h.auth = { status: 'authenticated', sub: 'me' };
+    h.noms = { data: [], isLoading: false };
+    expect(renderHook(() => useNomsList()).result.current.screen).toEqual({ kind: 'empty' });
+    const list = [{ id: 'n1' }];
+    h.noms = { data: list, isLoading: false };
+    expect(renderHook(() => useNomsList()).result.current.screen).toEqual({
+      kind: 'list',
+      noms: list,
+    });
+  });
+});
