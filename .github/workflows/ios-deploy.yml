@@ -162,26 +162,21 @@ jobs:
           # CFBundleVersion (unchanged even if MARKETING_VERSION is bumped on conflict).
           echo "BUILD_NUM=$BUILD_NUM" >> "$GITHUB_ENV"
 
+      - name: Prepare CI signing (manual, CI keychain)
+        env:
+          CI_KEYCHAIN_PASSWORD: ${{ secrets.CI_KEYCHAIN_PASSWORD }}
+        run: |
+          # Runner jobs run in the system launchd context, where Xcode's automatic
+          # signing can neither see nor write a keychain (DVTSecErrorDomain -61) and
+          # finds no profiles. Sign manually with the CI keychain's Apple Distribution
+          # identity and the "<bundle id> CI AppStore" profile the helper maintains
+          # (see ~/ci-signing/ios_manual_signing.py). It also writes ExportOptions.
+          security unlock-keychain -p "$CI_KEYCHAIN_PASSWORD" "$HOME/Library/Keychains/ci-signing.keychain-db"
+          python3 ~/ci-signing/ios_manual_signing.py apply "$XCODEPROJ" --export-options /tmp/ExportOptions.plist
       - name: Archive and upload (auto-bump version on conflict)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cat > /tmp/ExportOptions.plist << 'PLIST'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>method</key>
-              <string>app-store-connect</string>
-              <key>destination</key>
-              <string>upload</string>
-              <key>signingStyle</key>
-              <string>automatic</string>
-              <key>teamID</key>
-              <string>${{ secrets.TEAM_ID }}</string>
-          </dict>
-          </plist>
-          PLIST
 
           archive_and_upload() {
             xcodebuild archive \
@@ -209,6 +204,7 @@ jobs:
 
           if echo "$OUTPUT" | grep -qi "version.*already exists\|already been uploaded\|redundant binary\|train.*closed\|higher version"; then
             echo "⚠️ Version conflict, bumping patch version..."
+            python3 ~/ci-signing/ios_manual_signing.py revert "$XCODEPROJ"
             CURRENT=$(grep -m 1 'MARKETING_VERSION' "$XCODEPROJ/project.pbxproj" | sed 's/.*= *\(.*\);/\1/')
             MAJOR=$(echo "$CURRENT" | cut -d. -f1)
             MINOR=$(echo "$CURRENT" | cut -d. -f2)
@@ -219,12 +215,14 @@ jobs:
 
             # Upload the bumped build FIRST, so a rejected push can never leave
             # App Store Connect without a build.
+            python3 ~/ci-signing/ios_manual_signing.py apply "$XCODEPROJ" --export-options /tmp/ExportOptions.plist
             rm -rf ~/Desktop/Noms.xcarchive ~/Desktop/export
             archive_and_upload
 
             # Persist the bump. main is protected (required checks), so the bot
             # cannot push to it: open a PR and let it auto-merge once the gates
             # pass. No [skip ci] — the checks must run.
+            python3 ~/ci-signing/ios_manual_signing.py revert "$XCODEPROJ"
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             BRANCH="ci/bump-version-${NEW_VERSION}"
@@ -241,6 +239,9 @@ jobs:
             exit 1
           fi
 
+      - name: Revert CI signing
+        if: always()
+        run: python3 ~/ci-signing/ios_manual_signing.py revert "$XCODEPROJ"
       - name: Distribute to external beta testers
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
