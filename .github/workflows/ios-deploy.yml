@@ -91,7 +91,8 @@ jobs:
 
           key_id = "${{ secrets.ASC_KEY_ID }}"
           issuer_id = "${{ secrets.ASC_ISSUER_ID }}"
-          key_path = f"/Users/runner/private_keys/AuthKey_{key_id}.p8"
+          import os
+          key_path = os.path.expanduser(f"~/private_keys/AuthKey_{key_id}.p8")
 
           # Inline minimal JWT (ES256) without PyJWT
           import subprocess, tempfile, base64
@@ -254,7 +255,8 @@ jobs:
           issuer_id = os.environ["ASC_ISSUER_ID"]
           bundle_id = os.environ["BUNDLE_ID"]
           build_num = os.environ["BUILD_NUM"]
-          key_path = f"/Users/runner/private_keys/AuthKey_{key_id}.p8"
+          import os
+          key_path = os.path.expanduser(f"~/private_keys/AuthKey_{key_id}.p8")
           BASE = "https://api.appstoreconnect.apple.com/v1"
 
           def b64url(data):
