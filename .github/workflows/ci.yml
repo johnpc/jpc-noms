@@ -28,7 +28,7 @@ jobs:
     # slow CloudFormation deploy off the shared serial Mac mini. Same owner-only
     # gate as the Mac mini jobs: fork PRs get no AWS secrets anyway.
     name: Deploy + seed ephemeral sandbox
-    if: github.event_name != 'pull_request' || github.event.pull_request.user.login == 'johnpc'
+    if: github.event_name != 'pull_request' || contains(fromJSON('["johnpc","github-actions[bot]"]'), github.event.pull_request.user.login)
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -85,7 +85,7 @@ jobs:
     # self-hosted runners on a public repo are unsafe for fork PRs (arbitrary
     # code execution) — so only run for push-to-main or a PR authored by the
     # repo owner. Other PRs simply skip this job.
-    if: github.event_name != 'pull_request' || github.event.pull_request.user.login == 'johnpc'
+    if: github.event_name != 'pull_request' || contains(fromJSON('["johnpc","github-actions[bot]"]'), github.event.pull_request.user.login)
     runs-on: [self-hosted, mac-mini]
     timeout-minutes: 40
     steps:
@@ -158,7 +158,7 @@ jobs:
     # self-hosted runners on a public repo are unsafe for fork PRs (arbitrary
     # code execution) — so only run for push-to-main or a PR authored by the
     # repo owner. Other PRs simply skip this job.
-    if: github.event_name != 'pull_request' || github.event.pull_request.user.login == 'johnpc'
+    if: github.event_name != 'pull_request' || contains(fromJSON('["johnpc","github-actions[bot]"]'), github.event.pull_request.user.login)
     runs-on: [self-hosted, mac-mini]
     timeout-minutes: 30
     strategy:
@@ -273,14 +273,17 @@ jobs:
           retention-days: 7
 
   teardown:
-    # ALWAYS delete this run's sandbox — after success, failure, or cancel, on
+    # Delete this run's sandbox — after success or cancel, on
     # PRs and on main alike — so no CI sandbox outlives its run. `sandbox:delete`
     # is a no-op when the deploy never created the stack, and FAILS if the stack
     # is still there afterwards, so a leak turns the run red. Anything that slips
     # through anyway is reaped by the scheduled sweep in sandbox-cleanup.yml.
     name: Tear down ephemeral sandbox
     needs: [sandbox, quality, acceptance]
-    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.user.login == 'johnpc')
+    # ...except when a live leg FAILED: keep that run's sandbox so the leg can be
+    # re-run in place (`gh run rerun --failed` needs the stack to still exist);
+    # the 6-hourly sweep in sandbox-cleanup.yml reaps it if nobody does.
+    if: always() && needs.acceptance.result != 'failure' && (github.event_name != 'pull_request' || contains(fromJSON('["johnpc","github-actions[bot]"]'), github.event.pull_request.user.login))
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
