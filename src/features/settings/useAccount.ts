@@ -1,34 +1,19 @@
-import { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
 import * as authClient from '../auth/authClient';
+import { useSubmission } from '../../lib/useSubmission';
 
 /**
  * Account-management logic for Settings: change password, delete account, sign
- * out. Each action tracks its own busy/error; sign-out and delete route home
- * and refresh the auth state.
+ * out. One Submission owns busy/error/message across the three actions;
+ * sign-out and delete route home once their action succeeds.
  */
 export function useAccount() {
   const { email, signOut, refresh } = useAuth();
   const history = useHistory();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
+  const { run, busy, error, message } = useSubmission();
 
-  const run = async (fn: () => Promise<void>, ok: string, done?: () => void) => {
-    setBusy(true);
-    setError(null);
-    setMessage(null);
-    try {
-      await fn();
-      setMessage(ok);
-      done?.();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Something went wrong.');
-    } finally {
-      setBusy(false);
-    }
-  };
+  const goHome = (ok: boolean) => ok && history.replace('/home');
 
   return {
     email,
@@ -36,21 +21,22 @@ export function useAccount() {
     error,
     message,
     changePassword: (oldP: string, newP: string) =>
-      run(() => authClient.changePassword(oldP, newP), 'Password updated.'),
+      run(() => authClient.changePassword(oldP, newP), {
+        fallback: 'Something went wrong.',
+        message: 'Password updated.',
+      }),
     deleteAccount: () =>
-      run(
-        () => authClient.deleteAccount(),
-        'Account deleted.',
-        () => history.replace('/home'),
-      ),
+      run(() => authClient.deleteAccount(), {
+        fallback: 'Something went wrong.',
+        message: 'Account deleted.',
+      }).then(goHome),
     signOut: () =>
       run(
         async () => {
           await signOut();
           await refresh();
         },
-        'Signed out.',
-        () => history.replace('/home'),
-      ),
+        { fallback: 'Something went wrong.', message: 'Signed out.' },
+      ).then(goHome),
   };
 }

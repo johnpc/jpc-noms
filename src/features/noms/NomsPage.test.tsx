@@ -8,10 +8,8 @@ vi.mock('./useNoms', () => ({ useNomsList: useList }));
 import { NomsPage } from './NomsPage';
 
 const base = {
-  signedIn: true,
+  screen: { kind: 'empty' } as Record<string, unknown>,
   paired: true,
-  noms: [],
-  loading: false,
   createNom: vi.fn(),
   creating: false,
 };
@@ -28,7 +26,7 @@ describe('NomsPage', () => {
   });
 
   it('prompts sign-in when signed out', () => {
-    useList.mockReturnValue({ ...base, signedIn: false });
+    useList.mockReturnValue({ ...base, screen: { kind: 'signed-out' } });
     render1();
     expect(screen.getByTestId('noms-signin')).toBeInTheDocument();
   });
@@ -43,21 +41,24 @@ describe('NomsPage', () => {
   });
 
   it('shows an empty state and lists noms by date', () => {
-    useList.mockReturnValue({ ...base, noms: [] });
+    useList.mockReturnValue({ ...base, screen: { kind: 'empty' } });
     const { rerender } = render1();
     expect(screen.getByTestId('noms-empty')).toBeInTheDocument();
     useList.mockReturnValue({
       ...base,
-      noms: [
-        {
-          id: 'n1',
-          createdAt: '2026-07-03T12:00:00.000Z',
-          optionPlaceIds: [],
-          members: [],
-          pairingId: 'p1',
-          status: 'OPEN',
-        },
-      ],
+      screen: {
+        kind: 'list',
+        noms: [
+          {
+            id: 'n1',
+            createdAt: '2026-07-03T12:00:00.000Z',
+            optionPlaceIds: [],
+            members: [],
+            pairingId: 'p1',
+            status: 'OPEN',
+          },
+        ],
+      },
     });
     rerender(
       <MemoryRouter>
@@ -82,5 +83,12 @@ describe('NomsPage', () => {
     render1();
     screen.getByTestId('noms-create-btn').click();
     expect(createNom).toHaveBeenCalledWith();
+  });
+
+  it('keeps the create control but no empty prompt while loading', () => {
+    useList.mockReturnValue({ ...base, screen: { kind: 'loading' } });
+    render1();
+    expect(screen.getByTestId('noms-create-btn')).toBeInTheDocument();
+    expect(screen.queryByTestId('noms-empty')).not.toBeInTheDocument();
   });
 });

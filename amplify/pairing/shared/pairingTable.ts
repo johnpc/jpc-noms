@@ -31,6 +31,11 @@ export interface PairingRow {
   updatedAt: string;
 }
 
+// @state-machine pairing-lifecycle
+// PENDING (inviter only in members) → ACTIVE (both subs). The only two writers
+// are putPending (create) and activate (the guarded flip); the client never
+// edits `status` directly except the QR path, which creates ACTIVE outright.
+
 /** Create a PENDING pairing owned by the inviter. Returns the stored row. */
 export async function putPending(input: {
   inviterSub: string;

@@ -1,7 +1,11 @@
 import { useCallback, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useAuth } from './useAuth';
+import { useSubmission } from '../../lib/useSubmission';
 
+// @state-machine reset-password-wizard
+
+/** request (email) → confirm (code + new password) → signed in. */
 type Phase = 'request' | 'confirm';
 
 /** Form state + actions for the two-step forgot-password flow (email, then code + new password). */
@@ -12,35 +16,23 @@ export function useResetPasswordForm() {
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const { run, busy, error } = useSubmission();
 
   const submitEmail = useCallback(async () => {
-    setError(null);
-    setBusy(true);
-    try {
-      await resetPassword(email);
-      setPhase('confirm');
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not send a reset code.');
-    } finally {
-      setBusy(false);
-    }
-  }, [email, resetPassword]);
+    const ok = await run(() => resetPassword(email), { fallback: 'Could not send a reset code.' });
+    if (ok) setPhase('confirm');
+  }, [email, resetPassword, run]);
 
   const submitReset = useCallback(async () => {
-    setError(null);
-    setBusy(true);
-    try {
-      await confirmResetPassword(email, code, password);
-      await signIn(email, password); // land signed in, like sign-up's finish()
-      history.replace('/home');
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not reset your password.');
-    } finally {
-      setBusy(false);
-    }
-  }, [email, code, password, confirmResetPassword, signIn, history]);
+    const ok = await run(
+      async () => {
+        await confirmResetPassword(email, code, password);
+        await signIn(email, password); // land signed in, like sign-up's finish()
+      },
+      { fallback: 'Could not reset your password.' },
+    );
+    if (ok) history.replace('/home');
+  }, [email, code, password, confirmResetPassword, signIn, history, run]);
 
   return {
     phase,

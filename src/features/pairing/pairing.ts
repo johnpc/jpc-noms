@@ -1,5 +1,8 @@
 /** Pure pairing view helpers — no I/O, unit-tested. */
+import { screenGate, type GateScreen } from '../../lib/screenGate';
 import type { Pairing } from './types';
+
+// @state-machine pairing-view
 
 export type PairingView =
   | { kind: 'none' }
@@ -21,4 +24,17 @@ export function pairingView(pairing: Pairing | null, myEmail: string): PairingVi
   if (pairing.status === 'ACTIVE') return { kind: 'active', partnerEmail, pairingId: pairing.id };
   if (iAmInvitee) return { kind: 'pending-received', partnerEmail, pairingId: pairing.id };
   return { kind: 'pending-sent', partnerEmail };
+}
+
+// @state-machine pairing-screen
+/** The partner page: the shared signed-out / loading gate, then the view. */
+export type PairingScreen = GateScreen | PairingView;
+
+export function pairingScreen(
+  signedIn: boolean,
+  loading: boolean,
+  pairing: Pairing | null,
+  myEmail: string,
+): PairingScreen {
+  return screenGate(signedIn, loading) ?? pairingView(pairing, myEmail);
 }

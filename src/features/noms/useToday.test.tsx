@@ -51,7 +51,7 @@ describe('useToday', () => {
     const prev = nom({ id: 'prev', createdAt: iso(3), status: 'SELECTED', selectedPlaceId: 'x' });
     h.noms = { data: [prev, today], isLoading: false };
     const { result } = renderHook(() => useToday());
-    expect(result.current.nom?.id).toBe('today');
+    expect(result.current.screen).toEqual({ kind: 'open', nom: today });
     expect(result.current.previous?.id).toBe('prev');
     // rotation place 'a' is already an option → only 'b' is addable
     expect(result.current.addable).toEqual(['b']);
@@ -65,12 +65,22 @@ describe('useToday', () => {
   it('has no nom today when nothing was created today', () => {
     h.noms = { data: [nom({ id: 'old', createdAt: iso(2) })], isLoading: false };
     const { result } = renderHook(() => useToday());
-    expect(result.current.nom).toBeUndefined();
+    expect(result.current.screen).toEqual({ kind: 'empty' });
   });
 
   it('reports signed-out state', () => {
     h.auth = { status: 'unauthenticated', email: null, sub: null };
     const { result } = renderHook(() => useToday());
-    expect(result.current.signedIn).toBe(false);
+    expect(result.current.screen).toEqual({ kind: 'signed-out' });
+  });
+});
+
+describe('useToday screen gate', () => {
+  it('is loading while the first noms fetch is in flight', () => {
+    h.auth = { status: 'authenticated', email: 'me@x.com', sub: 'u1' };
+    h.useNomActions.mockReturnValue(h.actions);
+    h.noms = { data: [], isLoading: true };
+    const { result } = renderHook(() => useToday());
+    expect(result.current.screen).toEqual({ kind: 'loading' });
   });
 });

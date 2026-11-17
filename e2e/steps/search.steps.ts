@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { createBdd } from 'playwright-bdd';
 
 const { Given, When, Then } = createBdd();
@@ -49,19 +49,17 @@ Then('they land on the sign-in screen', async ({ page }) => {
 });
 
 Given('the test user signs in', async ({ page }) => {
-  if (!USERNAME || !PASSWORD) test.skip(true, 'TEST_USERNAME / TEST_PASSWORD not set');
+  // Never skip: a missing credential is a broken harness, not a passing run.
+  if (!USERNAME || !PASSWORD) throw new Error('TEST_USERNAME / TEST_PASSWORD must be set');
   await page.goto('/signin');
-  await page.locator('input[type="email"]').fill(USERNAME as string);
-  await page.locator('input[type="password"]').fill(PASSWORD as string);
+  await page.locator('input[type="email"]').fill(USERNAME);
+  await page.locator('input[type="password"]').fill(PASSWORD);
   await page.getByRole('button', { name: 'Sign in' }).click();
-  await page.waitForFunction(
-    () =>
-      Object.keys(window.localStorage).some(
-        (k) => k.includes('CognitoIdentityServiceProvider') && k.endsWith('.accessToken'),
-      ),
-    undefined,
-    { timeout: 15_000 },
-  );
+  // The AuthProvider — the one owner of the session — mirrors its status onto
+  // <html data-auth>; wait on THAT, not on an SDK storage key.
+  await expect(page.locator('html')).toHaveAttribute('data-auth', 'authenticated', {
+    timeout: 15_000,
+  });
 });
 
 When('the test user opens their rotation', async ({ page }) => {

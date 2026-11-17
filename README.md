@@ -84,8 +84,31 @@ npm run e2e-config        # pull amplify_outputs.json from the sandbox
 npm run dev               # http://localhost:5173
 ```
 
+## Fake backend (demo mode + CI)
+
+```bash
+npm run dev:fake          # the whole app on an in-browser fake backend — no AWS, no keys
+npm run test:e2e:fake     # the full Gherkin suite against it (what CI runs on every PR)
+```
+
+`FAKE_BACKEND=1` aliases the Amplify SDK to `src/fake-backend/`: Cognito, AppSync models,
+subscriptions and the Places/pairing/poke resolvers are re-implemented in ~400 lines over
+`localStorage`, seeded with the same restaurants, favorite and noms as `amplify/seed`. Sign in as
+`demo@noms.test` / `noms-demo` (sign-up and password-reset codes are `123456`). The page announces
+which backend it is on via `<html data-backend="fake|amplify">`. App code is untouched — the swap is
+three Vite aliases in `vite.config.ts`.
+
 ## Quality
 
 Every commit passes the full gate (husky pre-commit + CI): no `any`, ≤100-line logic files, ≥80% test
-coverage, CRAP ≤15, Prettier clean, Gherkin acceptance tests (Playwright + playwright-bdd), and a green
-build. See `CLAUDE.md` for the working agreement and architecture.
+coverage, CRAP ≤15, Prettier clean, Gherkin acceptance tests (Playwright + playwright-bdd) on **both**
+the fake backend and an ephemeral Amplify sandbox, an explicit state-machine catalog
+(`docs/state-machines.md`, gate-checked), and a green build. See `CLAUDE.md` for the working
+agreement and `AGENTS.md` for the operating rules.
+
+### No flaky tests
+
+There is no such thing as a flaky test here. An intermittent failure is a race — in the harness or
+the app — and it gets found and fixed. Nobody re-runs to green, adds a sleep, raises a timeout, skips a
+scenario or sets `retries > 0`; `scripts/check-e2e-waits.mjs` refuses all of those. Steps wait on real
+conditions (a locator, `html[data-auth]`, a URL), never on time.

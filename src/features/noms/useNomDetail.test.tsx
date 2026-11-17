@@ -50,9 +50,26 @@ describe('useNomDetail', () => {
     expect(result.current.busy).toBe(false);
   });
 
-  it('exposes no nom when the id is unknown', () => {
+  it('reports an unknown id as the missing screen', () => {
     const { result } = renderHook(() => useNomDetail('missing'));
-    expect(result.current.nom).toBeUndefined();
+    expect(result.current.screen).toEqual({ kind: 'missing' });
     expect(h.useNomActions).toHaveBeenCalledWith(undefined, expect.anything());
+  });
+});
+
+describe('useNomDetail screen', () => {
+  it('derives open / decided from the found nom', () => {
+    h.useNomActions.mockReturnValue(h.actions);
+    h.noms = { data: [nom], isLoading: false };
+    expect(renderHook(() => useNomDetail('n1')).result.current.screen).toEqual({
+      kind: 'open',
+      nom,
+    });
+    const decided = { ...nom, status: 'SELECTED' as const, selectedPlaceId: 'a' };
+    h.noms = { data: [decided], isLoading: false };
+    expect(renderHook(() => useNomDetail('n1')).result.current.screen).toEqual({
+      kind: 'decided',
+      nom: decided,
+    });
   });
 });

@@ -12,6 +12,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Nom } from './types';
 
+// @state-machine optimistic-nom-cache
+
 export function useNomListMutation<V>(
   mutationFn: (v: V) => Promise<unknown>,
   apply: (list: Nom[] | undefined, v: V) => Nom[],

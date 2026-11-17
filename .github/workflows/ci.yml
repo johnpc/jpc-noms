@@ -126,6 +126,12 @@ jobs:
       - name: Feature-coverage map (every .feature has a CI area)
         run: npm run check:features
 
+      - name: State-machine catalog (docs/state-machines.md ↔ owners)
+        run: npm run check:state-machines
+
+      - name: e2e wait discipline (no sleeps / skips / retries)
+        run: npm run check:e2e-waits
+
       - name: Unit tests with coverage (80% floor)
         run: npm run test:coverage
 
@@ -213,6 +219,56 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: playwright-report-${{ matrix.area.name }}
+          path: playwright-report/
+          retention-days: 7
+
+  acceptance-fake:
+    # The SAME Gherkin suite against the in-browser fake backend
+    # (src/fake-backend): no AWS account, no secrets, no sandbox, no network —
+    # so it runs for every PR (forks included) on a GitHub-hosted runner and
+    # can never be red because of the director's server or a cloud deploy.
+    # The sandbox legs above stay the live, honest check of the real stack.
+    name: Acceptance Tests, fake backend (${{ matrix.area.name }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      FAKE_BACKEND: '1'
+    strategy:
+      fail-fast: false
+      matrix:
+        area:
+          - name: smoke
+            paths: .features-gen/e2e/features/smoke
+          - name: search
+            paths: .features-gen/e2e/features/search
+          - name: pairing
+            paths: .features-gen/e2e/features/pairing
+          - name: noms
+            paths: .features-gen/e2e/features/noms
+          - name: settings
+            paths: .features-gen/e2e/features/settings
+          - name: stats
+            paths: .features-gen/e2e/features/stats
+          - name: download
+            paths: .features-gen/e2e/features/download
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: Run acceptance tests on the fake backend (${{ matrix.area.name }})
+        run: npx bddgen && npx playwright test ${{ matrix.area.paths }}
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-report-fake-${{ matrix.area.name }}
           path: playwright-report/
           retention-days: 7
 

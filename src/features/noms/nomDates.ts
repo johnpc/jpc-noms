@@ -3,6 +3,8 @@
 import type { Nom } from './types';
 import { isSelected } from './nom';
 
+// @state-machine today-nom
+
 /** A nom's display name: its creation date (noms are dated, not titled). */
 export function nomDateLabel(nom: Nom): string {
   if (!nom.createdAt) return 'New nom';
@@ -36,31 +38,39 @@ function dayKey(iso: string, now: Date): string {
 const byCreatedDesc = (a: Nom, b: Nom): number =>
   (b.createdAt ?? '').localeCompare(a.createdAt ?? '');
 
-/** Noms created on today's calendar date (local), most-recent first. */
-function todaysNoms(noms: Nom[], now: Date): Nom[] {
-  const key = dayKey('', now);
-  return noms.filter((n) => n.createdAt && dayKey(n.createdAt, now) === key).sort(byCreatedDesc);
-}
-
 /**
- * "Today's nom" = the MOST RECENT nom created today — whatever you last touched,
- * open or decided. Showing the latest matches expectation: after you decide,
- * you see the decision; after you start a fresh one, you see that. Undefined
- * when nothing was created today (caller shows the prompt + lazy-creates on add).
+ * What "today" holds, derived once: nothing created today, today's MOST RECENT
+ * nom still open, or that nom already decided. Showing the latest matches
+ * expectation — after you decide you see the decision; after you start a fresh
+ * one you see that. Today's screen AND the "➕ Nom" add-target both read this,
+ * so what Today shows and where an add lands can never disagree.
  */
+export type TodayState =
+  { kind: 'none' } | { kind: 'open'; nom: Nom } | { kind: 'decided'; nom: Nom };
+
+export function todayState(noms: Nom[], now: Date): TodayState {
+  const key = dayKey('', now);
+  const latest = noms
+    .filter((n) => n.createdAt && dayKey(n.createdAt, now) === key)
+    .sort(byCreatedDesc)[0];
+  if (!latest) return { kind: 'none' };
+  return isSelected(latest) ? { kind: 'decided', nom: latest } : { kind: 'open', nom: latest };
+}
+
+/** Today's shown nom (open or decided), or undefined when nothing was created today. */
 export function todaysNom(noms: Nom[], now: Date): Nom | undefined {
-  return todaysNoms(noms, now)[0];
+  const t = todayState(noms, now);
+  return t.kind === 'none' ? undefined : t.nom;
 }
 
 /**
- * Where a "➕ Nom" tap adds: today's most-recent nom IF it's still OPEN. If
- * today's latest is already DECIDED (or there's none today), returns undefined
- * so the caller creates a NEW nom — starting a fresh, visible nom rather than
- * re-opening a decision. This keeps the add-target and what Today shows in sync.
+ * Where a "➕ Nom" tap adds: today's nom only while it is still OPEN. Decided
+ * (or none today) → undefined, so the caller starts a NEW nom rather than
+ * re-opening a decision.
  */
 export function todaysOpenNom(noms: Nom[], now: Date): Nom | undefined {
-  const latest = todaysNoms(noms, now)[0];
-  return latest && !isSelected(latest) ? latest : undefined;
+  const t = todayState(noms, now);
+  return t.kind === 'open' ? t.nom : undefined;
 }
 
 /**

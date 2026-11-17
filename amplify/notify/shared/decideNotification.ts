@@ -1,3 +1,4 @@
+// @state-machine nom-push-decision
 /**
  * Pure decision logic for nom push notifications — no I/O, fully unit-tested.
  * Given the before/after of a Nom row, decide whether to notify, which member

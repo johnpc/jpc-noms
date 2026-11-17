@@ -31,6 +31,8 @@ import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { userInfo } from 'node:os';
 
+// @state-machine ci-sandbox-lifecycle
+
 const REGION = 'us-west-2';
 const PROFILE = process.env.AWS_PROFILE ?? 'personal';
 const NAMESPACE = JSON.parse(

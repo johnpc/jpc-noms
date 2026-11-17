@@ -3,27 +3,34 @@ import { useParams } from 'react-router-dom';
 import { useNomDetail } from './useNomDetail';
 import { NomOptionsSection } from './NomOptionsSection';
 import { NomFooterActions } from './NomFooterActions';
-import { NomShell } from './NomShell';
-import { isSelected, selectedByLabel } from './nom';
+import { PageShell } from './PageShell';
+import { Prompt } from './Prompt';
+import { selectedByLabel } from './nom';
 import { nomDateLabel } from './nomDates';
 
 /** One shared nom: its options (either partner can select) + your rotation to add from. */
 export function NomDetail() {
   const { id } = useParams<{ id: string }>();
   const d = useNomDetail(id);
+  const { screen } = d;
 
-  if (!d.signedIn || d.loading || !d.nom) {
+  if (screen.kind === 'signed-out' || screen.kind === 'loading' || screen.kind === 'missing') {
     return (
-      <NomShell title="Nom">
-        {!d.signedIn && <p data-testid="nom-signin">Sign in to view this nom.</p>}
-      </NomShell>
+      <PageShell title="Nom" backHref="/noms">
+        {screen.kind === 'signed-out' && (
+          <Prompt testid="nom-signin">Sign in to view this nom.</Prompt>
+        )}
+        {screen.kind === 'missing' && (
+          <Prompt testid="nom-missing">This nom is gone — it may have been deleted.</Prompt>
+        )}
+      </PageShell>
     );
   }
-  const nom = d.nom;
-  const selected = isSelected(nom);
+  const { nom } = screen;
+  const selected = screen.kind === 'decided';
 
   return (
-    <NomShell title={nomDateLabel(nom)}>
+    <PageShell title={nomDateLabel(nom)} backHref="/noms">
       {selected && (
         <IonText color="success">
           <p data-testid="nom-selected">
@@ -51,6 +58,6 @@ export function NomDetail() {
         onReopen={d.reopen}
         onDelete={d.del}
       />
-    </NomShell>
+    </PageShell>
   );
 }

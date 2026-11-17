@@ -14,22 +14,17 @@ import {
   confirmResetPassword as amplifyConfirmResetPassword,
   deleteUser as amplifyDeleteUser,
 } from 'aws-amplify/auth';
-import type { SignUpResult } from './types';
+import type { Identity, SignUpResult } from './types';
 
-/** Returns the signed-in user's email, or null if there is no session. */
-export async function currentEmail(): Promise<string | null> {
+/**
+ * The signed-in user's identity (email + stable Cognito subject), or null when
+ * there is no session. One SDK call for both so the session can never resolve
+ * half-populated (an email without a sub).
+ */
+export async function currentIdentity(): Promise<Identity | null> {
   try {
     const user = await getCurrentUser();
-    return user.signInDetails?.loginId ?? user.username;
-  } catch {
-    return null;
-  }
-}
-
-/** The signed-in user's Cognito subject (stable id), or null. */
-export async function currentSub(): Promise<string | null> {
-  try {
-    return (await getCurrentUser()).userId ?? null;
+    return { email: user.signInDetails?.loginId ?? user.username, sub: user.userId };
   } catch {
     return null;
   }

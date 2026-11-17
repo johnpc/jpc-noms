@@ -13,7 +13,7 @@ const h = vi.hoisted(() => ({
 vi.mock('react-router-dom', () => ({ useHistory: () => ({ push: h.push }) }));
 vi.mock('./useGeolocation', () => ({ useGeolocation: () => ({ latitude: 1, longitude: 2 }) }));
 vi.mock('./searchApi', () => ({
-  useSearchPlaces: () => ({ data: h.places, isFetching: false }),
+  useSearchPlaces: () => ({ data: h.places, isPending: false, isError: false, refetch: vi.fn() }),
 }));
 vi.mock('../auth/useAuth', () => ({ useAuth: () => ({ status: h.status }) }));
 vi.mock('../rotation/rotationApi', () => ({

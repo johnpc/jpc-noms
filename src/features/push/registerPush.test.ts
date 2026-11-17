@@ -26,10 +26,12 @@ vi.mock('./deviceApi', () => ({
 }));
 
 import { enablePush, pushStatus, disablePush, isOptedOut, lastPushError } from './registerPush';
+import { dispatchPush, getPushState } from './pushStore';
 
 describe('enablePush', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    dispatchPush({ type: 'reset' });
     h.addListener.mockResolvedValue(undefined);
     h.removeAllListeners.mockResolvedValue(undefined);
     h.register.mockResolvedValue(undefined);
@@ -53,25 +55,45 @@ describe('enablePush', () => {
     h.requestPermissions.mockResolvedValue({ receive: 'denied' });
     await enablePush('u1');
     expect(h.register).not.toHaveBeenCalled();
+    expect(getPushState()).toMatchObject({ kind: 'failed', permission: 'denied' });
   });
 
-  it('registers + persists the token on grant, returning granted', async () => {
+  it('registers + persists the token on grant, walking the machine to registered', async () => {
     h.isNative.mockReturnValue(true);
     h.requestPermissions.mockResolvedValue({ receive: 'granted' });
-    const result = await enablePush('u1');
-    expect(result).toBe('granted');
+    await enablePush('u1');
+    expect(getPushState()).toEqual({ kind: 'awaiting-token' });
     expect(h.addListener).toHaveBeenCalledWith('registration', expect.any(Function));
     expect(h.register).toHaveBeenCalled();
     // Fire the registration callback → registerDevice is called with the token.
     const cb = h.addListener.mock.calls[0][1] as (t: { value: string }) => void;
     cb({ value: 'tok-abc' });
+    expect(getPushState()).toEqual({ kind: 'saving', token: 'tok-abc' });
     expect(h.registerDevice).toHaveBeenCalledWith('tok-abc', 'u1');
+    await vi.waitFor(() =>
+      expect(getPushState()).toEqual({ kind: 'registered', token: 'tok-abc' }),
+    );
   });
 
-  it('returns denied when the user declines', async () => {
+  it('a failed Device save fails the machine with the reason', async () => {
     h.isNative.mockReturnValue(true);
-    h.requestPermissions.mockResolvedValue({ receive: 'denied' });
-    expect(await enablePush('u1')).toBe('denied');
+    h.requestPermissions.mockResolvedValue({ receive: 'granted' });
+    h.registerDevice.mockRejectedValue(new Error('unauthorized'));
+    await enablePush('u1');
+    const cb = h.addListener.mock.calls[0][1] as (t: { value: string }) => void;
+    cb({ value: 'tok-abc' });
+    await vi.waitFor(() => expect(getPushState()).toMatchObject({ kind: 'failed' }));
+    expect(lastPushError()).toContain('registerDevice failed');
+  });
+
+  it('a thrown SDK call fails the machine', async () => {
+    h.isNative.mockReturnValue(true);
+    h.requestPermissions.mockRejectedValue(new Error('no sdk'));
+    await enablePush('u1');
+    expect(getPushState()).toMatchObject({
+      kind: 'failed',
+      reason: expect.stringContaining('no sdk'),
+    });
   });
 
   it('records an APNs registrationError so it is not swallowed', async () => {
@@ -86,6 +108,7 @@ describe('enablePush', () => {
     expect(errCb).toBeTypeOf('function');
     errCb({ error: 'no valid aps-environment' });
     expect(lastPushError()).toContain('registrationError');
+    expect(getPushState()).toMatchObject({ kind: 'failed' });
   });
 });
 

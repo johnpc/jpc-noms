@@ -11,8 +11,6 @@ vi.mock('../noms/PokeButton', () => ({ PokeButton: () => <div data-testid="poke-
 import { PairingPage } from './PairingPage';
 
 const base = {
-  signedIn: true,
-  loading: false,
   inviteEmail: '',
   setInviteEmail: vi.fn(),
   invite: vi.fn(),
@@ -29,20 +27,20 @@ describe('PairingPage', () => {
   });
 
   it('prompts sign-in when signed out', () => {
-    useFlow.mockReturnValue({ ...base, signedIn: false, view: { kind: 'none' } });
+    useFlow.mockReturnValue({ ...base, screen: { kind: 'signed-out' } });
     render(<PairingPage />);
     expect(screen.getByTestId('pairing-signin')).toBeInTheDocument();
   });
 
   it('shows the invite form when unpaired', () => {
-    useFlow.mockReturnValue({ ...base, view: { kind: 'none' } });
+    useFlow.mockReturnValue({ ...base, screen: { kind: 'none' } });
     render(<PairingPage />);
     fireEvent.click(screen.getByTestId('pairing-invite-btn'));
     expect(base.invite).toHaveBeenCalled();
   });
 
   it('shows a waiting message after sending an invite', () => {
-    useFlow.mockReturnValue({ ...base, view: { kind: 'pending-sent', partnerEmail: 'b@x.com' } });
+    useFlow.mockReturnValue({ ...base, screen: { kind: 'pending-sent', partnerEmail: 'b@x.com' } });
     render(<PairingPage />);
     expect(screen.getByTestId('pairing-sent')).toHaveTextContent('b@x.com');
   });
@@ -50,7 +48,7 @@ describe('PairingPage', () => {
   it('lets the invitee accept', () => {
     useFlow.mockReturnValue({
       ...base,
-      view: { kind: 'pending-received', partnerEmail: 'a@x.com', pairingId: 'p1' },
+      screen: { kind: 'pending-received', partnerEmail: 'a@x.com', pairingId: 'p1' },
     });
     render(<PairingPage />);
     fireEvent.click(screen.getByTestId('pairing-accept-btn'));
@@ -60,7 +58,7 @@ describe('PairingPage', () => {
   it('shows the partner + an unpair button when active', () => {
     useFlow.mockReturnValue({
       ...base,
-      view: { kind: 'active', partnerEmail: 'b@x.com', pairingId: 'p1' },
+      screen: { kind: 'active', partnerEmail: 'b@x.com', pairingId: 'p1' },
     });
     render(<PairingPage />);
     expect(screen.getByTestId('pairing-active')).toHaveTextContent('b@x.com');

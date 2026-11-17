@@ -6,6 +6,7 @@ import {
   isSelected,
   nomSummary,
   selectedByLabel,
+  nomPhase,
 } from './nom';
 import {
   nomDateLabel,
@@ -13,6 +14,7 @@ import {
   todaysNom,
   todaysOpenNom,
   previousDecidedNom,
+  todayState,
 } from './nomDates';
 import type { Nom } from './types';
 
@@ -73,8 +75,11 @@ describe('pickRandomOption', () => {
 });
 
 describe('selectedByLabel', () => {
-  it('credits who picked', () => {
-    expect(selectedByLabel(nom({ selectedBy: 'Emily' }))).toBe('Emily picked this');
+  it('credits who picked a decided nom', () => {
+    const decided = { status: 'SELECTED' as const, selectedPlaceId: 'a' };
+    expect(selectedByLabel(nom({ ...decided, selectedBy: 'Emily' }))).toBe('Emily picked this');
+    // The credit belongs to a decision — an open nom never shows one.
+    expect(selectedByLabel(nom({ selectedBy: 'Emily' }))).toBe('');
   });
   it('is empty when unknown', () => {
     expect(selectedByLabel(nom({}))).toBe('');
@@ -171,5 +176,41 @@ describe('previousDecidedNom', () => {
   it('ignores undecided noms', () => {
     const openOld = nom({ id: 'o', createdAt: '2026-07-01T09:00:00', status: 'OPEN' });
     expect(previousDecidedNom([openOld])).toBeUndefined();
+  });
+});
+
+describe('nomPhase', () => {
+  it('is open until status AND place agree', () => {
+    expect(nomPhase(nom({}))).toEqual({ kind: 'open' });
+    expect(nomPhase(nom({ status: 'SELECTED' }))).toEqual({ kind: 'open' });
+    expect(nomPhase(nom({ selectedPlaceId: 'a' }))).toEqual({ kind: 'open' });
+  });
+  it('is decided with the winning place + a trimmed credit', () => {
+    expect(nomPhase(nom({ status: 'SELECTED', selectedPlaceId: 'a', selectedBy: ' Em ' }))).toEqual(
+      { kind: 'decided', placeId: 'a', by: 'Em' },
+    );
+    expect(nomPhase(nom({ status: 'SELECTED', selectedPlaceId: 'a' }))).toEqual({
+      kind: 'decided',
+      placeId: 'a',
+      by: '',
+    });
+  });
+});
+
+describe('todayState', () => {
+  const now = new Date('2026-07-03T12:00:00');
+  it('is none with nothing created today', () => {
+    expect(todayState([nom({ createdAt: '2026-07-01T09:00:00' })], now)).toEqual({ kind: 'none' });
+  });
+  it('is open / decided from today’s MOST RECENT nom', () => {
+    const early = nom({
+      id: 'e',
+      createdAt: '2026-07-03T08:00:00',
+      status: 'SELECTED',
+      selectedPlaceId: 'a',
+    });
+    const late = nom({ id: 'l', createdAt: '2026-07-03T10:00:00' });
+    expect(todayState([early, late], now)).toEqual({ kind: 'open', nom: late });
+    expect(todayState([early], now)).toEqual({ kind: 'decided', nom: early });
   });
 });

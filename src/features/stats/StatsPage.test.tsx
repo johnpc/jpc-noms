@@ -25,22 +25,28 @@ describe('StatsPage', () => {
   });
 
   it('prompts sign-in when signed out', () => {
-    useStatsMock.mockReturnValue({ signedIn: false, loading: false, stats: empty() });
+    useStatsMock.mockReturnValue({ screen: { kind: 'signed-out' } });
     render(<StatsPage />);
     expect(screen.getByTestId('stats-signin')).toBeInTheDocument();
   });
 
   it('shows an empty state with no decisions', () => {
-    useStatsMock.mockReturnValue({ signedIn: true, loading: false, stats: empty() });
+    useStatsMock.mockReturnValue({ screen: { kind: 'empty' } });
     render(<StatsPage />);
     expect(screen.getByTestId('stats-empty')).toBeInTheDocument();
   });
 
   it('renders tiles + a history row per decided nom', () => {
     useStatsMock.mockReturnValue({
-      signedIn: true,
-      loading: false,
-      stats: { totalNoms: 2, decidedCount: 2, openCount: 0, history: [decided('a'), decided('b')] },
+      screen: {
+        kind: 'ready',
+        stats: {
+          totalNoms: 2,
+          decidedCount: 2,
+          openCount: 0,
+          history: [decided('a'), decided('b')],
+        },
+      },
     });
     render(<StatsPage />);
     expect(screen.getByTestId('stats-tiles')).toBeInTheDocument();
@@ -48,7 +54,3 @@ describe('StatsPage', () => {
     expect(screen.getByText('row:b')).toBeInTheDocument();
   });
 });
-
-function empty() {
-  return { totalNoms: 0, decidedCount: 0, openCount: 0, history: [] };
-}
