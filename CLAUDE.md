@@ -177,7 +177,7 @@ AWS_PROFILE=personal npx ampx sandbox   # deploy/refresh the personal backend
   Xcode 27 SDK, an app without `UIApplicationSceneManifest` (Info.plist) + `SceneDelegate.swift` dies
   on its first frame ("UIScene life cycle is required for apps built with this SDK") — and that build
   archived, uploaded, passed every test (they run in a browser) and was rejected by App Review as
-  jpc.eats 4.0.0 "crashed on launch" (2026-11-17). `scripts/ios-launch-smoke.sh` now starts the real
+  jpc.eats 4.0.0 "crashed on launch" (2026-11-17). The shared launch smoke (`johnpc/ci-workflows` `ios-launch-smoke`, run by `ios-deploy.yml`) starts the real
   binary in a fresh simulator and gates the deploy before archiving: PASS needs Capacitor's
   "WebView loaded", the process alive 20 s later, no scene fault, no crash report. New native source
   files join the Xcode target via `cd ios/App && ruby add_scene_delegate.rb`-style scripts, never by hand.
