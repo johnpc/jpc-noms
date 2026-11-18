@@ -189,19 +189,21 @@ jobs:
           # finds no profiles. Sign manually with the CI keychain's Apple Distribution
           # identity and the "<bundle id> CI AppStore" profile the helper maintains
           # (see ~/ci-signing/ios_manual_signing.py). It also writes ExportOptions.
+          # Per-job $RUNNER_TEMP, not /tmp or ~/Desktop: another app's deploy on the mini can overwrite fixed paths mid-run.
           security unlock-keychain -p "$CI_KEYCHAIN_PASSWORD" "$HOME/Library/Keychains/ci-signing.keychain-db"
-          python3 ~/ci-signing/ios_manual_signing.py apply "$XCODEPROJ" --export-options /tmp/ExportOptions.plist
+          python3 ~/ci-signing/ios_manual_signing.py apply "$XCODEPROJ" --export-options "$RUNNER_TEMP/ExportOptions.plist"
       - name: Archive and upload (auto-bump version on conflict)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
 
+          # Archive + export live in per-job $RUNNER_TEMP so a concurrent deploy on the mini can't clobber them.
           archive_and_upload() {
             xcodebuild archive \
               -workspace "$XCWORKSPACE" \
               -scheme "$SCHEME" \
               -destination "generic/platform=iOS" \
-              -archivePath ~/Desktop/Noms.xcarchive \
+              -archivePath "$RUNNER_TEMP/Noms.xcarchive" \
               -allowProvisioningUpdates \
               -authenticationKeyPath ~/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8 \
               -authenticationKeyID ${{ secrets.ASC_KEY_ID }} \
@@ -209,9 +211,9 @@ jobs:
               -quiet
 
             xcodebuild -exportArchive \
-              -archivePath ~/Desktop/Noms.xcarchive \
-              -exportOptionsPlist /tmp/ExportOptions.plist \
-              -exportPath ~/Desktop/export \
+              -archivePath "$RUNNER_TEMP/Noms.xcarchive" \
+              -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+              -exportPath "$RUNNER_TEMP/export" \
               -allowProvisioningUpdates \
               -authenticationKeyPath ~/private_keys/AuthKey_${{ secrets.ASC_KEY_ID }}.p8 \
               -authenticationKeyID ${{ secrets.ASC_KEY_ID }} \
@@ -233,8 +235,8 @@ jobs:
 
             # Upload the bumped build FIRST, so a rejected push can never leave
             # App Store Connect without a build.
-            python3 ~/ci-signing/ios_manual_signing.py apply "$XCODEPROJ" --export-options /tmp/ExportOptions.plist
-            rm -rf ~/Desktop/Noms.xcarchive ~/Desktop/export
+            python3 ~/ci-signing/ios_manual_signing.py apply "$XCODEPROJ" --export-options "$RUNNER_TEMP/ExportOptions.plist"
+            rm -rf "$RUNNER_TEMP/Noms.xcarchive" "$RUNNER_TEMP/export"
             archive_and_upload
 
             # Persist the bump. main is protected (required checks), so the bot
