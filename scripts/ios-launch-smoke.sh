@@ -54,9 +54,13 @@ STARTED=$(date "+%Y-%m-%d %H:%M:%S")
 MARKER="$OUT/.started"; touch "$MARKER"
 UDID=""; SIMCTL_PID=""
 cleanup() {
+  if [ -n "$UDID" ]; then
+    # Screenshot BEFORE detaching the console: ending the --console-pty launch
+    # terminates the app, and the picture would show SpringBoard, not the app.
+    xcrun simctl io "$UDID" screenshot "$OUT/launch.png" >/dev/null 2>&1 && say "screenshot → $OUT/launch.png" || true
+  fi
   [ -n "$SIMCTL_PID" ] && kill "$SIMCTL_PID" 2>/dev/null
   if [ -n "$UDID" ]; then
-    xcrun simctl io "$UDID" screenshot "$OUT/launch.png" >/dev/null 2>&1 && say "screenshot → $OUT/launch.png" || true
     if [ "${SMOKE_KEEP_SIM:-0}" != "1" ]; then
       xcrun simctl shutdown "$UDID" >/dev/null 2>&1 || true
       xcrun simctl delete "$UDID" >/dev/null 2>&1 || true
