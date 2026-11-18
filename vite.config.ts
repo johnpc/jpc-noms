@@ -36,6 +36,13 @@ export default defineConfig({
         ]
       : [],
   },
+  // Node 26 note: Node now defines `globalThis.localStorage` as an OWN property whose
+  // value is undefined (Web Storage without --localstorage-file), and Vitest's jsdom
+  // environment never overwrites an existing global — so tests saw
+  // `localStorage === undefined`. The package.json test scripts therefore run Vitest
+  // with NODE_OPTIONS=--no-experimental-webstorage (removes Node's property; jsdom's
+  // Storage comes through). It lives in the scripts so local runs, the pre-commit hook
+  // and CI all get it; the flag is a harmless no-op on Node 22.
   test: {
     globals: true,
     environment: 'jsdom',
