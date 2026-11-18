@@ -53,3 +53,4 @@ tmp/
 
 # iOS launch smoke output (shared ios-launch-smoke action)
 ios-smoke-output/
+ios/.smoke-App/

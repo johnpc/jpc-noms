@@ -15,3 +15,7 @@ android/app/src/main/assets/public
 ios/App/Pods
 ios/App/App/capacitor.config.json
 ios/App/App/config.xml
+# Shared iOS launch smoke's scratch copy of the iOS project (ML Kit pod removed),
+# made next to ios/App during the deploy job. Generated; the version-bump commit's
+# pre-commit hook must not format-check it.
+ios/.smoke-App

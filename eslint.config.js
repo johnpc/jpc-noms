@@ -18,6 +18,8 @@ export default tseslint.config(
       // Isolated agent worktrees carry their own full copy of the repo — never
       // ours to lint (also keeps their coverage/* out of the run).
       '.claude',
+      // The shared iOS launch smoke's scratch copy of ios/App (deploy job only).
+      'ios/.smoke-App',
     ],
   },
   {
