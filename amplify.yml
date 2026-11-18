@@ -4,6 +4,9 @@ backend:
     preBuild:
       commands:
         # Match .nvmrc / package.json engines (Node 26); the Amplify image ships nvm.
+        # Node 26's binary links libatomic.so.1, which Amazon Linux 2023 lacks
+        # (node exits 127); the build user isn't root, hence sudo.
+        - sudo dnf install -y libatomic
         - nvm install 26 && nvm use 26
     build:
       commands:
@@ -14,6 +17,9 @@ frontend:
     preBuild:
       commands:
         # Match .nvmrc / package.json engines (Node 26); the Amplify image ships nvm.
+        # Node 26's binary links libatomic.so.1, which Amazon Linux 2023 lacks
+        # (node exits 127); the build user isn't root, hence sudo.
+        - sudo dnf install -y libatomic
         - nvm install 26 && nvm use 26
     build:
       commands:
