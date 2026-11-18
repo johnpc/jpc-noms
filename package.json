@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
+  "engines": {
+    "node": ">=26"
+  },
   "scripts": {
     "dev": "vite",
     "dev:fake": "FAKE_BACKEND=1 vite",
@@ -18,9 +21,9 @@
     "ensure-editor": "node scripts/ensure-editor.mjs",
     "gen:icons": "node scripts/gen-app-icons.mjs",
     "seed": "tsx amplify/seed/seed.ts",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
+    "test": "NODE_OPTIONS=\"$NODE_OPTIONS --no-experimental-webstorage\" vitest run",
+    "test:watch": "NODE_OPTIONS=\"$NODE_OPTIONS --no-experimental-webstorage\" vitest",
+    "test:coverage": "NODE_OPTIONS=\"$NODE_OPTIONS --no-experimental-webstorage\" vitest run --coverage",
     "test:e2e": "bddgen && playwright test",
     "test:e2e:fake": "FAKE_BACKEND=1 bddgen && FAKE_BACKEND=1 playwright test",
     "crap": "node scripts/crap-check.mjs",
