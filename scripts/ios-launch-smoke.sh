@@ -59,7 +59,7 @@ cleanup() {
     # terminates the app, and the picture would show SpringBoard, not the app.
     xcrun simctl io "$UDID" screenshot "$OUT/launch.png" >/dev/null 2>&1 && say "screenshot → $OUT/launch.png" || true
   fi
-  [ -n "$SIMCTL_PID" ] && kill "$SIMCTL_PID" 2>/dev/null
+  [ -n "$SIMCTL_PID" ] && kill "$SIMCTL_PID" 2>/dev/null || true  # already exited is fine; under set -e a bare failing kill aborts
   if [ -n "$UDID" ]; then
     if [ "${SMOKE_KEEP_SIM:-0}" != "1" ]; then
       xcrun simctl shutdown "$UDID" >/dev/null 2>&1 || true
@@ -124,7 +124,7 @@ for _ in $(seq 1 10); do
     kill -0 "$SIMCTL_PID" 2>/dev/null || break
   done
   [ -n "$APP_PID" ] && break
-  kill "$SIMCTL_PID" 2>/dev/null; wait "$SIMCTL_PID" 2>/dev/null || true
+  kill "$SIMCTL_PID" 2>/dev/null || true; wait "$SIMCTL_PID" 2>/dev/null || true
 done
 [ -n "$APP_PID" ] || { tail -5 "$OUT/app.stdout" >&2; fail "simctl launch never produced a running process within 30s"; }
 LAUNCHED_AT=$(date +%s)
