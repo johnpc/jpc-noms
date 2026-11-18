@@ -6,7 +6,7 @@ import Capacitor
 /// launch the app at all ("UIScene life cycle is required for apps built with
 /// this SDK"): the build archives, uploads and passes every test, then dies on
 /// the first frame. That is exactly how jpc.eats 4.0.0 was rejected by App
-/// Review ("The app crashed on launch"). `scripts/ios-launch-smoke.sh` guards it.
+/// Review ("The app crashed on launch"). The iOS Deploy launch smoke guards it.
 ///
 /// The scene owns the window now (created from the Main storyboard via
 /// `UISceneStoryboardFile`). This delegate shares it with AppDelegate and
