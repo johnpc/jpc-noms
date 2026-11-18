@@ -166,13 +166,21 @@ AWS_PROFILE=personal npx ampx sandbox   # deploy/refresh the personal backend
   (`e2e/global-setup.ts`) refuses any pool not tagged `amplify:deployment-type=sandbox`.
 - **Bundle id:** `com.johncorser.eats` — Noms ships through the existing **eats** App Store listing
   (John retired jpc-eats and replaced it with Noms; history was migrated). On-screen name is `jpc.noms`,
-  MARKETING_VERSION 3.0. **Apple team:** `JW5SC3NYUV` (pinned in `project.pbxproj`).
+  MARKETING_VERSION 4.0.0. **Apple team:** `JW5SC3NYUV` (pinned in `project.pbxproj`).
 - **Editor test user:** reused stoop creds in `.env.local` (`TEST_USERNAME`/`TEST_PASSWORD`); created in
   the sandbox Cognito pool and added to the `editors` group. `npm run ensure-editor` (re)creates it
   idempotently — CI runs it against every fresh per-run pool.
 - **Secrets** (`.env`, git-ignored): `GOOGLE_PLACES_API_KEY`, `TESSIE_API_KEY`, `TESLA_VIN`.
-- iOS deploy runs on `macos-26` (iOS 26 SDK required). `ITSAppUsesNonExemptEncryption=false` is set so
-  App Store uploads don't prompt for export compliance.
+- iOS deploy runs on the self-hosted Mac mini (Xcode 27). `ITSAppUsesNonExemptEncryption=false` is set
+  so App Store uploads don't prompt for export compliance.
+- **The iOS app must adopt the UIScene life cycle — or it does not launch at all.** Built with the
+  Xcode 27 SDK, an app without `UIApplicationSceneManifest` (Info.plist) + `SceneDelegate.swift` dies
+  on its first frame ("UIScene life cycle is required for apps built with this SDK") — and that build
+  archived, uploaded, passed every test (they run in a browser) and was rejected by App Review as
+  jpc.eats 4.0.0 "crashed on launch" (2026-11-17). `scripts/ios-launch-smoke.sh` now starts the real
+  binary in a fresh simulator and gates the deploy before archiving: PASS needs Capacitor's
+  "WebView loaded", the process alive 20 s later, no scene fault, no crash report. New native source
+  files join the Xcode target via `cd ios/App && ruby add_scene_delegate.rb`-style scripts, never by hand.
 
 ## Conventions
 

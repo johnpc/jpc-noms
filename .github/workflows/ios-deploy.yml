@@ -78,6 +78,24 @@ jobs:
           # mid-archive. Regenerates ios/App/Pods + the .xcworkspace.
           cd ios/App && pod install
 
+      - name: Launch smoke (the built app must start in a simulator)
+        # A build made with the iOS 27 SDK but no UIScene manifest archives, uploads
+        # and passes every browser test, then dies on its first frame — that is how
+        # jpc.eats 4.0.0 was rejected ("crashed on launch"). Start the real binary
+        # before spending a signed archive on it. Reuses the dist/ built above.
+        run: SMOKE_WEB_BUILD=0 bash scripts/ios-launch-smoke.sh
+
+      - name: Keep the launch-smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-launch-smoke
+          path: |
+            ios-smoke-output/launch.png
+            ios-smoke-output/app.stdout
+            ios-smoke-output/xcodebuild.log
+          if-no-files-found: ignore
+
       - name: Write App Store Connect API key
         run: |
           mkdir -p ~/private_keys
@@ -286,16 +304,22 @@ jobs:
               return f"{header}.{payload}.{b64url(r + s)}"
 
           def api(path, method="GET", body=None):
-              data = json.dumps(body).encode() if body is not None else None
-              req = urllib.request.Request(f"{BASE}{path}", data=data, method=method,
-                  headers={"Authorization": f"Bearer {token()}", "Content-Type": "application/json"})
-              try:
-                  resp = urllib.request.urlopen(req, context=ctx)
-                  raw = resp.read()
-                  return json.loads(raw) if raw else {}
-              except urllib.error.HTTPError as e:
-                  print(f"  HTTP {e.code} on {method} {path}: {e.read().decode()}")
-                  raise
+              # App Store Connect answers a transient 500 UNEXPECTED_ERROR now and
+              # then (it killed the 2026-11-17 deploy on its very first GET). Retry
+              # only server errors, a few times; any 4xx is a real problem and raises.
+              for attempt in range(1, 4):
+                  data = json.dumps(body).encode() if body is not None else None
+                  req = urllib.request.Request(f"{BASE}{path}", data=data, method=method,
+                      headers={"Authorization": f"Bearer {token()}", "Content-Type": "application/json"})
+                  try:
+                      resp = urllib.request.urlopen(req, context=ctx)
+                      raw = resp.read()
+                      return json.loads(raw) if raw else {}
+                  except urllib.error.HTTPError as e:
+                      print(f"  HTTP {e.code} on {method} {path}: {e.read().decode()}")
+                      if e.code < 500 or attempt == 3:
+                          raise
+                      time.sleep(10 * attempt)
 
           # 1) Resolve the app by bundle id.
           apps = api(f"/apps?filter[bundleId]={bundle_id}").get("data", [])
